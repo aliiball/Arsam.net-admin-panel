@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 
 import { useLayout } from '@/lib/layout/layout-context';
+import { AssistantDock } from '@/components/ai';
 import { CommandPaletteProvider } from './command-palette-context';
 import { CommandPalette } from './CommandPalette';
 import { MobileBottomNav } from './MobileNav';
@@ -36,6 +37,7 @@ export function AppShell({ children }: AppShellProps) {
         )}
         <MobileBottomNav />
         <CommandPalette />
+        <AssistantDock />
       </div>
     </CommandPaletteProvider>
   );

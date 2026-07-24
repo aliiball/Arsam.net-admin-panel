@@ -780,3 +780,64 @@ Entry format:
     (`FormSection`/`ProvinceFormDialog`).
 - Suggested commit message:
   `feat(settings): system settings + live feature-flag bridge + layout defaults vs MSW + audit`
+
+## 2026-07-25 Task 016 — Aşama 4: AI-first Katman (Assistant + Kopilotlar)
+- Built: a single, coherent AI-first layer wiring the panel's scattered AI pieces into one surface. NO LLM —
+  "AI" here is a deterministic, unit-tested rule-based parser + the existing `aiSuggestion` data. Core in
+  **`src/lib/ai/`** (all PURE, no `Date.now()`/argless `new Date()`): `intent.ts` (Zod discriminated-union intent
+  schema — filter/navigate/bulk-action/unknown + filter chips); `parse.ts` (`parseCommand(input, context)` with
+  precedence bulk→navigate→filter→unknown, and `parseFilters` recognising category/city/status vocab + numeric
+  price(₺)/area(m²) ranges with üzeri/altı/arası qualifiers — vocabulary INJECTED via `ParseContext` so the core
+  stays domain-agnostic and single-origin); `apply-intent.ts` (the GUARDRAIL: `applyIntent(intent, deps)` throws
+  unless `deps.confirmed` for the bulk write path; `selectApprovable` narrows strictly to `status==='pending' &&
+  aiSuggestion==='ok'` — NOK/uncertain NEVER auto-approved; `filtersToSearch` deterministic URL serialization);
+  `assistant-store.ts` (`useSyncExternalStore` open/closed bridge mirroring `permission-store`/`feature-flags-store`,
+  so ⌘K / palette / FAB all open it without prop-drilling). Components in **`src/components/ai/`**: `AssistantDock`
+  (reinterpreted "Calm Signal" FAB launcher — `aria-label`+`aria-haspopup="dialog"` — plus the panel in a Sheet,
+  mobile-first full-width→sm right panel); `AssistantPanel` (context header from `useMatches` routeMeta; command
+  Textarea WITH FieldHelp + persistent `sr-only` `aria-describedby` mirror; parsed-intent CARD with confirm-before-
+  apply for filter[chips→Uygula→navigate w/ params]/navigate[→git]/bulk[→ConfirmDialog]/unknown; a `CopilotCard`
+  reflecting the pending-queue query state [loading skeleton / real ErrorState / empty / approvable count]; a "Son
+  AI aksiyonları" list reading `getAuditLog()` for `ai:*` actors); `assistant-context.ts` (builds parser vocab from
+  the user's PERMITTED nav [so a proposed navigate never points at a forbidden route] + listing taxonomy; `AI_QUEUE_QUERY`).
+  **Copilot integrations (minimal touch):** the FilterBar NL parser was MOVED to `lib/ai` — `features/listings/lib/nl-context.ts`
+  supplies the vocab and `ListingsListPage.parseNaturalLanguage` now delegates to `parseFilters` (behaviour is a
+  SUPERSET: category/city/status + price/m² ranges; single origin). The moderation copilot bulk-approves via a new
+  `useAiApproveListings` mutation posting `decision:'ok', actor:'ai:moderation-copilot'` per id; `moderationSchema`
+  gained an optional `actor` and the moderate handler writes it (defaults `user:current` for humans). Wiring:
+  `AssistantDock` mounted once in `AppShell`; a "AI Asistanını aç" quick action added to `CommandPalette`. Full-DoD
+  stories for `AssistantDock` + `AssistantPanel` (Default/Loading/Empty/Error[real `isError` via `seedQueryError`]/
+  Mobile + play; NavigateIntent story too) + a `CommandPalette` `AssistantAction` play assertion. Unit tests:
+  `lib/ai/parse.test.ts` (schema-valid + deterministic intents; filter/navigate/bulk/unknown; longest-module-match;
+  "aktif ilanları göster"→filter not navigate; bare "onayla" does NOT fire bulk) and `lib/ai/apply-intent.test.ts`
+  (the guardrail: `selectApprovable` excludes uncertain/nok/non-pending; bulk THROWS + never writes when unconfirmed;
+  applies ONLY the AI-OK ids when confirmed) + `handlers.test.ts` (`ai:moderation-copilot` actor lands in audit).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (857/857, 144 files) ·
+  build PASS · build-storybook PASS. (Note: `SettingsPage.stories > Error` shows a rare full-suite-parallel flake —
+  passes in isolation every time and on warm re-runs; pre-existing global-store/timing interaction, not this diff.)
+- DoD self-check: ran the `dod-reviewer` agent → 2 blocking gaps, BOTH FIXED before checkpoint, re-verified green:
+  (1) the four AI action buttons (`size="sm"`=32px) were below the 44px target the task explicitly requires for the
+  confirm-before-apply affordances → added `min-h-11` to the CopilotCard "Toplu onayı öner", the IntentCard
+  confirm/dismiss pair, the unknown-intent "Kapat", plus the primary "Yorumla" button; (2) the command Textarea had
+  no `aria-describedby` for its FieldHelp → added a persistent `sr-only` help mirror (`id="assistant-command-help"`)
+  and pointed `aria-describedby` at it (FormField pattern). Applied the non-blocking rec too: a `CommandPalette`
+  `AssistantAction` story asserting the new ⌘K affordance. Deferred (non-blocking, tracked for the FastAPI backend):
+  `moderationSchema.actor` is an unrestricted string in the mock phase — the real backend must derive `actor` from
+  the authenticated agent identity, not trust the request body (no auth boundary exists yet).
+- Decisions/assumptions:
+  - **Scope discipline (task note):** delivered the core — assistant skeleton + pure parser + guardrail — plus exactly
+    ONE NL-filter integration (listings) and ONE moderation bulk-action, per the task's "1+1 yeter" guidance. Other
+    verticals are NOT wired to a copilot; the shared `lib/ai` core makes that a later drop-in.
+  - **Domain-agnostic core:** `lib/ai` takes vocabulary via `ParseContext` (categories/cities/statuses/modules)
+    rather than importing feature taxonomy — so the pure parser has no feature dependency and the feature owns its
+    vocab (single origin). The assistant component assembles the context from permitted nav + listing taxonomy.
+  - **Filter apply = navigate-with-params:** applying a filter intent navigates to the entity's list route with the
+    filters as URL search params, which the existing `useTableUrlState` reads — no new apply plumbing, reuses the
+    URL-as-source-of-truth contract. The IntentCard "Uygula" click IS the confirm for the non-destructive path.
+  - **Store over context (015 lesson):** open state is a `useSyncExternalStore` store, not a context, so any surface
+    opens the assistant without threading a provider. Route context is read reactively via `useMatches` in the panel,
+    NOT duplicated in the store.
+  - **`retryOnMount:false` in story clients:** RQ retries errored queries on mount by default, which overwrote the
+    seeded error → the panel's `Error` story sets `retryOnMount:false` so `seedQueryError` sticks (deterministic).
+- Suggested commit message:
+  `feat(ai): deterministic assistant + copilots — NL parser/intent core, guardrailed AI bulk-approve vs audit`

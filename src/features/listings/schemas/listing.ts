@@ -45,6 +45,13 @@ export const moderationSchema = z
   .object({
     decision: z.enum(MODERATION_DECISIONS),
     reason: z.string().optional(),
+    /**
+     * Optional acting agent. Human decisions omit it (server defaults to the
+     * current user); the AI copilot passes `ai:<agent>` so the audit trail
+     * distinguishes AI-originated approvals. Guardrail: the copilot may only
+     * send `decision: 'ok'` over AI-OK + pending rows (see lib/ai/apply-intent).
+     */
+    actor: z.string().optional(),
   })
   .refine((v) => v.decision === 'ok' || (v.reason?.trim().length ?? 0) > 0, {
     message: 'Uncertain/NOK için gerekçe zorunludur.',

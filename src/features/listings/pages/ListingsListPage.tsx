@@ -11,6 +11,7 @@ import { exportCsv, exportXls } from '@/lib/export';
 import { api, encodeListQuery } from '@/lib/api/client';
 import type { Paginated } from '@/lib/api/types';
 import { Can } from '@/lib/permissions/permission-context';
+import { parseFilters } from '@/lib/ai';
 import type { Listing } from '../schemas/listing';
 import {
   CATEGORIES,
@@ -18,8 +19,8 @@ import {
   STATUSES,
   STATUS_LABELS,
   ilOptions,
-  LOCATIONS,
 } from '../data/taxonomy';
+import { listingFilterContext } from '../lib/nl-context';
 import { listingColumns } from '../components/listingColumns';
 import { useListings } from '../api/queries';
 
@@ -48,17 +49,14 @@ const filters: FilterConfig[] = [
   { id: 'price', label: 'Fiyat', kind: 'numberRange', unit: '₺' },
 ];
 
-/** Parse simple Turkish free text into proposed listing filters. */
+/**
+ * Parse Turkish free text into proposed listing filters via the shared,
+ * deterministic `lib/ai` parser (single origin — the global assistant parses
+ * through the same core). Behaviour is a superset of the old inline parser:
+ * category / city / status plus price + m² ranges.
+ */
 function parseNaturalLanguage(text: string): Record<string, string | string[]> {
-  const out: Record<string, string | string[]> = {};
-  const lower = text.toLocaleLowerCase('tr');
-  const cat = CATEGORIES.find((c) => lower.includes(CATEGORY_LABELS[c].toLocaleLowerCase('tr')));
-  if (cat) out.category = cat;
-  if (lower.includes('bekleyen') || lower.includes('beklemede')) out.status = 'pending';
-  if (lower.includes('yayında') || lower.includes('aktif')) out.status = 'active';
-  const ilEntry = Object.entries(LOCATIONS).find(([, v]) => lower.includes(v.label.toLocaleLowerCase('tr')));
-  if (ilEntry) out.il = ilEntry[0];
-  return out;
+  return parseFilters(text, listingFilterContext()).filters;
 }
 
 export function ListingsListPage() {

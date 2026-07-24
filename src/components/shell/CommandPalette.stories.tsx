@@ -45,6 +45,16 @@ export const Search: Story = {
   },
 };
 
+export const AssistantAction: Story = {
+  play: async () => {
+    const dialog = await within(document.body).findByRole('dialog');
+    const input = within(dialog).getByPlaceholderText(/Modül ara/i);
+    await userEvent.type(input, 'asistan');
+    // The new AI assistant quick action is reachable from ⌘K.
+    await expect(within(dialog).getByText('AI Asistanını aç')).toBeInTheDocument();
+  },
+};
+
 export const Empty: Story = {
   play: async () => {
     const dialog = await within(document.body).findByRole('dialog');

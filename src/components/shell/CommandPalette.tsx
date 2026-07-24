@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Moon, PanelLeft, PanelTop, Rows3, Sun } from 'lucide-react';
+import { Monitor, Moon, PanelLeft, PanelTop, Rows3, Sparkles, Sun } from 'lucide-react';
 
 import {
   CommandDialog,
@@ -13,6 +13,7 @@ import {
   CommandShortcut,
 } from '@/components/ui/command';
 import { useLayout } from '@/lib/layout/layout-context';
+import { setAssistantOpen } from '@/lib/ai';
 import { flattenNav, navSchema } from '@/config/nav-schema';
 import { useSession } from '@/lib/permissions/permission-context';
 import { usePermissionMatrix } from '@/lib/permissions/permission-store';
@@ -61,6 +62,9 @@ export function CommandPalette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Hızlı Aksiyonlar">
+          <CommandItem onSelect={() => run(() => setAssistantOpen(true))} data-action="open-assistant" data-entity="assistant">
+            <Sparkles className="size-4" /> AI Asistanını aç
+          </CommandItem>
           <CommandItem onSelect={() => run(() => setMode('sidebar'))} data-action="set-layout-mode" data-entity="layout">
             <PanelLeft className="size-4" /> Kenar çubuğu moduna geç
           </CommandItem>

@@ -37,6 +37,17 @@ describe('listings handlers', () => {
     expect(before.id).toBe('L-1001');
   });
 
+  it('records an ai:* actor when the AI copilot approves (guardrail attribution)', async () => {
+    const after = await api.post<Listing>('/listings/L-1003/moderate', {
+      decision: 'ok',
+      actor: 'ai:moderation-copilot',
+    });
+    expect(after.status).toBe('active');
+    const audit = getAuditFor('listing:L-1003');
+    expect(audit[0]?.action).toBe('listing.approve');
+    expect(audit[0]?.actor).toBe('ai:moderation-copilot');
+  });
+
   it('moderation (NOK) rejects and records the reason', async () => {
     const after = await api.post<Listing>('/listings/L-1002/moderate', {
       decision: 'nok',

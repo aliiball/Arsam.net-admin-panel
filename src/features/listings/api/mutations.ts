@@ -52,6 +52,35 @@ export function useModerateListing(id: string) {
   });
 }
 
+/** The audit actor recorded for copilot-originated approvals. */
+export const AI_MODERATION_ACTOR = 'ai:moderation-copilot';
+
+/**
+ * Guardrailed AI bulk approval: approves the caller-selected ids (which MUST be
+ * AI-OK + pending — enforced by `selectApprovable` at the call site) one by one
+ * as `decision: 'ok'` with an `ai:*` actor, so each write lands in the audit log
+ * attributed to the copilot. Never called without a human ConfirmDialog.
+ */
+export function useAiApproveListings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        await api.post<Listing>(`/listings/${id}/moderate`, {
+          decision: 'ok',
+          actor: AI_MODERATION_ACTOR,
+        } satisfies ModerationInput);
+      }
+      return ids;
+    },
+    onSuccess: (ids) => {
+      toast.success(`${ids.length} ilan AI kopilotu ile onaylandı.`);
+      void qc.invalidateQueries({ queryKey: listingKeys.all });
+    },
+    onError: () => toast.error('Toplu onay başarısız oldu.'),
+  });
+}
+
 /** Create a listing from validated form values. */
 export function useCreateListing() {
   const qc = useQueryClient();

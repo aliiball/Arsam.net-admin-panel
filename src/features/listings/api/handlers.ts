@@ -143,14 +143,20 @@ export const listingsHandlers = [
   http.post(`${API_BASE_URL}/listings/:id/moderate`, async ({ params, request }) => {
     const idx = db.findIndex((l) => l.id === params.id);
     if (idx === -1) return new HttpResponse(null, { status: 404 });
-    const { decision, reason } = (await request.json()) as { decision: ModerationDecision; reason?: string };
+    const { decision, reason, actor } = (await request.json()) as {
+      decision: ModerationDecision;
+      reason?: string;
+      actor?: string;
+    };
     const before = db[idx]!;
     const nextStatus: Listing['status'] =
       decision === 'ok' ? 'active' : decision === 'nok' ? 'rejected' : 'pending';
     const after: Listing = { ...before, status: nextStatus };
     db[idx] = after;
     writeAudit({
-      actor: 'user:current',
+      // Human decisions default to the current user; the AI copilot passes an
+      // `ai:<agent>` actor so its approvals are attributable in the audit log.
+      actor: actor ?? 'user:current',
       action: `listing.${decision === 'ok' ? 'approve' : decision === 'nok' ? 'reject' : 'hold'}`,
       resource: `listing:${before.id}`,
       before: { status: before.status },
