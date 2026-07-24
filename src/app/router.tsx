@@ -13,6 +13,7 @@ import { CategoriesListPage, CategoryDetailPage } from '@/features/categories';
 import { LocationsListPage, ProvinceDetailPage } from '@/features/locations';
 import { ReportsListPage, ReportDetailPage } from '@/features/messages';
 import { PackagesListPage, PaymentsListPage, PaymentDetailPage } from '@/features/promotions';
+import { ReportsPage } from '@/features/reports';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -124,7 +125,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'reports',
-        Component: () => <PlaceholderPage title="Raporlar & Analitik" />,
+        Component: ReportsPage,
         handle: meta({ title: 'Raporlar & Analitik', permission: 'report.view', aiEntity: 'report' }),
       },
       {

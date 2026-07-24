@@ -9,6 +9,7 @@ import { locationsHandlers } from '@/features/locations/api/handlers';
 import { reportsHandlers } from '@/features/messages/api/handlers';
 import { promotionsHandlers } from '@/features/promotions/api/handlers';
 import { dashboardHandlers } from '@/features/dashboard/api/handlers';
+import { reportsHandlers as analyticsHandlers } from '@/features/reports/api/handlers';
 
 /**
  * Demo endpoint proving the resource contract:
@@ -51,6 +52,8 @@ export const handlers = [
   ...usersHandlers,
   ...categoriesHandlers,
   ...locationsHandlers,
+  // Exact `/reports/overview` must precede the messages `/reports/:id` param route.
+  ...analyticsHandlers,
   ...reportsHandlers,
   ...promotionsHandlers,
   ...dashboardHandlers,

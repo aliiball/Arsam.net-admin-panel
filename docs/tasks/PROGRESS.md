@@ -553,3 +553,52 @@ Entry format:
     `GET /packages/:id` endpoint exists for completeness.
 - Suggested commit message:
   `feat(promotions): doping packages CRUD + payments/refund vertical — guardrailed refunds vs MSW + audit`
+
+## 2026-07-24 Task 012 — Raporlar & Analitik
+- Built: `features/reports` — a READ-ONLY analytics vertical deriving every metric from the EXISTING mock DBs
+  (`getListingsSnapshot`/`getPaymentsSnapshot`/`getReportsSnapshot`), NO new seed data. Pure, deterministic
+  helpers in `src/lib/analytics.ts` (`dayKey`, `sumBy`, `rateOf`, `shiftDayKey`, `eachDayKey`, `latest/earliestDayKey`,
+  `countByDay`/`sumByDay`, `buildDailySeries` gap-fills days with 0) — NO `Date.now()`/argless `new Date()`; day math
+  parses explicit `YYYY-MM-DDT00:00:00Z` strings. `features/reports/lib/overview.ts` `computeOverview(input, range)`
+  (also pure): resolves the `[from,to]` window from the LATEST `createdAt` in data (data-derived "today", clamps to
+  earliest for `all`), then scopes KPIs (totalListings/activeListings/totalRevenue [gross paid − refunds, failed
+  excluded]/refundRate/pendingModeration/openReports), listings + revenue daily trends, moderation funnel
+  (submitted→pending/active/rejected), and category/status donut breakdowns to that window. Zod-first schemas
+  (`reportsRange` 7d|30d|90d|all, `metricPoint`, `breakdownSlice`, `funnelStage`, `reportsKpis`, `reportsOverview`);
+  the handler `reportsOverviewSchema.parse`s its own envelope. MSW `GET /reports/overview?range=` (range `safeParse`
+  → falls back to 30d) registered in the central registry BEFORE the messages `/reports/:id` param route (exact path
+  must win the match — the messages "reports"=complaints resource shares the `/reports` prefix). Hook
+  `useReportsOverview(range)` (queryKey by range, keepPreviousData). New primitive `components/data/LineChartCard`
+  (recharts Line/Area variants, chart-1..5 tokens, ResponsiveContainer, loading + empty[all-zero] branches, and an
+  always-present `sr-only` data table so color is never the sole signal). Page `ReportsPage`: range Tabs selector +
+  6 KPI tiles + ilan-trendi line + gelir-trendi area (₺) + moderasyon-hunisi bar + kategori/durum donuts; every chart
+  has a per-chart `ChartExportMenu` (CSV/XLS of its underlying data via `lib/export`). Router: `/reports`
+  PlaceholderPage → `ReportsPage` (routeMeta + `report.view` already gated at route level). Full-DoD stories for
+  LineChartCard + ReportsPage (Default/Loading/Empty/Error/Mobile + play; page `Error` drives a REAL `isError` via
+  `seedQueryError`). Unit tests: `analytics.test.ts` (bucket/shift/series determinism) + `reports/api/handlers.test.ts`
+  (window resolution, revenue = paid − refunds, refund rate, funnel counts, schema-valid envelope, range fallback,
+  determinism).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (734/734, 124 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 2 blocking a11y gaps, BOTH FIXED before checkpoint:
+  (1) the new range-selector `Tabs` triggers were <44px (shared `ui/tabs.tsx` is `h-9`/`py-1`) → added `min-h-11 px-3`
+  on the triggers + `h-auto flex-wrap` on the list, page-local override only (shared primitive untouched);
+  (2) the moderation-funnel `BarChart` (reused bare `ChartCard`) had no `sr-only` data summary like `LineChartCard`
+  → wrapped it with a mirrored `sr-only` table (Aşama/Adet). Re-verified green (734/734, build-storybook PASS).
+  Deferred (non-blocking, tracked): `ErrorState`/`ChartCard`/`DonutChartCard` are shared pre-existing primitives —
+  `ErrorState`'s retry button + `ChartCard`'s missing built-in sr-only summary are cross-cutting; fold "extend
+  `ChartCard` with an optional accessible summary + bump `ErrorState` retry to 44px" into the Aşama 5 a11y pass.
+  Funnel bar chart doesn't show an empty-branch message at all-zero (the Empty story still proves line/area/donut
+  empty-out) — minor polish.
+- Decisions/assumptions:
+  - Read-only: this module NEVER writes to `lib/audit`; it only reads snapshots. Revenue is attributed to a payment's
+    `createdAt` day (refunds fold into that day's net) for a deterministic single-series trend — real per-refund dates
+    arrive with FastAPI.
+  - Endpoint stays `/reports/overview` per the task; the `/reports` prefix collision with the messages complaints
+    resource is resolved purely by handler ordering (exact before param), not by renaming.
+  - `report.view` already lives on finance + analyst + super-admin (matrix + `docs/PERMISSIONS.md` already synced) —
+    no permission change needed; route-level `RouteGuard` gates the page, so no redundant in-page `<Can>` wrapper.
+  - KPIs are windowed (not global lifetime totals) so the range selector actually changes the numbers.
+  - Bundle ~2.0MB (recharts already in graph) — reinforces the deferred Aşama 5 route-level `lazy()` code-split.
+- Suggested commit message:
+  `feat(reports): read-only analytics vertical — KPI + trend/funnel/donut charts, per-chart export vs derived metrics`

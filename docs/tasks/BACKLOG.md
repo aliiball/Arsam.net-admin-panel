@@ -15,6 +15,8 @@
   gerçek page-error story'leri `seedQueryError` ile). ✅
 - **011** — Doping & Ödemeler (paket CRUD + aktif/arşiv; ödeme list/detail + guardrail'li iade [reason zorunlu +
   tutar ≤ kalan, server-side 422] + audit; finance rolü). ✅
+- **012** — Raporlar & Analitik (READ-ONLY analitik: mevcut mock DB'lerden türetilmiş KPI + trend/huni/donut
+  grafikleri, per-chart CSV/XLS export; `LineChartCard` primitifi; saf/deterministik `lib/analytics`). ✅
 
 ## Sıradaki fazlar
 - **006 — Aşama 2: Harita & dataviz katmanı** — `MapView` (React Leaflet + markercluster), ek grafik
