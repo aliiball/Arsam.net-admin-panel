@@ -15,6 +15,7 @@ import { ReportsListPage, ReportDetailPage } from '@/features/messages';
 import { PackagesListPage, PaymentsListPage, PaymentDetailPage } from '@/features/promotions';
 import { ReportsPage } from '@/features/reports';
 import { AuditListPage } from '@/features/audit';
+import { RbacPage } from '@/features/rbac';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -136,7 +137,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'rbac',
-        Component: () => <PlaceholderPage title="Roller & İzinler" />,
+        Component: RbacPage,
         handle: meta({ title: 'Roller & İzinler', permission: 'rbac.manage', aiEntity: 'rbac' }),
       },
       {

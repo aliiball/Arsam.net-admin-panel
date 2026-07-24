@@ -656,3 +656,60 @@ Entry format:
   - `audit.view` already lives on analyst + super-admin (matrix) and gates the route — no permission change needed.
 - Suggested commit message:
   `feat(audit): filterable read-only audit table + shared AuditTimeline; dedupe 6 detail-page timelines`
+
+## 2026-07-25 Task 014 — RBAC (Roller & İzinler)
+- Built: `features/rbac` — a **write vertical over the live permission MODEL** (013 was read-only; this edits
+  authz itself). The core is a **reactive matrix bridge** (`src/lib/permissions/permission-store.ts`): a
+  `useSyncExternalStore` external store holding the LIVE `PermissionMatrix`, seeded from the immutable `matrix`
+  constant via `cloneMatrix`. `getPermissionMatrix`/`setPermissionMatrix`/`resetPermissionMatrix`/`usePermissionMatrix`
+  + a live `can()`. Added `canWith(m, role, perm)` (pure) to `permissions.ts`; the seed-based `can()` stays for
+  legacy/pure use. **Rewired all four authz surfaces to read the live matrix reactively:** `usePermission`/`Can`
+  (`permission-context`), `RouteGuard`, `filterNavByRole`/`usePermittedNav` (`nav-utils`, now takes a matrix arg),
+  and `CommandPalette` — so an edit on `/rbac` reflects in gating/nav/route-guard immediately. Zod-first schemas
+  (`features/rbac/schemas/rbac.ts`: re-exports canonical `Role`/`Permission`/`PermissionMatrix`; `permissionToggleSchema`,
+  `rbacMatrixSchema`; pure `isGranted`/`toggleMatrix` [non-mutating, super-admin no-op]; `EDITABLE_ROLES`/`SUPER_ADMIN`).
+  `data/rbac.ts` `PERMISSION_CATALOG` — all known `resource.action` permissions grouped by resource with Turkish
+  labels + per-action help (12 resources) + `ALL_PERMISSIONS`. MSW handlers (`GET /rbac/matrix` → `{roles, catalog,
+  matrix}`; `POST /rbac/matrix/toggle` → `super-admin` downgrade attempt 422 [self-lockout guard], invalid body 422,
+  idempotent toggles are no-ops [no dup audit]; every real change writes `rbac.grant`/`rbac.revoke`, resource
+  `role:<role>`, before/after `{[permission]: 'açık'|'kapalı'}`). Registered in the central registry (`resetRbacDb()`
+  for tests, `getRbacMatrixSnapshot()`). Hooks: `useRbacMatrix()` + `useTogglePermission()` (optimistic update to BOTH
+  the query cache AND the live store, rollback both on error, re-sync from server envelope on success + sonner toast).
+  Component `PermissionMatrixEditor`: real `<table role="grid">`, resource-grouped `<tbody>` sections, `scope=col/row/
+  colgroup` headers, `sr-only` caption; each editable cell is a 44px-target (`min-h-11 min-w-11` label wrapper)
+  Checkbox with `aria-label="<rol> için <izin>"` (shape+label signal, never color); `super-admin` column is a read-only
+  `*` Badge; every row carries label + `FieldHelp` (help popover, NO `title`) + mono permission code; loading skeleton +
+  empty-catalog branch. Page `RbacPage`: header + editor (fed by the hooks, `disabled` while a toggle is in flight) +
+  `AuditTimeline` change-history panel (reads `role:*` audit, `renderResource` maps `role:<role>`→Turkish label); a
+  `useEffect` syncs server matrix→store while mounted. **Instant/optimistic save UX** (no batch "Kaydet"), matching the
+  users/promotions optimistic pattern. Router: `/rbac` PlaceholderPage → real `RbacPage` (`rbac.manage` route guard
+  already present). `docs/PERMISSIONS.md` synced (canWith + live-store model + super-admin guardrail + catalog pointer).
+  Full-DoD stories for `PermissionMatrixEditor` (Default[toggle play]/Loading/Empty/Disabled/Mobile) + `RbacPage`
+  (Default/Loading/Empty/Error[real `isError` via `seedQueryError`]/Mobile + play). Unit tests: `handlers.test.ts`
+  (envelope, grant+audit, revoke+audit, super-admin 422 guardrail, invalid 422, idempotent no-dup-audit) and
+  `permission-store.test.tsx` (a live `setPermissionMatrix` edit re-renders BOTH `<Can>` AND `RouteGuard` end-to-end;
+  reset restores the seed).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (790/790, 133 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 1 blocking gap, FIXED before checkpoint: `RbacPage` passed
+  `matrix={data?.matrix ?? ({} as never)}` — an unsafe cast forcing an invalid `{}` through `PermissionMatrix` (the
+  DoD bans `any`/`!`/`@ts-ignore`-class escapes) → replaced with `cloneMatrix(seedMatrix)` (type-valid, no cast; the
+  editor shows a skeleton while loading anyway). Applied the reviewer's non-blocking recommendation too: added a
+  DIRECT `RouteGuard` live-reflect test (previously only `<Can>` proved the shared path). Deferred (non-blocking):
+  custom-role CREATION was left out of scope (task said optional/keep-small; the 5 seed roles' matrix editing is the
+  goal) — flag for a later task if needed; pre-existing `FieldHelp` doesn't wire `aria-describedby` popover→field
+  (project-wide `docs/FORMS_UX.md` follow-up, component untouched here).
+- Decisions/assumptions:
+  - **Bridge strategy:** kept `matrix` as the immutable SEED; the runtime copy lives in a `useSyncExternalStore` store
+    (`setPermissionMatrix` always assigns a NEW object so the snapshot ref changes → subscribers re-render). Chose the
+    store over threading a context through `SessionProvider` — least invasive, and `can()`/`canWith` stay pure.
+  - MSW handler keeps its OWN `rbacDb` (the "server" truth + audit writer); the client store is updated by the toggle
+    hook (optimistic) and re-synced from the server envelope on success + by a page effect on load. Global mutable
+    state → `resetRbacDb()` (handler) and `resetPermissionMatrix()` (store, `afterEach`) isolate tests; the append-only
+    audit log can't be reset, so the idempotent-toggle test measures the audit DELTA, not the absolute count.
+  - Audit before/after use `{[permission]: 'açık'|'kapalı'}` so `AuditTimeline`'s `auditDiff` renders a readable
+    `listing.approve: kapalı → açık` line (the permission is the diff KEY, so it shows even though the resource is `role:*`).
+  - Super-admin guardrail is enforced in THREE places: UI (read-only `*` Badge, no checkbox), `toggleMatrix` (no-op),
+    and the handler (422). `rbac.manage` is super-admin-only in the matrix, so only super-admin can reach `/rbac`.
+- Suggested commit message:
+  `feat(rbac): runtime-editable role/permission matrix editor — live authz bridge + toggle vs MSW + audit`

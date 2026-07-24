@@ -15,6 +15,7 @@ import {
 import { useLayout } from '@/lib/layout/layout-context';
 import { flattenNav, navSchema } from '@/config/nav-schema';
 import { useSession } from '@/lib/permissions/permission-context';
+import { usePermissionMatrix } from '@/lib/permissions/permission-store';
 import { filterNavByRole } from './nav-utils';
 import { useCommandPalette } from './command-palette-context';
 
@@ -26,11 +27,12 @@ export function CommandPalette() {
   const { open, setOpen } = useCommandPalette();
   const navigate = useNavigate();
   const { user } = useSession();
+  const matrix = usePermissionMatrix();
   const { setMode, setTheme, toggleDensity } = useLayout();
 
   const navItems = useMemo(
-    () => flattenNav(filterNavByRole(navSchema, user.role)),
-    [user.role],
+    () => flattenNav(filterNavByRole(navSchema, user.role, matrix)),
+    [user.role, matrix],
   );
 
   const run = (fn: () => void) => {

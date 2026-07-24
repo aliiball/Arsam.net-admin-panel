@@ -18,11 +18,24 @@ export const matrix: PermissionMatrix = {
   finance:   ['promotion.sell','payment.refund','report.view','listing.view'],
   analyst:   ['report.view','listing.view','audit.view'],
 };
-export function can(role: Role, p: Permission): boolean {
-  const set = matrix[role];
+export function canWith(m: PermissionMatrix, role: Role, p: Permission): boolean {
+  const set = m[role];
   return set === '*' || set.includes(p);
 }
 ```
+
+The `matrix` constant is the immutable **seed**. At runtime the matrix is editable via
+the RBAC editor (`/rbac`); the live copy lives in `lib/permissions/permission-store`
+(`getPermissionMatrix`/`setPermissionMatrix`, `usePermissionMatrix` React subscription).
+`Can`/`usePermission`/nav filtering/`RouteGuard` all read the LIVE copy, so an edit made
+on `/rbac` reflects everywhere immediately. Every grant/revoke writes an audit entry
+(`rbac.grant`/`rbac.revoke`, resource `role:<role>`).
+
+## Editable-model guardrails
+- **`super-admin` is immutable**: always `'*'` (every permission). The editor renders it
+  read-only and the toggle endpoint returns 422 if a downgrade is attempted (self-lockout guard).
+- The full grantable set is catalogued in `features/rbac/data/rbac.ts` (`PERMISSION_CATALOG`,
+  grouped by resource) — keep it in sync with the seed `matrix` and this file.
 
 ## UI gating rules (hide vs disable)
 - **Hide** when the user could never have the permission in their role (avoid teasing capabilities).

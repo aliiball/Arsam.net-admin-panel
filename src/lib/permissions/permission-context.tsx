@@ -1,6 +1,7 @@
 import * as React from 'react';
 
-import { can, type Permission, type Role } from './permissions';
+import { canWith, type Permission, type Role } from './permissions';
+import { usePermissionMatrix } from './permission-store';
 
 export interface SessionUser {
   id: string;
@@ -45,8 +46,9 @@ export function useSession(): SessionContextValue {
 /** Returns whether the current user holds a permission (or a predicate helper). */
 export function usePermission(permission?: Permission): boolean {
   const { user } = useSession();
+  const matrix = usePermissionMatrix();
   if (!permission) return true;
-  return can(user.role, permission);
+  return canWith(matrix, user.role, permission);
 }
 
 export interface CanProps {

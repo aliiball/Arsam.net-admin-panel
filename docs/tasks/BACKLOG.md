@@ -19,6 +19,8 @@
   grafikleri, per-chart CSV/XLS export; `LineChartCard` primitifi; saf/deterministik `lib/analytics`). ✅
 - **013** — Denetim Kaydı (READ-ONLY: filtrelenebilir `/audit` tablosu + paylaşılan `AuditTimeline`; 6 detay
   sayfasının ad-hoc timeline'ı tekilleştirildi; saf `filterAuditEntries`; AI-vs-insan aktör ayrımı). ✅
+- **014** — RBAC (runtime-editable rol/izin matris editörü; `useSyncExternalStore` canlı-authz köprüsü →
+  `Can`/nav/RouteGuard/CommandPalette anında yansır; super-admin guardrail [UI read-only + 422]; toggle+audit). ✅
 
 ## Sıradaki fazlar
 - **006 — Aşama 2: Harita & dataviz katmanı** — `MapView` (React Leaflet + markercluster), ek grafik

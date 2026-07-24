@@ -33,9 +33,19 @@ export const matrix: PermissionMatrix = {
   analyst: ['report.view', 'listing.view', 'audit.view'],
 };
 
-export function can(role: Role, permission: Permission): boolean {
-  const set = matrix[role];
+/** Pure permission check against an explicit matrix (the runtime-editable copy). */
+export function canWith(m: PermissionMatrix, role: Role, permission: Permission): boolean {
+  const set = m[role];
   return set === '*' || set.includes(permission);
+}
+
+/**
+ * Seed-based permission check (the immutable `matrix` constant). The app uses the
+ * live, runtime-editable copy via `@/lib/permissions/permission-store`; this stays
+ * as a pure helper bound to the seed.
+ */
+export function can(role: Role, permission: Permission): boolean {
+  return canWith(matrix, role, permission);
 }
 
 export const ROLES: Role[] = ['super-admin', 'moderator', 'support', 'finance', 'analyst'];

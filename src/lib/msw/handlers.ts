@@ -11,6 +11,7 @@ import { promotionsHandlers } from '@/features/promotions/api/handlers';
 import { dashboardHandlers } from '@/features/dashboard/api/handlers';
 import { reportsHandlers as analyticsHandlers } from '@/features/reports/api/handlers';
 import { auditHandlers } from '@/features/audit/api/handlers';
+import { rbacHandlers } from '@/features/rbac/api/handlers';
 
 /**
  * Demo endpoint proving the resource contract:
@@ -60,4 +61,6 @@ export const handlers = [
   ...dashboardHandlers,
   // Exact `/audit` route; no param-route prefix collision (audit is read-only).
   ...auditHandlers,
+  // Exact `/rbac/matrix` routes; no param-route prefix collision.
+  ...rbacHandlers,
 ];
