@@ -1,0 +1,197 @@
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { DataTable } from '@/components/data-table/DataTable';
+import { FilterBar } from '@/components/data-table/FilterBar';
+import { useTableUrlState } from '@/components/data-table/use-table-url-state';
+import type { FilterConfig } from '@/components/data-table/types';
+import { exportCsv, exportXls } from '@/lib/export';
+import { api, encodeListQuery } from '@/lib/api/client';
+import type { Paginated } from '@/lib/api/types';
+import { Button } from '@/components/ui/button';
+import { Can } from '@/lib/permissions/permission-context';
+import {
+  REASON_CATEGORIES,
+  REASON_CATEGORY_LABELS,
+  REPORT_PRIORITIES,
+  REPORT_PRIORITY_LABELS,
+  REPORT_STATUS_LABELS,
+  REPORT_STATUSES,
+  REPORT_SUBJECT_TYPE_LABELS,
+  REPORT_SUBJECT_TYPES,
+} from '../data/reports';
+import { reportColumns } from '../components/reportColumns';
+import { ReportActionDialog } from '../components/ReportActionDialog';
+import { useReports, reportKeys } from '../api/queries';
+import type { Report, ReportActionInput } from '../schemas/report';
+
+const filters: FilterConfig[] = [
+  {
+    id: 'status',
+    label: 'Durum',
+    kind: 'faceted',
+    multiple: true,
+    options: REPORT_STATUSES.map((s) => ({ value: s, label: REPORT_STATUS_LABELS[s] })),
+  },
+  {
+    id: 'subjectType',
+    label: 'Tür',
+    kind: 'faceted',
+    multiple: true,
+    options: REPORT_SUBJECT_TYPES.map((t) => ({ value: t, label: REPORT_SUBJECT_TYPE_LABELS[t] })),
+  },
+  {
+    id: 'reasonCategory',
+    label: 'Sebep',
+    kind: 'faceted',
+    multiple: true,
+    options: REASON_CATEGORIES.map((r) => ({ value: r, label: REASON_CATEGORY_LABELS[r] })),
+  },
+  {
+    id: 'priority',
+    label: 'Öncelik',
+    kind: 'faceted',
+    multiple: true,
+    options: REPORT_PRIORITIES.map((p) => ({ value: p, label: REPORT_PRIORITY_LABELS[p] })),
+  },
+];
+
+/** Parse simple Turkish free text into proposed report filters. */
+function parseNaturalLanguage(text: string): Record<string, string | string[]> {
+  const out: Record<string, string | string[]> = {};
+  const lower = text.toLocaleLowerCase('tr');
+  if (lower.includes('açık') || lower.includes('acik') || lower.includes('bekleyen')) out.status = 'open';
+  if (lower.includes('çözül') || lower.includes('cozul')) out.status = 'resolved';
+  if (lower.includes('reddedil')) out.status = 'dismissed';
+  if (lower.includes('üst merci') || lower.includes('ust merci') || lower.includes('escalate')) out.status = 'escalated';
+  if (lower.includes('ilan')) out.subjectType = 'listing';
+  if (lower.includes('kullanıcı') || lower.includes('kullanici')) out.subjectType = 'user';
+  if (lower.includes('mesaj')) out.subjectType = 'message';
+  if (lower.includes('spam')) out.reasonCategory = 'spam';
+  if (lower.includes('dolandırıcı') || lower.includes('dolandirici')) out.reasonCategory = 'fraud';
+  if (lower.includes('uygunsuz')) out.reasonCategory = 'inappropriate';
+  if (lower.includes('yanlış') || lower.includes('yanlis')) out.reasonCategory = 'misinformation';
+  if (lower.includes('yüksek') || lower.includes('yuksek') || lower.includes('acil')) out.priority = 'high';
+  return out;
+}
+
+export function ReportsListPage() {
+  const state = useTableUrlState({ defaultPageSize: 25 });
+  const { data, isLoading, isError, refetch } = useReports(state.query);
+
+  return (
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Mesajlar &amp; Şikayetler</h1>
+          <p className="text-muted-foreground text-sm">
+            İlan, kullanıcı ve mesaj şikayetleri; three-tier moderasyon (çöz / üst mercie taşı / reddet).
+          </p>
+        </div>
+      </header>
+
+      <DataTable
+        columns={reportColumns}
+        data={data?.items ?? []}
+        total={data?.total ?? 0}
+        state={state}
+        getRowId={(r) => r.id}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => void refetch()}
+        filterBar={
+          <FilterBar
+            tableKey="reports"
+            filters={filters}
+            state={state}
+            searchPlaceholder="Konu, açıklama veya şikayet eden ara…"
+            onNaturalLanguage={parseNaturalLanguage}
+          />
+        }
+        renderSubRow={(row) => (
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
+              <Detail label="Şikayet No" value={row.id} />
+              <Detail label="Konu No" value={row.subjectId} />
+              <Detail label="Tür" value={REPORT_SUBJECT_TYPE_LABELS[row.subjectType]} />
+              <Detail label="Sebep" value={REASON_CATEGORY_LABELS[row.reasonCategory]} />
+            </div>
+            <p className="text-muted-foreground">{row.description}</p>
+          </div>
+        )}
+        bulkActions={(ids, _all, clear) => <BulkReportActions ids={ids} clear={clear} />}
+        onExport={async (format, scope, ctx) => {
+          try {
+            let reports: Report[];
+            if (scope === 'selection') {
+              const ids = new Set(ctx.selectedIds);
+              reports = ctx.pageRows.filter((r) => ids.has(r.id));
+            } else if (scope === 'all') {
+              const params = encodeListQuery({
+                page: 1,
+                pageSize: Math.max(data?.total ?? 1000, 1),
+                sort: state.query.sort,
+                filters: state.query.filters,
+              });
+              if (state.query.q) params.set('q', state.query.q);
+              const res = await api.get<Paginated<Report>>('/reports', params);
+              reports = res.items;
+            } else {
+              reports = ctx.pageRows;
+            }
+            const headers = ['Şikayet No', 'Konu', 'Tür', 'Sebep', 'Öncelik', 'Durum', 'Şikayet eden'];
+            const rows = reports.map((r) => [
+              r.id,
+              r.subjectLabel,
+              REPORT_SUBJECT_TYPE_LABELS[r.subjectType],
+              REASON_CATEGORY_LABELS[r.reasonCategory],
+              REPORT_PRIORITY_LABELS[r.priority],
+              REPORT_STATUS_LABELS[r.status],
+              r.reporterName,
+            ]);
+            const exporter = format === 'xls' ? exportXls : exportCsv;
+            exporter('sikayetler', headers, rows);
+            toast.success(`${rows.length} kayıt ${format.toUpperCase()} olarak dışa aktarıldı.`);
+          } catch {
+            toast.error('Dışa aktarma başarısız.');
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function BulkReportActions({ ids, clear }: { ids: string[]; clear: () => void }) {
+  const qc = useQueryClient();
+
+  const run = async (input: ReportActionInput) => {
+    try {
+      await Promise.all(ids.map((id) => api.post(`/reports/${id}/action`, input)));
+      toast.success(`${ids.length} şikayet için işlem uygulandı.`);
+      void qc.invalidateQueries({ queryKey: reportKeys.all });
+      clear();
+    } catch {
+      toast.error('Toplu işlem başarısız.');
+    }
+  };
+
+  return (
+    <Can permission="message.moderate">
+      <div className="flex items-center gap-2">
+        <Button variant="default" onClick={() => void run({ action: 'resolve' })} data-action="resolve" data-entity="report">
+          {ids.length} şikayeti çöz
+        </Button>
+        <ReportActionDialog action="dismiss" onConfirm={run} triggerLabel={`${ids.length} şikayeti reddet`} />
+      </div>
+    </Can>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-muted-foreground text-xs">{label}</dt>
+      <dd className="break-all">{value}</dd>
+    </div>
+  );
+}

@@ -6,6 +6,7 @@ import { listingsHandlers } from '@/features/listings/api/handlers';
 import { usersHandlers } from '@/features/users/api/handlers';
 import { categoriesHandlers } from '@/features/categories/api/handlers';
 import { locationsHandlers } from '@/features/locations/api/handlers';
+import { reportsHandlers } from '@/features/messages/api/handlers';
 import { dashboardHandlers } from '@/features/dashboard/api/handlers';
 
 /**
@@ -49,5 +50,6 @@ export const handlers = [
   ...usersHandlers,
   ...categoriesHandlers,
   ...locationsHandlers,
+  ...reportsHandlers,
   ...dashboardHandlers,
 ];

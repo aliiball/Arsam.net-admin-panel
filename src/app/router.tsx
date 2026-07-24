@@ -11,6 +11,7 @@ import {
 import { UsersListPage, OfficesListPage, UserDetailPage } from '@/features/users';
 import { CategoriesListPage, CategoryDetailPage } from '@/features/categories';
 import { LocationsListPage, ProvinceDetailPage } from '@/features/locations';
+import { ReportsListPage, ReportDetailPage } from '@/features/messages';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -103,8 +104,15 @@ export const router = createBrowserRouter([
       },
       {
         path: 'messages',
-        Component: () => <PlaceholderPage title="Mesajlar & Şikayetler" />,
         handle: meta({ title: 'Mesajlar & Şikayetler', permission: 'message.moderate', aiEntity: 'message' }),
+        children: [
+          { index: true, Component: ReportsListPage },
+          {
+            path: ':id',
+            Component: ReportDetailPage,
+            handle: meta({ title: 'Şikayet Detayı', permission: 'message.moderate', aiEntity: 'message' }),
+          },
+        ],
       },
       {
         path: 'reports',

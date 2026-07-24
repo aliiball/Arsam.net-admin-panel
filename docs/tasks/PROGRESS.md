@@ -444,3 +444,55 @@ Entry format:
     single `location.*` action family disambiguates the three levels without new action names.
 - Suggested commit message:
   `feat(locations): manageable il/ilçe/mahalle taxonomy — hierarchical CRUD, reorder, bulk-archive vs MSW + audit`
+
+## 2026-07-24 Task 010 — Mesajlar & Şikayetler
+- Built: `features/messages` end-to-end vs MSW, following the users vertical as the template (three-tier
+  moderation + reason-required + audit). Zod-first schemas (`reportSchema` id/subjectType[listing|user|message]/
+  subjectId/subjectLabel/reasonCategory[spam|fraud|inappropriate|misinformation|other]/description/status[open|
+  resolved|dismissed|escalated]/priority[low|normal|high]/reporterName/createdAt, `reportActionSchema` with a
+  reason-required refine [dismiss/escalate require reason; resolve does not], `reasonFormSchema`). Taxonomy/labels
+  (`data/reports.ts`: subject types, reason categories, statuses, priorities, actions + `REPORT_ACTION_STATUS`
+  mapping resolve→resolved/dismiss→dismissed/escalate→escalated). Deterministic 30-row seed (mixed subject/reason/
+  priority, skewed toward `open` so the queue has work). MSW handlers (list w/ filter status/subjectType/
+  reasonCategory/priority + q search over subjectLabel/description/reporterName, sort, paginate; detail; single
+  `POST /reports/:id/action` runtime-validated via `reportActionSchema.safeParse` → 422; every write emits an
+  immutable `lib/audit` entry `report.resolve|dismiss|escalate`, resource `report:<id>`, before/after status +
+  reason). Query/mutation hooks (`useReports` keepPreviousData, `useReport`, `useReportAction` optimistic status
+  flip + rollback + sonner toasts). Components: `ReportStatusBadge` (label carries meaning), `ReportPriorityBadge`
+  (icon + label + `aria-label` — color never the sole signal), `ReasonCategoryBadge` (icon + label + aria-label),
+  `ReportDecision` (purpose-built three-tier OK→resolve / Belirsiz→escalate / NOK→dismiss; escalate/dismiss reason
+  required via a focus-managed popover WITH a `FieldHelp` affordance + `aria-describedby`; gated by a single
+  `message.moderate` permission — NOT the listing-coupled ModerationDecision), `ReportActionDialog` (RHF + FieldHelp
+  reason capture for bulk dismiss/escalate), `reportColumns`. Pages: List (`/messages` — DataTable + FilterBar with
+  status/subjectType/reasonCategory/priority facets + NL parser + bulk resolve/dismiss + export CSV/XLS with scope +
+  expandable sub-row showing the quoted description), Detail (`/messages/:id` — complaint meta + quoted-content
+  blockquote + subject deep-link [listing/user] + three-tier `ReportDecision` + audit timeline; closed complaints
+  show a "no further action" note). Router: `messages` PlaceholderPage → real List + `:id` Detail (routeMeta +
+  `message.moderate`). MSW registry updated. Full-DoD stories for every component + both pages (seeded QueryClient +
+  memory-router harness) + a handlers unit test (list/filter/sort, resolve+audit, dismiss/escalate+reason audit,
+  reason-required 422 guardrail for BOTH dismiss and escalate with the row left untouched).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (640/640, 110 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 1 blocking gap, FIXED before checkpoint: `ReportDecision`'s
+  escalate/dismiss reason popover rendered a raw `Label`+`Textarea` (no FieldHelp / no `aria-describedby`) — a
+  Golden-Rule-6 violation → added a `FieldHelp` affordance beside the label, a helper `<p>`, and wired
+  `aria-describedby` into the Textarea. Re-verified green. Non-blocking, tracked: bulk actions cover resolve/dismiss
+  only (matches the task spec "bulk resolve/dismiss"; escalate stays per-row on detail, mirroring users' suspend/ban
+  bulk); the same raw-textarea anti-pattern still exists in the pre-existing `listings/ModerationDecision.tsx`
+  (out of scope — flag to fix when that vertical is next touched).
+- **Debt paid (009 lesson):** page `Error` stories now drive a REAL `isError` state (not an Empty mirror) — added
+  `seedQueryError()` in `page-story-utils` that builds the query cache into an error state deterministically (no
+  network); the List Error story asserts `role="alert"` + a "Tekrar dene" retry button, the Detail Error story
+  asserts the "Şikayet bulunamadı" ErrorState. This is the first vertical with a genuine page-error story; the same
+  helper can retrofit listings/users/categories/locations in a later story-polish pass.
+- Decisions/assumptions:
+  - Three-tier maps OK→resolve (no reason, green), Belirsiz→escalate (reason, outline), NOK→dismiss (reason,
+    destructive). Escalate/dismiss require a reason both in the UI popover and server-side (`safeParse` → 422).
+  - Single `POST /reports/:id/action` endpoint (not three routes); bulk POSTs the same endpoint per id so each audits.
+  - Quoted content is mock (`subjectLabel` + `subjectType` + `description`); real subject relations arrive with
+    FastAPI. Detail page deep-links to the subject for listing/user (message has no detail route).
+  - `message.moderate` already lives on moderator + support (matrix ready) — no permission change needed.
+  - The server refine requires a NON-EMPTY reason (matching the popover); `reasonFormSchema`'s stricter ≥5-char rule
+    is intentionally the dialog-form's client-side rule (bulk `ReportActionDialog`), not enforced by the endpoint.
+- Suggested commit message:
+  `feat(messages): reports/complaints vertical — three-tier moderation queue vs MSW + audit; real page-error stories`
