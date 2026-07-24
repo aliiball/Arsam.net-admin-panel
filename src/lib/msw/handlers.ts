@@ -4,6 +4,7 @@ import { API_BASE_URL } from '@/lib/api/client';
 import type { Paginated } from '@/lib/api/types';
 import { listingsHandlers } from '@/features/listings/api/handlers';
 import { usersHandlers } from '@/features/users/api/handlers';
+import { categoriesHandlers } from '@/features/categories/api/handlers';
 import { dashboardHandlers } from '@/features/dashboard/api/handlers';
 
 /**
@@ -41,4 +42,4 @@ export const demoHandlers = [
 ];
 
 /** Aggregated handler registry. Features register here as they land. */
-export const handlers = [...demoHandlers, ...listingsHandlers, ...usersHandlers, ...dashboardHandlers];
+export const handlers = [...demoHandlers, ...listingsHandlers, ...usersHandlers, ...categoriesHandlers, ...dashboardHandlers];

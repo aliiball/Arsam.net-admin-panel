@@ -9,6 +9,7 @@
 - **Aşama 1** — topnav overflow fix + gerçek Dashboard (KpiCard/ChartCard/stats) + FilterBar save-view dialog. ✅
 - **006 / Aşama 2** — Harita & dataviz (MapView + DonutChartCard; ilan detayı haritası + dashboard donut). ✅
 - **007** — Kullanıcılar & Ofisler (doğrulama/askı/ban + trust skoru, three-tier moderasyon + audit). ✅
+- **008** — Kategoriler & Nitelikler (taksonomi + dinamik nitelik seti CRUD, reorder, bulk-archive + audit). ✅
 
 ## Sıradaki fazlar
 - **006 — Aşama 2: Harita & dataviz katmanı** — `MapView` (React Leaflet + markercluster), ek grafik

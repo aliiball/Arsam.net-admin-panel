@@ -9,6 +9,7 @@ import {
   ModerationQueuePage,
 } from '@/features/listings';
 import { UsersListPage, OfficesListPage, UserDetailPage } from '@/features/users';
+import { CategoriesListPage, CategoryDetailPage } from '@/features/categories';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -65,8 +66,15 @@ export const router = createBrowserRouter([
       },
       {
         path: 'categories',
-        Component: () => <PlaceholderPage title="Kategoriler & Nitelikler" />,
         handle: meta({ title: 'Kategoriler & Nitelikler', permission: 'category.manage', aiEntity: 'category' }),
+        children: [
+          { index: true, Component: CategoriesListPage },
+          {
+            path: ':id',
+            Component: CategoryDetailPage,
+            handle: meta({ title: 'Kategori Detayı', permission: 'category.manage', aiEntity: 'category' }),
+          },
+        ],
       },
       {
         path: 'locations',

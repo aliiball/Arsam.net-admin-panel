@@ -336,3 +336,59 @@ Entry format:
   full-DoD story (Sidebar/Topnav/Mobile/Loading/Empty/Error + play). Also fixed a seed artifact where every
   office landed in one city (type period === ilKeys period) by varying `il` per triplet. Runtime-verified:
   `/users/agents` renders 10 offices, no non-office rows leak. lint/typecheck/test/build still green.
+
+## 2026-07-24 Task 008 — Kategoriler & Nitelikler
+- Built: `features/categories` end-to-end vs MSW, following the listings/users verticals as a template. Zod-first
+  schemas (`attributeFieldSchema` id/key/label/type/required/unit?/options?/order, `categorySchema` with an
+  `attributes[]` set, `categoryFormSchema` + `attributeFormSchema` (select requires ≥1 option via refine),
+  `reorderInputSchema`) + PURE helpers `sortByOrder`/`nextOrder`/`validateAttributeKeyUnique` (unit-tested).
+  Taxonomy metadata (`data/categories.ts`: ATTRIBUTE_TYPES + labels, CATEGORY_STATUSES + labels, curated lucide
+  CATEGORY_ICONS, per-key ATTRIBUTE_DEFS) and `buildSeedCategories()` that DERIVES the seed from the listings
+  vertical's static `CATEGORY_ATTRIBUTES`/`CATEGORY_LABELS` + HEATING/DEED/ZONING enums — one origin, listings
+  form untouched. MSW handlers (list w/ status filter + order-sort, detail, create, patch=update/archive,
+  `POST /categories/reorder`, `POST /:id/attributes` upsert, `POST /:id/attributes/reorder`, `DELETE
+  /:id/attributes/:attrId`) — inputs runtime-validated (`categoryFormSchema`/`attributeFormSchema`/`reorderInputSchema`
+  → 422), every write emits an immutable `lib/audit` entry (`category.create|update|archive|reorder`,
+  `attribute.create|update|delete|reorder`); duplicate category keys 422. `getCategoriesSnapshot()` read bridge
+  (sorted) ready for the listing form to consume later WITHOUT breaking today's static taxonomy. Query/mutation
+  hooks (`useCategories` keepPreviousData, `useCategory`, `useUpsertCategory`, `useReorderCategories` optimistic +
+  rollback, `useUpsertAttribute`, `useReorderAttributes`, `useDeleteAttribute`). Components: `CategoryStatusBadge`,
+  `AttributeTypeBadge` (icon+label+aria-label so type is never color-only), `CategoryFormDialog` (create/edit meta
+  via RHF + FieldHelp), `AttributeFormDialog` (RHF + `useWatch` + `useFieldArray` options editor; FieldHelp on every
+  named field; key-uniqueness guardrail via `validateAttributeKeyUnique`; select requires options), `AttributeEditor`
+  (add/edit/delete + up/down reorder + ConfirmDialog delete), `categoryColumns` (row-level reorder driven by table
+  `meta`). Pages: List (DataTable + FilterBar status facet + NL parser + row reorder + "Yeni kategori" + bulk-archive
+  + export CSV/XLS), Detail/Edit (`/categories/:id` — meta card + edit dialog + AttributeEditor + audit timeline).
+  Router: `/categories` index → List, `/categories/:id` → Detail (routeMeta + `category.manage`); replaced the
+  PlaceholderPage. Added an additive `meta?: unknown` prop to the shared `DataTable` (forwarded to
+  `table.options.meta`) so columns can trigger reorder. Full-DoD stories for every component + both pages (seeded
+  QueryClient + memory-router harness reused from listings `page-story-utils`) + a handlers/helpers unit test proving
+  the pure helpers, list/filter/sort, create+audit, duplicate-key 422, archive-audit, category reorder updates order,
+  attribute upsert(create→update)+audit, delete+audit, attribute reorder, and `getCategoriesSnapshot` sorting.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (530/530, 94 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 3 blocking gaps, all FIXED before checkpoint:
+  (1) native `title="Zorunlu"` on the required marker (help/info must NEVER use `title`) → removed (the icon already
+  carries `aria-label="Zorunlu alan"`); (2) reorder icon buttons overrode `size="icon"` (44px) down to 24px via
+  `size-6` → dropped the override so up/down keep the 44px WCAG target, laid side-by-side to avoid tall rows;
+  (3) the row-selection column had no `bulkActions` wired (dead affordance vs DATA_TABLE_SPEC point 5) → wired a real
+  bulk-archive (gated by `category.manage`, ConfirmDialog, PATCHes each selected active category to `archived`
+  writing one `category.archive` audit entry per id). Non-blocking improvement applied: helper line above the
+  select-options list (rows are `register`-bound without FieldHelp — documented pragmatic exception for a repeating
+  2-cell row). Deferred (non-blocking, tracked): make `DataTableProps<TData, TMeta>` generic (currently a double-cast
+  boundary for `meta`); page `Error` stories mirror `Empty` rather than a real `isError`/500 state (same cross-cutting
+  convention as listings/users — worth one dedicated story-polish task).
+- Decisions/assumptions:
+  - Parallel-build strategy (option (b) from the task): the new module reads FROM the listings taxonomy and exposes
+    `getCategoriesSnapshot()`; `src/features/listings/**` has ZERO diff, so the create-wizard's static
+    `CATEGORY_ATTRIBUTES` still works. Actually binding the wizard to the snapshot is a separate optional step.
+  - Attribute reorder got its own endpoint (`POST /:id/attributes/reorder`, audit `attribute.reorder`) — a small
+    superset of the task's listed attribute audit actions (create|update|delete) — to make the editor's up/down real.
+  - Category reorder only offered on the natural-order view (no active sort/filter/search and single full page); the
+    list page computes `canReorder` and passes reorder callbacks to the columns via the new DataTable `meta` prop.
+  - Numeric form fields: none here (category/attribute meta are all string/enum/boolean/array), so the listings
+    string-then-parse dance wasn't needed; `required` binds a `Switch` via a FormField render-fn.
+  - `category.manage` already existed in `docs/PERMISSIONS.md` and the nav/router; only super-admin (`*`) holds it,
+    which is sufficient for gating — no matrix change needed.
+- Suggested commit message:
+  `feat(categories): manageable taxonomy — category/attribute CRUD, reorder, bulk-archive vs MSW + audit`

@@ -43,6 +43,8 @@ export interface DataTableProps<TData> {
   bulkActions?: (selectedIds: string[], allMatching: boolean, clear: () => void) => React.ReactNode;
   /** Export handler; receives the current page rows + selection. */
   onExport?: (format: ExportFormat, scope: ExportScope, ctx: { pageRows: TData[]; selectedIds: string[] }) => void | Promise<void>;
+  /** Arbitrary table meta forwarded to columns via `table.options.meta`. */
+  meta?: unknown;
   emptyTitle?: string;
   emptyDescription?: string;
 }
@@ -62,6 +64,7 @@ export function DataTable<TData>({
   renderMobileCard,
   bulkActions,
   onExport,
+  meta,
   emptyTitle = 'Kayıt bulunamadı',
   emptyDescription = 'Filtreleri değiştirin ya da yeni bir kayıt oluşturun.',
 }: DataTableProps<TData>) {
@@ -91,6 +94,7 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getRowCanExpand: () => Boolean(renderSubRow),
+    ...(meta !== undefined ? { meta: meta as Record<string, unknown> } : {}),
   });
 
   const rows = table.getRowModel().rows;
