@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 import { ATTRIBUTE_TYPES, CATEGORY_STATUSES, CATEGORY_ICONS } from '../data/categories';
 
+// Re-export the shared ordering helpers so existing `../schemas/category`
+// imports keep working (single origin lives in `@/lib/order`).
+export { sortByOrder, nextOrder } from '@/lib/order';
+
 /** A single select option (value + display label). */
 export const attributeOptionSchema = z.object({
   value: z.string().trim().min(1, 'Değer zorunludur'),
@@ -78,16 +82,6 @@ export type ReorderInput = z.infer<typeof reorderInputSchema>;
 // ---------------------------------------------------------------------------
 // PURE helpers (UI-independent, unit-testable)
 // ---------------------------------------------------------------------------
-
-/** Ascending sort by `order` (stable). Does not mutate the input. */
-export function sortByOrder<T extends { order: number }>(items: T[]): T[] {
-  return [...items].sort((a, b) => a.order - b.order);
-}
-
-/** Next `order` value = max(order) + 1 (0 when empty). */
-export function nextOrder(items: { order: number }[]): number {
-  return items.reduce((max, i) => Math.max(max, i.order), -1) + 1;
-}
 
 /**
  * True when `key` is unique among `existing` attributes, ignoring the field

@@ -10,6 +10,7 @@ import {
 } from '@/features/listings';
 import { UsersListPage, OfficesListPage, UserDetailPage } from '@/features/users';
 import { CategoriesListPage, CategoryDetailPage } from '@/features/categories';
+import { LocationsListPage, ProvinceDetailPage } from '@/features/locations';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -78,8 +79,15 @@ export const router = createBrowserRouter([
       },
       {
         path: 'locations',
-        Component: () => <PlaceholderPage title="Lokasyonlar" />,
         handle: meta({ title: 'Lokasyonlar', permission: 'location.manage', aiEntity: 'location' }),
+        children: [
+          { index: true, Component: LocationsListPage },
+          {
+            path: ':id',
+            Component: ProvinceDetailPage,
+            handle: meta({ title: 'İl Detayı', permission: 'location.manage', aiEntity: 'location' }),
+          },
+        ],
       },
       {
         path: 'promotions',

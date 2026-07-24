@@ -392,3 +392,55 @@ Entry format:
     which is sufficient for gating — no matrix change needed.
 - Suggested commit message:
   `feat(categories): manageable taxonomy — category/attribute CRUD, reorder, bulk-archive vs MSW + audit`
+
+## 2026-07-24 Task 009 — Lokasyonlar (il / ilçe / mahalle)
+- Built: `features/locations` end-to-end vs MSW, replicating the 008 categories vertical as a THREE-level
+  hierarchy. Zod-first schemas (`neighborhoodSchema` id/name/order, `districtSchema` id/key/label/order/status/
+  neighborhoods[], `provinceSchema` id/code[plaka]/label/order/status/districts[], + form schemas
+  `provinceFormSchema` [2-digit plaka regex], `districtFormSchema` [slug key], `neighborhoodFormSchema` [name],
+  `reorderInputSchema`) + PURE helpers `validateCodeUnique`/`validateKeyUnique` (unit-tested). Extracted the
+  shared ordering helpers to a new `src/lib/order.ts` (`sortByOrder`/`nextOrder`); `categories/schemas/category.ts`
+  now RE-EXPORTS them (single origin, no behavior change, no duplication) and `locations/schemas/location.ts` does
+  the same. Seed DERIVED from the listings vertical's static `LOCATIONS` (`buildSeedProvinces()`), so `taxonomy.ts`
+  has ZERO diff (no regression); `getLocationsSnapshot()` read bridge ready for the listing form/filters to consume
+  later. MSW handlers (province list w/ status filter + code/label search + order-sort, detail, create, patch=
+  update/archive, reorder; district upsert/reorder/delete; neighborhood upsert/reorder/delete) — inputs runtime-
+  validated (`safeParse` → 422; duplicate plaka & duplicate district-key → 422), every write emits an immutable
+  `lib/audit` entry (`location.create|update|archive|delete|reorder` with a `level` field in the payload
+  distinguishing province/district/neighborhood; resource `province:<id>` so district/neighborhood changes show on
+  the province timeline, top-level reorder `province:*`). Query/mutation hooks (`useProvinces` keepPreviousData,
+  `useProvince`, `useUpsertProvince`, `useReorderProvinces` optimistic + rollback, `useUpsertDistrict`,
+  `useReorderDistricts`, `useDeleteDistrict`, `useUpsertNeighborhood`, `useReorderNeighborhoods`,
+  `useDeleteNeighborhood` — neighborhood hooks take `provinceId` and carry `districtId` in the mutate payload).
+  Components: `LocationStatusBadge`, `provinceColumns` (row-level reorder via table `meta`), `ProvinceFormDialog`/
+  `DistrictFormDialog`/`NeighborhoodFormDialog` (RHF + FieldHelp on every field), `LocationTree` (the hierarchical
+  editor — generalizes 008 `AttributeEditor` to two nested levels: districts with add/edit/delete/reorder + an
+  expandable per-district `NeighborhoodEditor` with the same affordances; all mutation hooks called once at the top
+  and threaded down as props). Pages: List (`/locations` — DataTable + FilterBar status facet + NL parser + row
+  reorder + "Yeni il" + bulk-archive + export CSV/XLS + expandable district-summary sub-row), Detail/Edit
+  (`/locations/:id` — province meta card + edit dialog + `LocationTree` + audit timeline). Router: `/locations`
+  index → List, `/locations/:id` → ProvinceDetail (routeMeta + `location.manage`); replaced the PlaceholderPage.
+  Full-DoD stories for every component + both pages (seeded QueryClient + memory-router harness reused from listings
+  `page-story-utils`) + a handlers/helpers unit test (pure helpers, list/filter/sort, create+audit, duplicate-plaka
+  422, invalid-plaka 422, archive-audit, province reorder, district upsert[create→update]+audit, duplicate district-
+  key 422, district delete+audit, district reorder, neighborhood upsert/reorder/delete, snapshot sorting).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (590/590, 102 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → NO blocking issues, "Ready to commit: YES". Applied one non-blocking
+  cleanup (dropped unused `LOCATION_LEVELS`/`LOCATION_LEVEL_LABELS` dead exports; audit payload uses the narrowed
+  string literals directly). Deferred (non-blocking, tracked): page `Error` stories mirror `Empty` rather than a real
+  `isError`/500 state — the SAME cross-cutting convention as listings/users/categories; folded into the 010 task
+  notes to fix the pattern there. `location.manage` remains super-admin-only (`*`), identical to `category.manage`
+  and sufficient for gating — no matrix change.
+- Decisions/assumptions:
+  - Parallel-build strategy (task risk note): the new module READS from listings' `LOCATIONS` and exposes
+    `getLocationsSnapshot()`; `src/features/listings/**` + `taxonomy.ts` have ZERO diff, so the create-wizard's
+    cascading location step + all il/ilçe/mahalle filters still work off the static taxonomy. Binding them to the
+    snapshot is a separate optional step.
+  - Shared `lib/order.ts` chosen over copy-paste (task recommendation); categories re-exports for backward compat.
+  - Neighborhoods have NO status (only id/name/order per the task); province + district carry status. District
+    delete cascades its neighborhoods (single `location.delete` audit entry for the district).
+  - Province id `P-<plaka>` for seeded rows (`P-new-N` for created); audit `level` lives inside before/after so the
+    single `location.*` action family disambiguates the three levels without new action names.
+- Suggested commit message:
+  `feat(locations): manageable il/ilçe/mahalle taxonomy — hierarchical CRUD, reorder, bulk-archive vs MSW + audit`

@@ -1,0 +1,193 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { DataTable } from '@/components/data-table/DataTable';
+import { FilterBar } from '@/components/data-table/FilterBar';
+import { useTableUrlState } from '@/components/data-table/use-table-url-state';
+import type { FilterConfig } from '@/components/data-table/types';
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog';
+import { Button } from '@/components/ui/button';
+import { exportCsv, exportXls } from '@/lib/export';
+import { api } from '@/lib/api/client';
+import { Can } from '@/lib/permissions/permission-context';
+import { LOCATION_STATUSES, LOCATION_STATUS_LABELS } from '../data/locations';
+import { provinceColumns, type ProvinceTableMeta } from '../components/provinceColumns';
+import { ProvinceFormDialog } from '../components/ProvinceFormDialog';
+import { useProvinces, provinceKeys } from '../api/queries';
+import { useReorderProvinces, useUpsertProvince } from '../api/mutations';
+import { sortByOrder, type Province } from '../schemas/location';
+
+const filters: FilterConfig[] = [
+  {
+    id: 'status',
+    label: 'Durum',
+    kind: 'faceted',
+    multiple: true,
+    options: LOCATION_STATUSES.map((s) => ({ value: s, label: LOCATION_STATUS_LABELS[s] })),
+  },
+];
+
+function parseNaturalLanguage(text: string): Record<string, string | string[]> {
+  const out: Record<string, string | string[]> = {};
+  const lower = text.toLocaleLowerCase('tr');
+  if (lower.includes('arşiv') || lower.includes('arsiv')) out.status = 'archived';
+  if (lower.includes('aktif')) out.status = 'active';
+  return out;
+}
+
+export function LocationsListPage() {
+  const state = useTableUrlState({ defaultPageSize: 25 });
+  const { data, isLoading, isError, refetch } = useProvinces(state.query);
+  const upsert = useUpsertProvince();
+  const reorder = useReorderProvinces(state.query);
+  const navigate = useNavigate();
+
+  const items = data?.items ?? [];
+  const ordered = sortByOrder(items);
+  // Reordering only makes sense on the unfiltered, unsorted natural-order view.
+  const canReorder =
+    state.query.sort.length === 0 &&
+    Object.keys(state.query.filters).length === 0 &&
+    state.query.q === '' &&
+    ordered.length === (data?.total ?? 0);
+
+  const meta: ProvinceTableMeta = {
+    canReorder,
+    reordering: reorder.isPending,
+    isFirst: (row) => ordered[0]?.id === row.id,
+    isLast: (row) => ordered[ordered.length - 1]?.id === row.id,
+    onMove: (row, dir) => {
+      const index = ordered.findIndex((p) => p.id === row.id);
+      const target = index + dir;
+      if (target < 0 || target >= ordered.length) return;
+      const ids = ordered.map((p) => p.id);
+      [ids[index], ids[target]] = [ids[target]!, ids[index]!];
+      reorder.mutate(ids);
+    },
+  };
+
+  return (
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Lokasyonlar</h1>
+          <p className="text-muted-foreground text-sm">
+            İl → ilçe → mahalle coğrafi taksonomisi. İlan formu ve şehir filtreleri bu tek kaynaktan beslenir.
+          </p>
+        </div>
+        <Can permission="location.manage">
+          <ProvinceFormDialog
+            onSubmit={async (values) => {
+              const created = await upsert.mutateAsync({ values });
+              navigate(`/locations/${created.id}`);
+            }}
+          />
+        </Can>
+      </header>
+
+      <DataTable
+        columns={provinceColumns}
+        data={ordered}
+        total={data?.total ?? 0}
+        state={state}
+        meta={meta}
+        getRowId={(r) => r.id}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => void refetch()}
+        emptyTitle="İl bulunamadı"
+        emptyDescription="Filtreleri değiştirin ya da yeni bir il oluşturun."
+        filterBar={
+          <FilterBar
+            tableKey="locations"
+            filters={filters}
+            state={state}
+            searchPlaceholder="İl adı veya plaka ara…"
+            onNaturalLanguage={parseNaturalLanguage}
+          />
+        }
+        bulkActions={(ids, _all, clear) => (
+          <BulkProvinceActions provinces={ordered.filter((p) => ids.includes(p.id))} clear={clear} />
+        )}
+        renderSubRow={(row) => (
+          <div className="text-sm">
+            {row.districts.length > 0 ? (
+              <p>
+                <span className="text-muted-foreground text-xs">İlçeler: </span>
+                {sortByOrder(row.districts)
+                  .map((d) => d.label)
+                  .join(', ')}
+              </p>
+            ) : (
+              <p className="text-muted-foreground">Bu ile bağlı ilçe yok.</p>
+            )}
+          </div>
+        )}
+        onExport={(format) => {
+          try {
+            const headers = ['Sıra', 'Plaka', 'İl', 'İlçe Sayısı', 'Durum'];
+            const rows = ordered.map((p: Province) => [
+              String(p.order + 1),
+              p.code,
+              p.label,
+              String(p.districts.length),
+              LOCATION_STATUS_LABELS[p.status],
+            ]);
+            const exporter = format === 'xls' ? exportXls : exportCsv;
+            exporter('lokasyonlar', headers, rows);
+            toast.success(`${rows.length} il ${format.toUpperCase()} olarak dışa aktarıldı.`);
+          } catch {
+            toast.error('Dışa aktarma başarısız.');
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+/** Bulk-archive the selected provinces (each write emits a location.archive audit entry). */
+function BulkProvinceActions({ provinces, clear }: { provinces: Province[]; clear: () => void }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const archivable = provinces.filter((p) => p.status !== 'archived');
+
+  const run = async () => {
+    try {
+      await Promise.all(
+        archivable.map((p) =>
+          api.patch(`/provinces/${p.id}`, { code: p.code, label: p.label, status: 'archived' }),
+        ),
+      );
+      toast.success(`${archivable.length} il arşivlendi.`);
+      void qc.invalidateQueries({ queryKey: provinceKeys.all });
+      clear();
+    } catch {
+      toast.error('Toplu arşivleme başarısız.');
+    }
+  };
+
+  return (
+    <Can permission="location.manage">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={archivable.length === 0}
+        onClick={() => setOpen(true)}
+        data-action="bulk-archive"
+        data-entity="province"
+      >
+        {archivable.length > 0 ? `${archivable.length} ili arşivle` : 'Zaten arşivli'}
+      </Button>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="İlleri arşivle"
+        description={`Seçili ${archivable.length} il arşivlenecek ve yeni ilanlarda gizlenecek. Bu işlem denetim kaydına yazılır.`}
+        confirmLabel="Arşivle"
+        onConfirm={run}
+      />
+    </Can>
+  );
+}
