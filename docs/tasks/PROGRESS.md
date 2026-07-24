@@ -237,3 +237,41 @@ Entry format:
 - Suggested commit message:
   `feat(dashboard): real dashboard (KPI + chart + stats); fix topnav overflow; FilterBar save-view dialog`
 
+## 2026-07-24 Task 006 — Aşama 2: Harita & Dataviz Katmanı
+- Built: `MapView` (`components/data`) — React Leaflet 5 + `leaflet.markercluster`. Token-styled pins
+  (`L.divIcon`, `--color-primary`/`--color-chart-1`, no default-icon asset bug) + cluster badges via a
+  custom `iconCreateFunction`; imperative `ClusterLayer` child (`useMap`) syncs markers into a
+  `markerClusterGroup`, binds popups, fires `onMarkerClick`, and fit-bounds when no `center` is given.
+  A11y: the map region is a labelled `role="region"` (aria-label lives on the wrapper `<div>` because
+  react-leaflet swallows unknown props on `MapContainer`), plus an always-rendered `sr-only` marker list
+  of focusable buttons (accessible alternative + keyboard) so the map is never the sole signal; Leaflet
+  zoom controls bumped to 44px targets in `theme.css`. `DonutChartCard` — recharts `PieChart` donut with
+  center total overlay + token-colored legend (label + value, color never the sole signal), chart-1..5
+  tokens, empty-state branch. `features/listings/data/geo.ts` — approx il/ilçe centroids + deterministic
+  `listingLatLng` (FNV-1a id hash → ±0.02° jitter) as PURE functions (unit-tested in jsdom). Integrations:
+  `ListingDetailPage` gets a "Konum" single-marker map card (labelled "yaklaşık konum"); `DashboardPage`
+  gets a `byStatus` donut (category bar chart narrowed from col-span-2 to a 3-up row). `theme.css` gained an
+  unlayered Leaflet theming block (container/controls/popups → tokens). Full-DoD stories for MapView (+
+  SingleMarker) and DonutChartCard (Default/Loading/Empty/Error/Mobile + play); DashboardPage story now
+  seeds real `byStatus` and asserts the donut; geo unit test (determinism + jitter envelope + fallbacks).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (425/425, 78
+  files) · build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 3 blocking gaps, all FIXED before checkpoint:
+  (1) `MapContainer aria-label` was swallowed by react-leaflet → moved `role="region"`+`aria-label` to the
+  wrapper div; (2) Leaflet zoom buttons were 26px → 44px in `theme.css`; (3) `DashboardPage.Default` story
+  demoed the donut with empty data → seeded `byStatus` + added a play assertion. Non-blocking items noted.
+- Decisions/assumptions:
+  - Coordinates are MOCK/approximate (il+ilçe centroids only, no backend geo) — `listingLatLng` jitters by
+    a deterministic id hash so co-located listings don't stack on one pixel. Real coords arrive with FastAPI.
+  - Leaflet markers/clusters are styled via inline `L.divIcon` HTML referencing CSS var tokens (the only
+    way to token-style outside Tailwind's class layer); no hardcoded hex/rgb — shadows use `--shadow-md`.
+  - No `mounted` client-guard: this is an SSR-free SPA and the Storybook browser project runs real Chromium,
+    so `MapContainer` renders directly (removing it also cleared a lint "setState in effect" error).
+  - OSM tiles are fetched live (unmocked) in stories/tests — acceptable now; flagged to mock + make the tile
+    provider configurable when hardening (Aşama 5).
+  - Stretch "listings map-view toggle" DEFERRED (not built) — detail-page + dashboard integration covers the
+    acceptance criteria; revisit under Reports/Analytics (012) or polish (017).
+  - Bundle grew to ~1.8MB (leaflet + markercluster) — reinforces deferred route-level `lazy()` (Aşama 5),
+    with `MapView` a prime lazy-load candidate since it's only on the detail page.
+- Suggested commit message:
+  `feat(map): token-styled MapView (leaflet+markercluster) + DonutChartCard; wire detail map + dashboard donut`

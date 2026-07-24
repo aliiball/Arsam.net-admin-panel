@@ -244,3 +244,32 @@
     }
   }
 }
+
+/* Leaflet map theming — token-driven overrides for the third-party map styles.
+   Unlayered so they win over leaflet's own stylesheet regardless of import order. */
+.leaflet-container {
+  background: var(--muted);
+  font-family: var(--font-sans);
+}
+.leaflet-bar a,
+.leaflet-control-zoom a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  background: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+}
+.leaflet-bar a:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--shadow-md);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--muted-foreground);
+}

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { LoadingState } from '@/components/feedback/LoadingState';
 import { ErrorState } from '@/components/feedback/ErrorState';
+import { MapView } from '@/components/data/MapView';
 import { getAuditFor } from '@/lib/audit';
 import {
   CATEGORY_LABELS,
@@ -14,6 +15,7 @@ import {
   LOCATIONS,
   ZONING_LABELS,
 } from '../data/taxonomy';
+import { listingLatLng } from '../data/geo';
 import { useListing } from '../api/queries';
 import { useModerateListing } from '../api/mutations';
 import { ListingStatusBadge } from '../components/ListingStatusBadge';
@@ -30,6 +32,8 @@ export function ListingDetailPage() {
 
   const a = listing.attributes;
   const audit = getAuditFor(`listing:${listing.id}`);
+  const coords = listingLatLng(listing);
+  const locationText = `${LOCATIONS[listing.il]?.districts[listing.ilce]?.label ?? ''}, ${LOCATIONS[listing.il]?.label ?? ''}`;
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -77,6 +81,35 @@ export function ListingDetailPage() {
           </dl>
         </CardContent>
       </Card>
+
+      {coords && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Konum</CardTitle>
+            <CardDescription>
+              {locationText} · {listing.mahalle}{' '}
+              <span className="text-muted-foreground">(yaklaşık konum)</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MapView
+              markers={[
+                {
+                  id: listing.id,
+                  lat: coords.lat,
+                  lng: coords.lng,
+                  label: listing.title,
+                  popup: `${listing.title} — ${listing.price.toLocaleString('tr-TR')} ₺`,
+                },
+              ]}
+              center={coords}
+              zoom={12}
+              height={300}
+              ariaLabel={`${listing.title} konum haritası`}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

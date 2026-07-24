@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { KpiCard } from '@/components/data/KpiCard';
 import { ChartCard } from '@/components/data/ChartCard';
+import { DonutChartCard } from '@/components/data/DonutChartCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { getAuditLog } from '@/lib/audit';
 import type { TableQuery } from '@/components/data-table/types';
@@ -63,7 +64,6 @@ export function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Category chart */}
         <ChartCard
-          className="lg:col-span-2"
           title="Kategoriye göre ilanlar"
           description="Aktif taksonomi dağılımı"
         >
@@ -84,6 +84,16 @@ export function DashboardPage() {
             <Bar dataKey="count" name="İlan" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ChartCard>
+
+        {/* Status distribution donut */}
+        <DonutChartCard
+          title="Duruma göre dağılım"
+          description="İlan yaşam döngüsü"
+          centerLabel="ilan"
+          data={(stats?.byStatus ?? [])
+            .filter((s) => s.count > 0)
+            .map((s) => ({ name: s.label, value: s.count }))}
+        />
 
         {/* Recent moderation decisions (audit) */}
         <Card className="gap-3">

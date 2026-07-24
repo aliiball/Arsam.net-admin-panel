@@ -27,7 +27,14 @@ const STATS: DashboardStats = {
     { category: 'devremulk', label: 'Devremülk', count: 8 },
     { category: 'turistik', label: 'Turistik Tesis', count: 8 },
   ],
-  byStatus: [],
+  byStatus: [
+    { status: 'active', label: 'Yayında', count: 20 },
+    { status: 'pending', label: 'Beklemede', count: 12 },
+    { status: 'rejected', label: 'Reddedildi', count: 8 },
+    { status: 'draft', label: 'Taslak', count: 10 },
+    { status: 'expired', label: 'Süresi doldu', count: 6 },
+    { status: 'archived', label: 'Arşivlendi', count: 4 },
+  ],
 };
 
 function render(seeded = true) {
@@ -62,6 +69,9 @@ export const Default: Story = {
     await expect(canvas.getByRole('heading', { name: 'Genel Bakış' })).toBeInTheDocument();
     await expect(await canvas.findByText('Toplam İlan')).toBeInTheDocument();
     await expect(canvas.getByText('Kategoriye göre ilanlar')).toBeInTheDocument();
+    // Status donut renders with real seeded data (unique legend label + title).
+    await expect(canvas.getByText('Duruma göre dağılım')).toBeInTheDocument();
+    await expect(canvas.getByText('Arşivlendi')).toBeInTheDocument();
   },
 };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
