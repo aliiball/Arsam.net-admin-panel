@@ -1,0 +1,36 @@
+name: Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit + Storybook tests
+        run: npm run test -- --run
+      - name: Build
+        run: npm run build
+      - name: Install Playwright (for Storybook tests)
+        run: npx playwright install --with-deps chromium
+      - name: Build Storybook
+        run: npm run build-storybook
+      - name: Storybook interaction + a11y tests
+        run: npx vitest --run --project=storybook
