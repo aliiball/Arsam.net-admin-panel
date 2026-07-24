@@ -10,6 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -47,6 +56,8 @@ export function FilterBar({
   const { views, saveView, deleteView } = useSavedViews(tableKey);
   const [nlText, setNlText] = useState('');
   const [nlProposal, setNlProposal] = useState<Record<string, string | string[]> | null>(null);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [viewName, setViewName] = useState('');
 
   const chips = buildChips(filters, state);
 
@@ -165,8 +176,8 @@ export function FilterBar({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onSelect={() => {
-                const name = window.prompt('Görünüm adı');
-                if (name) saveView(name, state.search);
+                setViewName('');
+                setSaveOpen(true);
               }}
               data-action="save-view"
               data-entity="table"
@@ -176,6 +187,48 @@ export function FilterBar({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Save-view dialog (replaces the native window.prompt) */}
+      <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Görünümü kaydet</DialogTitle>
+            <DialogDescription>Mevcut filtre, sıralama ve arama bir isimle saklanır.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-1.5">
+            <Label htmlFor="save-view-name">Görünüm adı</Label>
+            <Input
+              id="save-view-name"
+              value={viewName}
+              onChange={(e) => setViewName(e.target.value)}
+              placeholder="Örn. Bekleyen arsa ilanları"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && viewName.trim()) {
+                  saveView(viewName.trim(), state.search);
+                  setSaveOpen(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Vazgeç</Button>
+            </DialogClose>
+            <Button
+              disabled={!viewName.trim()}
+              onClick={() => {
+                saveView(viewName.trim(), state.search);
+                setSaveOpen(false);
+              }}
+              data-action="confirm-save-view"
+              data-entity="table"
+            >
+              Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Active filter chips */}
       {(chips.length > 0 || state.q) && (

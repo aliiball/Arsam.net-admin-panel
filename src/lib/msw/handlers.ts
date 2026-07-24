@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { API_BASE_URL } from '@/lib/api/client';
 import type { Paginated } from '@/lib/api/types';
 import { listingsHandlers } from '@/features/listings/api/handlers';
+import { dashboardHandlers } from '@/features/dashboard/api/handlers';
 
 /**
  * Demo endpoint proving the resource contract:
@@ -39,4 +40,4 @@ export const demoHandlers = [
 ];
 
 /** Aggregated handler registry. Features register here as they land. */
-export const handlers = [...demoHandlers, ...listingsHandlers];
+export const handlers = [...demoHandlers, ...listingsHandlers, ...dashboardHandlers];

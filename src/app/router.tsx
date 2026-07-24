@@ -1,13 +1,13 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { AppShell } from '@/components/shell/AppShell';
+import { DashboardPage } from '@/features/dashboard';
 import {
   ListingsListPage,
   ListingDetailPage,
   ListingCreatePage,
   ModerationQueuePage,
 } from '@/features/listings';
-import { DemoPage } from './pages/DemoPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -22,7 +22,7 @@ export const router = createBrowserRouter([
     path: '/',
     Component: AppShell,
     children: [
-      { index: true, Component: DemoPage, handle: meta({ title: 'Genel Bakış', aiEntity: 'dashboard' }) },
+      { index: true, Component: DashboardPage, handle: meta({ title: 'Genel Bakış', aiEntity: 'dashboard' }) },
       {
         path: 'listings',
         handle: meta({ title: 'İlanlar', permission: 'listing.view', aiEntity: 'listing' }),

@@ -32,9 +32,12 @@ export function TopnavMenu({ items }: { items: NavItem[] }) {
     const children = Array.from(measure.children) as HTMLElement[];
     let used = 0;
     let count = 0;
-    for (const child of children) {
-      used += child.offsetWidth;
-      if (used <= available - MORE_RESERVED_PX) count += 1;
+    for (let i = 0; i < children.length; i += 1) {
+      // account for the flex `gap-1` (4px) between rendered items
+      used += children[i]!.offsetWidth + (i > 0 ? 4 : 0);
+      // reserve space for the "More" trigger only while items still overflow
+      const budget = i < children.length - 1 ? available - MORE_RESERVED_PX : available;
+      if (used <= budget) count += 1;
       else break;
     }
     setVisibleCount(Math.max(1, Math.min(items.length, count)));
@@ -53,13 +56,15 @@ export function TopnavMenu({ items }: { items: NavItem[] }) {
   const overflow = items.slice(visibleCount);
 
   return (
-    <div ref={containerRef} className="relative flex min-w-0 flex-1 items-center gap-1">
-      {/* Hidden measurement row (all items) */}
+    <div ref={containerRef} className="relative flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+      {/* Hidden measurement row — mirrors the real button markup (icon + label
+          + chevron for groups) so the fit calculation is accurate. */}
       <div ref={measureRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex">
         {items.map((item) => (
-          <span key={item.id} className="flex h-9 items-center gap-2 px-3 text-sm font-medium">
+          <span key={item.id} className="flex h-8 items-center gap-2 whitespace-nowrap px-3 text-sm font-medium">
             <item.icon className="size-4" />
             {item.label}
+            {item.children?.length ? <ChevronDown className="size-3.5" /> : null}
           </span>
         ))}
       </div>

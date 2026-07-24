@@ -214,3 +214,26 @@ Entry format:
 - Suggested commit message:
   `fix(dod): route RBAC guard, wizard location FieldHelp/aria, export scope+xls, table a11y`
 
+## 2026-07-24 Aşama 1 — Quick fixes + real Dashboard
+- **Topnav overlap bug (görseldeki bozukluk) fixed:** `TopnavMenu` priority-plus measurement was inaccurate
+  (ghost row didn't mirror the real buttons — missing the group chevron + inter-item gap) and the container
+  had no overflow clip, so nav items visually overlapped the right-side actions cluster. Fix: ghost row now
+  mirrors real button markup (icon + label + chevron for groups), the fit calc adds the `gap-1` (4px) and only
+  reserves the "More" width while items still overflow, container is `overflow-hidden`, and the `TopbarActions`
+  cluster is `shrink-0` so it can never be compressed/overlapped.
+- **Real Dashboard replaces the demo ping page:** new `KpiCard` (tabular value + trend delta) and `ChartCard`
+  (recharts `ResponsiveContainer`, chart-1..5 tokens) primitives; `GET /api/dashboard/stats` MSW endpoint
+  computing live counts from the listings mock DB (via `getListingsSnapshot`); `useDashboardStats` hook;
+  `features/dashboard/DashboardPage` = 4 KPI tiles + category bar chart + recent-decisions (audit) panel +
+  pending-queue preview + quick links. Index route now renders DashboardPage (old `DemoPage`/`/ping` kept for
+  the contract unit test). Full-DoD stories for KpiCard/ChartCard/DashboardPage.
+- **FilterBar `window.prompt` → themed Dialog:** saving a view now opens a focus-managed `Dialog` with a
+  labelled `Input` (Enter-to-save), replacing the native prompt (themeable, mobile-friendly, a11y-clean).
+- Verification: lint PASS (0 errors; warnings only) · typecheck PASS · test PASS (409/409, 75 files) ·
+  build PASS · dev serves `/` clean.
+- Notes: bundle grew to ~1.59MB (recharts) — reinforces the deferred route-level `lazy()` code-split
+  (Aşama 5). Recharts' first entry into the browser-test graph triggers the known one-time Vite dep
+  pre-bundle reload; a warm re-run is green.
+- Suggested commit message:
+  `feat(dashboard): real dashboard (KPI + chart + stats); fix topnav overflow; FilterBar save-view dialog`
+

@@ -61,6 +61,11 @@ export function resetListingsDb() {
   db = seed();
 }
 
+/** Current snapshot of the mock DB (read-only; used by dashboard stats). */
+export function getListingsSnapshot(): Listing[] {
+  return [...db];
+}
+
 function applyQuery(url: URL): Paginated<Listing> {
   const page = Number(url.searchParams.get('page') ?? '1');
   const pageSize = Number(url.searchParams.get('pageSize') ?? '25');

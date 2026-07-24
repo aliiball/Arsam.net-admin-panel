@@ -20,7 +20,7 @@ export function TopnavShell({ children }: { children: ReactNode }) {
           <nav className="hidden min-w-0 flex-1 lg:flex" aria-label="Ana gezinme" data-testid="topnav">
             <TopnavMenu items={nav} />
           </nav>
-          <div className="ml-auto">
+          <div className="ml-auto shrink-0">
             <TopbarActions />
           </div>
         </div>
