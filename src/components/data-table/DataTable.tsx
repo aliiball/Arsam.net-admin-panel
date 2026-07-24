@@ -1,0 +1,297 @@
+import * as React from 'react';
+import {
+  flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type RowSelectionState,
+  type VisibilityState,
+} from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+
+import { EmptyState } from '@/components/feedback/EmptyState';
+import { ErrorState } from '@/components/feedback/ErrorState';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DensityToggle } from '@/components/shell/DensityToggle';
+import { ColumnVisibility } from './ColumnVisibility';
+import { ExportMenu, type ExportFormat, type ExportScope } from './ExportMenu';
+import { DataTablePagination } from './DataTablePagination';
+import { BulkActionBar } from './BulkActionBar';
+import type { TableUrlState } from './use-table-url-state';
+
+const VIRTUAL_THRESHOLD = 30;
+const ROW_HEIGHT = 44;
+
+export interface DataTableProps<TData> {
+  columns: ColumnDef<TData>[];
+  data: TData[];
+  total: number;
+  state: TableUrlState;
+  getRowId: (row: TData) => string;
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
+  /** Filter bar slot rendered above the table. */
+  filterBar?: React.ReactNode;
+  /** Expandable detail row content. */
+  renderSubRow?: (row: TData) => React.ReactNode;
+  /** Mobile card renderer (below lg). Falls back to a simple key/value list. */
+  renderMobileCard?: (row: TData, selected: boolean, toggle: () => void) => React.ReactNode;
+  /** Bulk actions rendered in the selection bar. */
+  bulkActions?: (selectedIds: string[], allMatching: boolean, clear: () => void) => React.ReactNode;
+  /** Export handler; receives the current page rows + selection. */
+  onExport?: (format: ExportFormat, scope: ExportScope, ctx: { pageRows: TData[]; selectedIds: string[] }) => void | Promise<void>;
+  emptyTitle?: string;
+  emptyDescription?: string;
+}
+
+/** Advanced, server-driven, URL-synced data table (DATA_TABLE_SPEC 10-point contract). */
+export function DataTable<TData>({
+  columns,
+  data,
+  total,
+  state,
+  getRowId,
+  isLoading = false,
+  isError = false,
+  onRetry,
+  filterBar,
+  renderSubRow,
+  renderMobileCard,
+  bulkActions,
+  onExport,
+  emptyTitle = 'Kayıt bulunamadı',
+  emptyDescription = 'Filtreleri değiştirin ya da yeni bir kayıt oluşturun.',
+}: DataTableProps<TData>) {
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [allMatching, setAllMatching] = React.useState(false);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting: state.sorting, rowSelection, columnVisibility },
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+    pageCount: Math.max(1, Math.ceil(total / state.pagination.pageSize)),
+    getRowId,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    onSortingChange: state.setSorting,
+    onRowSelectionChange: (updater) => {
+      setRowSelection(updater);
+      setAllMatching(false);
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: () => Boolean(renderSubRow),
+  });
+
+  const rows = table.getRowModel().rows;
+  const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id]);
+  const clearSelection = () => {
+    setRowSelection({});
+    setAllMatching(false);
+  };
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 8,
+    enabled: rows.length > VIRTUAL_THRESHOLD,
+  });
+
+  const useVirtual = rows.length > VIRTUAL_THRESHOLD;
+  const virtualItems = virtualizer.getVirtualItems();
+  const paddingTop = useVirtual && virtualItems.length > 0 ? (virtualItems[0]?.start ?? 0) : 0;
+  const paddingBottom =
+    useVirtual && virtualItems.length > 0
+      ? virtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0)
+      : 0;
+  const renderedRows = useVirtual ? virtualItems.map((vi) => rows[vi.index]!) : rows;
+
+  const handleExport = (format: ExportFormat, scope: ExportScope) =>
+    onExport?.(format, scope, { pageRows: data, selectedIds });
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1">{filterBar}</div>
+        <div className="flex items-center gap-2">
+          <DensityToggle />
+          <ColumnVisibility table={table} />
+          {onExport && <ExportMenu selectedCount={selectedIds.length} onExport={handleExport} />}
+        </div>
+      </div>
+
+      {selectedIds.length > 0 && bulkActions && (
+        <BulkActionBar
+          selectedCount={selectedIds.length}
+          total={total}
+          allMatchingSelected={allMatching}
+          onSelectAllMatching={() => setAllMatching(true)}
+          onClear={clearSelection}
+        >
+          {bulkActions(selectedIds, allMatching, clearSelection)}
+        </BulkActionBar>
+      )}
+
+      {isError ? (
+        <ErrorState {...(onRetry ? { onRetry } : {})} />
+      ) : isLoading ? (
+        <LoadingRows columns={table.getVisibleFlatColumns().length} />
+      ) : rows.length === 0 ? (
+        <EmptyState title={emptyTitle} description={emptyDescription} />
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div
+            ref={scrollRef}
+            className="relative hidden max-h-[32rem] overflow-auto rounded-lg border border-border lg:block"
+          >
+            <table className="w-full caption-bottom text-sm" role="grid">
+              <thead className="bg-muted/60 sticky top-0 z-10 backdrop-blur">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      const canSort = header.column.getCanSort();
+                      const sorted = header.column.getIsSorted();
+                      return (
+                        <th
+                          key={header.id}
+                          scope="col"
+                          aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
+                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                          className="text-muted-foreground relative h-11 whitespace-nowrap px-3 text-left align-middle font-medium"
+                        >
+                          {header.column.getCanResize() && (
+                            <div
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                              className="hover:bg-border absolute right-0 top-0 h-full w-1 cursor-col-resize touch-none select-none"
+                              aria-hidden="true"
+                            />
+                          )}
+                          {header.isPlaceholder ? null : canSort ? (
+                            <button
+                              type="button"
+                              onClick={header.column.getToggleSortingHandler()}
+                              className="hover:text-foreground -ml-1 inline-flex h-8 items-center gap-1 rounded px-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              data-action="sort"
+                              data-entity="table"
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              {sorted === 'asc' ? (
+                                <ArrowUp className="size-3.5" />
+                              ) : sorted === 'desc' ? (
+                                <ArrowDown className="size-3.5" />
+                              ) : (
+                                <ChevronsUpDown className="size-3.5 opacity-40" />
+                              )}
+                            </button>
+                          ) : (
+                            flexRender(header.column.columnDef.header, header.getContext())
+                          )}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {paddingTop > 0 && (
+                  <tr aria-hidden>
+                    <td style={{ height: paddingTop }} colSpan={table.getVisibleFlatColumns().length} />
+                  </tr>
+                )}
+                {renderedRows.map((row) => (
+                  <React.Fragment key={row.id}>
+                    <tr
+                      data-state={row.getIsSelected() ? 'selected' : undefined}
+                      className="border-t border-border data-[state=selected]:bg-accent/40 hover:bg-muted/40 transition-colors"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-3 py-2 align-middle" style={{ height: ROW_HEIGHT }}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                    {row.getIsExpanded() && renderSubRow && (
+                      <tr className="bg-muted/30">
+                        <td colSpan={row.getVisibleCells().length} className="px-3 py-3">
+                          {renderSubRow(row.original)}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+                {paddingBottom > 0 && (
+                  <tr aria-hidden>
+                    <td style={{ height: paddingBottom }} colSpan={table.getVisibleFlatColumns().length} />
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="space-y-2 lg:hidden">
+            {rows.map((row) => {
+              const selected = row.getIsSelected();
+              const toggle = () => row.toggleSelected();
+              return (
+                <div key={row.id} className="bg-card rounded-lg border border-border p-3">
+                  {renderMobileCard ? (
+                    renderMobileCard(row.original, selected, toggle)
+                  ) : (
+                    <dl className="grid grid-cols-2 gap-1 text-sm">
+                      {row.getVisibleCells().map((cell) => (
+                        <div key={cell.id} className="col-span-2 flex justify-between gap-2">
+                          <dt className="text-muted-foreground">
+                            {typeof cell.column.columnDef.header === 'string' ? cell.column.columnDef.header : cell.column.id}
+                          </dt>
+                          <dd className="text-right">{flexRender(cell.column.columnDef.cell, cell.getContext())}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      <DataTablePagination
+        page={state.pagination.pageIndex + 1}
+        pageSize={state.pagination.pageSize}
+        total={total}
+        selectedCount={allMatching ? total : selectedIds.length}
+        onPageChange={state.setPage}
+        onPageSizeChange={state.setPageSize}
+      />
+    </div>
+  );
+}
+
+function LoadingRows({ columns }: { columns: number }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border">
+      <div className="bg-muted/60 h-11 border-b border-border" />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 border-b border-border px-3 py-2 last:border-b-0">
+          {Array.from({ length: Math.min(columns || 5, 6) }).map((_, j) => (
+            <Skeleton key={j} className="h-4 flex-1" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
