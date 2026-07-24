@@ -7,6 +7,7 @@ import { LoadingState } from '@/components/feedback/LoadingState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Can } from '@/lib/permissions/permission-context';
 import { getAuditFor } from '@/lib/audit';
+import { AuditTimeline } from '@/features/audit';
 import { useProvince } from '../api/queries';
 import { useUpsertProvince } from '../api/mutations';
 import { LocationStatusBadge } from '../components/LocationStatusBadge';
@@ -82,16 +83,7 @@ export function ProvinceDetailPage() {
             <CardDescription>Bu il üzerindeki her değişiklik kalıcı olarak kaydedilir.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ol className="space-y-2 text-sm">
-              {audit.map((entry) => (
-                <li key={entry.id} className="flex items-start gap-2">
-                  <span className="text-muted-foreground font-mono text-xs">{entry.ts.slice(0, 10)}</span>
-                  <span>
-                    <span className="font-medium">{entry.action}</span> — {entry.actor}
-                  </span>
-                </li>
-              ))}
-            </ol>
+            <AuditTimeline entries={audit} />
           </CardContent>
         </Card>
       )}

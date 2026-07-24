@@ -8,6 +8,7 @@ import { LoadingState } from '@/components/feedback/LoadingState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Can } from '@/lib/permissions/permission-context';
 import { getAuditFor } from '@/lib/audit';
+import { AuditTimeline } from '@/features/audit';
 import { LOCATIONS } from '@/features/listings/data/taxonomy';
 import { USER_TYPE_LABELS } from '../data/users';
 import { useUser } from '../api/queries';
@@ -132,16 +133,7 @@ export function UserDetailPage() {
           {audit.length > 0 && (
             <>
               <Separator />
-              <ol className="space-y-2 text-sm">
-                {audit.map((entry) => (
-                  <li key={entry.id} className="flex items-start gap-2">
-                    <span className="text-muted-foreground font-mono text-xs">{entry.ts.slice(0, 10)}</span>
-                    <span>
-                      <span className="font-medium">{entry.action}</span> — {entry.actor}
-                    </span>
-                  </li>
-                ))}
-              </ol>
+              <AuditTimeline entries={audit} />
             </>
           )}
         </CardContent>

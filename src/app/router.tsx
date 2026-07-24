@@ -14,6 +14,7 @@ import { LocationsListPage, ProvinceDetailPage } from '@/features/locations';
 import { ReportsListPage, ReportDetailPage } from '@/features/messages';
 import { PackagesListPage, PaymentsListPage, PaymentDetailPage } from '@/features/promotions';
 import { ReportsPage } from '@/features/reports';
+import { AuditListPage } from '@/features/audit';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -130,7 +131,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'audit',
-        Component: () => <PlaceholderPage title="Denetim Kaydı" />,
+        Component: AuditListPage,
         handle: meta({ title: 'Denetim Kaydı', permission: 'audit.view', aiEntity: 'audit' }),
       },
       {

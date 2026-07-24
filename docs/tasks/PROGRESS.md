@@ -602,3 +602,57 @@ Entry format:
   - Bundle ~2.0MB (recharts already in graph) — reinforces the deferred Aşama 5 route-level `lazy()` code-split.
 - Suggested commit message:
   `feat(reports): read-only analytics vertical — KPI + trend/funnel/donut charts, per-chart export vs derived metrics`
+
+## 2026-07-24 Task 013 — Denetim Kaydı (Audit Log)
+- Built: `features/audit` — a READ-ONLY vertical over the existing append-only `lib/audit` log (mirrors the 012
+  read-only pattern). NO new writes, NO new seed data. Zod schema (`auditEntrySchema` mirroring `lib/audit`'s
+  `AuditEntry`; `auditPageSchema` envelope) that RE-EXPORTS the canonical `AuditEntry` type from `@/lib/audit`
+  (single origin, no competing definition). Taxonomy/labels (`data/audit.ts`: `ACTION_FAMILIES`
+  [listing/user/category/location/report/package/payment] + labels, `ACTOR_KINDS` [human/ai] + labels + `Bot`/`User`
+  icons). PURE, deterministically unit-testable helpers in `lib/audit-utils.ts`: `actorKind` (`ai:*`→ai else human),
+  `actionFamily` (prefix before the first dot; `attribute.*` folds into `category`), `isKnownFamily`, `auditReason`
+  (pulls a non-empty `reason` from the after→before snapshot), `auditDiff` (field-level before→after changes, excludes
+  `reason`), and `filterAuditEntries(entries, filter)` (family/actorKind/date-range/free-text filter + sort; default
+  newest-first; NON-mutating). MSW `GET /audit?page&pageSize&sort&filters` reads `getAuditLog()`, applies the pure
+  filter, paginates — registered LAST in the central registry (exact `/audit`, no param-route prefix collision, 012
+  ordering lesson noted). Hooks: `useAuditLog(query)` (keepPreviousData) + `useAuditFor(resource)` (sync read for
+  detail pages). Components: `AuditActorBadge` (Bot/User icon + actor text + `aria-label` "İnsan/Yapay Zeka aktör: …"
+  — color NEVER the sole AI-vs-human signal), `AuditTimeline` (shared `<ol>`/`<li>` timeline: actor badge + action +
+  resource [optional `renderResource` formatter] + before→after diff + reason + absolute `<time dateTime>` with
+  `sr-only` label; NO relative time [determinism]; empty-state branch), `auditColumns` (ts/actor/action/resource/
+  reason). Page `AuditListPage` (`/audit` — DataTable + FilterBar [action-family facet + actor-kind facet + date range
+  + NL/free-text parser] + CSV/XLS export [view/all scopes; no select column → no dead bulk affordance] + URL-state +
+  expandable per-row `AuditTimeline` sub-row). Router: `/audit` PlaceholderPage → real `AuditListPage`.
+  **De-duplication:** ALL SIX detail pages (`ListingDetailPage`, `UserDetailPage`, `CategoryDetailPage`,
+  `ProvinceDetailPage`, `ReportDetailPage`, `PaymentDetailPage`) now render `<AuditTimeline entries={audit} />` in place
+  of their ad-hoc `<ol>` block (existing `audit.length > 0` + Card/Separator wrappers preserved; behavior equal, richer
+  visual). Full-DoD stories for `AuditActorBadge`/`AuditTimeline`/`AuditListPage` (Default/Loading/Empty/Error/Mobile +
+  play; page `Error` drives a REAL `isError` via `seedQueryError`, 010/011/012 pattern; `AuditListPage` also ships
+  Sidebar/Topnav bonus stories). Unit tests: `lib/audit-utils.test.ts` (all pure helpers + filter with fixed input:
+  actor split, family fold, reason extraction, diff, family/actorKind/date/free-text filter, explicit sort, determinism
+  + no-mutation) and `api/handlers.test.ts` (loose self-seeded integration: envelope, actorKind facet, family facet
+  [attribute→category], free-text q — global-log isolation via self-writes, per the task's read-only test note).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (771/771, 129 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → NO blocking issues, "Ready to commit: YES". Confirmed read-only
+  (production module never imports `writeAudit`; only the test seeds fixtures), AI-vs-human distinction via icon+label+
+  aria, semantic `<ol>` + `sr-only` time, real `isError` story, no `title` attr, no hardcoded colors, strict TS.
+  Non-blocking nice-to-have noted (not applied): a `play` assertion on the `Loading` story of `AuditListPage`
+  (currently render-only, matching the existing list-page precedent across verticals).
+- Decisions/assumptions:
+  - READ-ONLY like 012: the module NEVER writes `lib/audit`; the live `/audit` table starts empty and fills as
+    verticals perform actions at runtime. AI-actor (`ai:*`) entries are demonstrated via `MOCK_AUDIT` fixtures in
+    stories/tests (no current handler writes `ai:*` actors) — the `AuditTimeline`/`AuditActorBadge` capability is what
+    the DoD requires, and adding seed `ai:*` entries would violate "no new seed data".
+  - `reason` is NOT a top-level `AuditEntry` field — it is embedded in the `after`/`before` snapshot by the writing
+    verticals; `auditReason` derives it. `auditDiff` renders the rest of the snapshot as key: before→after.
+  - Filter logic lives in a PURE helper (`filterAuditEntries`) tested with fixed input; the handler integration test
+    self-seeds via `writeAudit` and asserts loosely, because `getAuditLog()` is global mutable state other verticals
+    mutate at runtime (task risk note).
+  - No row-selection column (read-only, no bulk actions) → export offers view/all only; `ExportMenu` disables the
+    selection scope at `selectedCount===0`, so there's no dead affordance (avoids the DATA_TABLE_SPEC-5 flag).
+  - Date-range facet id is `ts` (params `tsFrom`/`tsTo`); action-family facet id is `family`; actor-kind facet id is
+    `actorKind` — all read via `url.searchParams.getAll(...)` in the handler.
+  - `audit.view` already lives on analyst + super-admin (matrix) and gates the route — no permission change needed.
+- Suggested commit message:
+  `feat(audit): filterable read-only audit table + shared AuditTimeline; dedupe 6 detail-page timelines`

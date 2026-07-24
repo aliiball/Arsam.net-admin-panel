@@ -10,6 +10,7 @@ import { reportsHandlers } from '@/features/messages/api/handlers';
 import { promotionsHandlers } from '@/features/promotions/api/handlers';
 import { dashboardHandlers } from '@/features/dashboard/api/handlers';
 import { reportsHandlers as analyticsHandlers } from '@/features/reports/api/handlers';
+import { auditHandlers } from '@/features/audit/api/handlers';
 
 /**
  * Demo endpoint proving the resource contract:
@@ -57,4 +58,6 @@ export const handlers = [
   ...reportsHandlers,
   ...promotionsHandlers,
   ...dashboardHandlers,
+  // Exact `/audit` route; no param-route prefix collision (audit is read-only).
+  ...auditHandlers,
 ];
