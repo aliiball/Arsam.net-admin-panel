@@ -4,7 +4,7 @@
 `super-admin`, `moderator`, `support`, `finance`, `analyst`. Roles map to permission sets; a user has exactly one primary role (extendable to multiple later).
 
 ## Permission naming: `resource.action`
-Examples: `listing.view`, `listing.approve`, `listing.reject`, `listing.edit`, `user.view`, `user.ban`, `user.verify`, `agent.verify`, `category.manage`, `location.manage`, `promotion.sell`, `payment.refund`, `message.moderate`, `report.view`, `audit.view`, `rbac.manage`, `settings.manage`.
+Examples: `listing.view`, `listing.approve`, `listing.reject`, `listing.edit`, `user.view`, `user.verify`, `user.suspend`, `user.ban`, `user.unban`, `agent.verify`, `category.manage`, `location.manage`, `promotion.sell`, `payment.refund`, `message.moderate`, `report.view`, `audit.view`, `rbac.manage`, `settings.manage`.
 
 ## PermissionMatrix data model
 ```ts
@@ -14,7 +14,7 @@ export type PermissionMatrix = Record<Role, Permission[] | '*'>;
 export const matrix: PermissionMatrix = {
   'super-admin': '*',
   moderator: ['listing.view','listing.approve','listing.reject','listing.edit','message.moderate','report.view'],
-  support:   ['user.view','user.verify','agent.verify','message.moderate','listing.view'],
+  support:   ['user.view','user.verify','user.suspend','user.ban','user.unban','agent.verify','message.moderate','listing.view'],
   finance:   ['promotion.sell','payment.refund','report.view','listing.view'],
   analyst:   ['report.view','listing.view','audit.view'],
 };

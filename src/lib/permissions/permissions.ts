@@ -19,7 +19,16 @@ export const matrix: PermissionMatrix = {
     'message.moderate',
     'report.view',
   ],
-  support: ['user.view', 'user.verify', 'agent.verify', 'message.moderate', 'listing.view'],
+  support: [
+    'user.view',
+    'user.verify',
+    'user.suspend',
+    'user.ban',
+    'user.unban',
+    'agent.verify',
+    'message.moderate',
+    'listing.view',
+  ],
   finance: ['promotion.sell', 'payment.refund', 'report.view', 'listing.view'],
   analyst: ['report.view', 'listing.view', 'audit.view'],
 };

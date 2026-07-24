@@ -275,3 +275,64 @@ Entry format:
     with `MapView` a prime lazy-load candidate since it's only on the detail page.
 - Suggested commit message:
   `feat(map): token-styled MapView (leaflet+markercluster) + DonutChartCard; wire detail map + dashboard donut`
+
+## 2026-07-24 Task 007 — Kullanıcılar & Ofisler
+- Built: `features/users` end-to-end vs MSW, following the listings vertical as a template. Zod-first schemas
+  (`userSchema` entity with type/status/verification/trustScore/office, `officeSchema`, `userActionSchema`
+  with reason-required refine, `reasonFormSchema` for the dialog) + PURE `computeTrustScore(user)` (baseline +
+  weighted verification channels + activity, clamped by lifecycle status; banned→0). Taxonomy/labels
+  (`data/users.ts`: types, statuses, verification levels/channels, action labels). MSW handlers (list with
+  filter/sort/paginate over status/type/verification/il/trust-range, detail, single `POST /users/:id/action`
+  covering verify/suspend/ban/unban) — action input is now runtime-validated via `userActionSchema.safeParse`
+  (422 on failure) and every write emits an immutable `lib/audit` entry (`user.verify|suspend|ban|unban`,
+  before/after status+verification+reason). Query/mutation hooks (`useUsers` keepPreviousData, `useUser`,
+  `useUserAction` optimistic status flip + rollback + sonner toasts). Components: `UserStatusBadge`,
+  `TrustScoreMeter` (0–100 `role="meter"` with aria-value*, numeric value + tier label so color is never the
+  sole signal; compact variant for table cells), `VerificationBadges` (identity/office/phone; icon + label +
+  `aria-label` carrying the level to assistive tech + tooltip), `UserActionDialog` (RHF + `FormField`/FieldHelp
+  reason capture; suspend/ban require ≥5-char reason, unban optional), `userColumns`. Pages: List (DataTable +
+  FilterBar with status/type/verification facets + trust numberRange + il + NL parser, bulk suspend/ban via the
+  dialog, export CSV/XLS with scope), Detail (profile + TrustScoreMeter + VerificationBadges + office/agents
+  card + three-tier Doğrula/Askıya-al/Yasakla + Yasağı-kaldır + audit timeline). Router: `/users` index →
+  UsersListPage, `/users/:id` → UserDetailPage (routeMeta + permission). Permissions: added
+  `user.suspend|ban|unban` to the `support` role (matrix + `docs/PERMISSIONS.md`), gated via `<Can>` + route
+  meta. Full-DoD stories for every component + both pages (seeded-QueryClient + memory-router harness reused
+  from listings `page-story-utils`) + a `computeTrustScore` + handlers-write-audit unit test.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (470/470, 85
+  files) · build PASS. Runtime-verified by driving the running dev app with Playwright: list renders 25 trust
+  meters; deep-linked `?status=banned` and `?trustMin=70` filter correctly; detail page moderation group +
+  meter present; suspend dialog blocks empty submit (guardrail), then on confirm flips status→Askıda,
+  recomputes trust→35, writes `user.suspend` audit, shows unban button + success toast.
+- DoD self-check: ran the `dod-reviewer` agent → 1 blocking a11y gap, FIXED before checkpoint:
+  `VerificationBadges` conveyed the verification LEVEL only via aria-hidden icon + color + a keyboard-inaccessible
+  tooltip → added `aria-label="{channel}: {level}"` on each Badge so the level reaches screen readers (color/icon
+  never the sole signal); story now asserts the accessible name. Non-blocking items also applied:
+  `docs/PERMISSIONS.md` synced with the new support permissions; `userActionSchema` is now actually used
+  (server-side validation) instead of type-only. Deferred (inherited from listings template, non-blocking):
+  page `Error` stories mirror `Empty` rather than a real `isError`/500 state — tracked for a later story-polish
+  pass alongside the same gap in listings; `AiSuggestionBadge` shares the same tooltip-keyboard pattern (out of
+  scope here, flag to fix with VerificationBadges' fix pattern).
+- Decisions/assumptions:
+  - Trust score is a PURE function of {status, verification, listingsCount} (no Date/tenure) so it stays
+    deterministic + unit-testable; the seed and every mutation recompute it. Suspended caps at 35, pending at 60,
+    banned at 0.
+  - Verify/suspend/ban/unban all go through ONE `POST /users/:id/action` endpoint (not four routes) — simpler
+    handler, single audit-write path; bulk actions POST the same endpoint per id so they audit too.
+  - The three-tier moderation UX is realized as Doğrula (immediate) / Askıya-al / Yasakla on the detail page
+    (reason captured by `UserActionDialog`), rather than importing the listing-coupled `ModerationDecision`
+    (which bakes in `listing.*` permissions + labels); the pattern is reused, the component is purpose-built.
+  - Offices are embedded on `type='office'` users (title/taxId/il/ilçe/memberAgents) and agents reference an
+    `officeName` — no separate office CRUD (verification/ban/trust is the focus per the task). `/users/agents`
+    stays a placeholder.
+  - `il` added to the user entity so the shared `ilOptions`/LOCATIONS (from listings taxonomy) power the city
+    facet; users reuse the listings location taxonomy rather than duplicating it.
+- Suggested commit message:
+  `feat(users): end-to-end users & offices vertical — list/detail, trust score, verify/suspend/ban vs MSW + audit`
+- Follow-up (same task, post-review): the `/users/agents` "Emlak Ofisleri" sub-nav was a PlaceholderPage (office
+  CRUD was out of the original scope). Turned it into a real `OfficesListPage` — the users list locked to
+  `type='office'` via `withOfficeType(query)`, with office-oriented `officeColumns` (unvan/vergiNo/durum/trust/
+  doğrulama/üye-danışman-sayısı/şehir), status+ofis-belgesi+il filters, export, and expandable sub-row (email/
+  phone/konum/üye danışmanlar). Wired `/users/agents` → OfficesListPage (permission `agent.verify`), added
+  full-DoD story (Sidebar/Topnav/Mobile/Loading/Empty/Error + play). Also fixed a seed artifact where every
+  office landed in one city (type period === ilKeys period) by varying `il` per triplet. Runtime-verified:
+  `/users/agents` renders 10 offices, no non-office rows leak. lint/typecheck/test/build still green.

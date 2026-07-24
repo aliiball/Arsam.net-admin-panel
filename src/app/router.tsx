@@ -8,6 +8,7 @@ import {
   ListingCreatePage,
   ModerationQueuePage,
 } from '@/features/listings';
+import { UsersListPage, OfficesListPage, UserDetailPage } from '@/features/users';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -49,11 +50,16 @@ export const router = createBrowserRouter([
         path: 'users',
         handle: meta({ title: 'Kullanıcılar & Ofisler', permission: 'user.view', aiEntity: 'user' }),
         children: [
-          { index: true, Component: () => <PlaceholderPage title="Kullanıcılar" /> },
+          { index: true, Component: UsersListPage },
           {
             path: 'agents',
-            Component: () => <PlaceholderPage title="Emlak Ofisleri" />,
+            Component: OfficesListPage,
             handle: meta({ title: 'Emlak Ofisleri', permission: 'agent.verify', aiEntity: 'agent' }),
+          },
+          {
+            path: ':id',
+            Component: UserDetailPage,
+            handle: meta({ title: 'Kullanıcı Detayı', permission: 'user.view', aiEntity: 'user' }),
           },
         ],
       },
