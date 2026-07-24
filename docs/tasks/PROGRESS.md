@@ -496,3 +496,60 @@ Entry format:
     is intentionally the dialog-form's client-side rule (bulk `ReportActionDialog`), not enforced by the endpoint.
 - Suggested commit message:
   `feat(messages): reports/complaints vertical — three-tier moderation queue vs MSW + audit; real page-error stories`
+
+## 2026-07-24 Task 011 — Doping & Ödemeler
+- Built: `features/promotions` end-to-end vs MSW — TWO resources following the users/messages template:
+  (1) doping-package CRUD + active/archive; (2) payment/invoice list/detail + a single guardrailed **refund**
+  action. Zod-first schemas (`dopingPackageSchema` id/name/kind[featured|showcase|urgent|top]/durationDays/price/
+  status/order, `paymentSchema` id/invoiceNo/user/package/amount/method[card|transfer|wallet]/status[paid|refunded|
+  partially-refunded|failed]/createdAt/lineItems/refundedAmount?, `refundActionSchema` amount>0 + reason-required
+  refine, `packageFormSchema` price/durationDays numeric-string, `makeRefundFormSchema(remaining)` factory that
+  refines amount ≤ remaining + reason ≥5-char). PURE money helpers `remainingAmount`/`refundOutcome`/`isRefundable`/
+  `formatTry` + `packageFormToPayload` (string→number at the submit boundary — avoids the zod-coerce transform clash,
+  Task 005 lesson); `lib/order` re-exported (single origin). Seed: 6 packages + 28 payments (mixed user/package/
+  method/status, skewed toward `paid` so the refund queue has work; some already partially/fully refunded). MSW
+  handlers (package list[status/kind facet + q + order-sort]/detail/create/patch[update|archive]; payment list
+  [status/method facet + createdAtFrom/To date range + q, sort, paginate]/detail/`POST /payments/:id/refund`) —
+  inputs runtime-validated (`safeParse` → 422); refund guardrail enforced SERVER-SIDE: missing reason → 422 AND
+  amount > remaining → 422 (Task 007 lesson: not type-only). Every write emits an immutable `lib/audit` entry
+  (`package.create|update|archive`, `payment.refund` with before/after status + refundedAmount + partial flag +
+  reason). Registered in the central MSW registry. Query/mutation hooks (`usePackages`/`usePackage`/`usePayments`/
+  `usePayment`; `useUpsertPackage`/`useArchivePackage`; `useRefundPayment` optimistic status flip paid→refunded /
+  partially-refunded + rollback + sonner toast). Components: `PackageStatusBadge`, `PackageKindBadge` (icon+label+
+  aria), `PaymentStatusBadge`, `PaymentMethodBadge` (icon+label+aria — color never the sole signal), `PackageFormDialog`
+  (RHF + FieldHelp on every field; price/gün numeric-string), `RefundDialog` (purpose-built — NOT the three-tier
+  ModerationDecision; RHF + FieldHelp on tam-iade Switch + amount + reason; full/partial toggle keeps amount = remaining;
+  amount can never exceed remaining), `packageColumns` (edit via table meta), `paymentColumns` (select column +
+  invoice deep-link). Pages: PackagesList (`/promotions` — DataTable + status/kind facets + NL + "Yeni paket" dialog +
+  bulk-archive + export), PaymentsList (`/promotions/payments` — DataTable + status/method facets + date-range + NL +
+  export with scope; row → detail), PaymentDetail (`/promotions/payments/:id` — invoice summary + line-items table +
+  RefundDialog + audit timeline; refunded/failed payments show "iade yapılamaz"). Router: both PlaceholderPages →
+  real pages + nested `payments/:id` detail (routeMeta + permission). Permissions: `promotion.sell` (packages) +
+  `payment.refund` (refund) already on the `finance` role — no matrix change. Full-DoD stories for all 6 components +
+  3 pages (seeded-QueryClient + memory-router harness reused; page `Error` stories drive a REAL isError via
+  `seedQueryError`, Task 010 pattern) + a handlers/helpers unit test (list/filter/sort, create[strings parsed]+audit,
+  invalid-price 422, archive+audit, refund reason-required 422, refund>remaining 422, partial→partially-refunded+audit,
+  full→refunded, second refund finishes partially-refunded, `remainingAmount` never negative).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (706/706, 120 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 1 blocking gap, FIXED before checkpoint: the Payments table had no
+  row-selection column, making the `onExport` `scope === 'selection'` branch dead code and permanently disabling the
+  "Seçili" export option (DATA_TABLE_SPEC point 5) → added a `select` checkbox column to `paymentColumns` (mirrors
+  packages/messages), so selection now drives the selection-scoped export. Re-verified green (706/706). Non-blocking,
+  tracked: PaymentsList wires no dedicated `bulkActions` (refund is per-row with a required reason/amount, so no
+  meaningful bulk action — selection still powers export; matches the accepted OfficesList precedent); shared `Switch`/
+  `Checkbox` primitives are below 44px (systemic pre-existing gap across all verticals, flag for Aşama 5).
+- Decisions/assumptions:
+  - Money is string-then-parse everywhere (form fields numeric-string, parsed in `packageFormToPayload` / at the refund
+    submit boundary); display via `formatTry` (tabular-nums + tr-TR + ₺). The ≤-remaining ceiling is enforced BOTH in
+    the dialog (`makeRefundFormSchema(remaining)` factory) AND server-side (handler remaining check → 422).
+  - `refundActionSchema` carries only amount>0 + reason-required (schema can't know runtime remaining); the handler adds
+    the `amount ≤ remaining` + `status ∈ {paid, partially-refunded}` checks → 422. `refundOutcome` decides
+    refunded vs partially-refunded (full-remaining → refunded).
+  - `RefundDialog` is purpose-built (adapts the users/messages dialog pattern), NOT an import of ModerationDecision/
+    ReportDecision — this module has a single guardrailed action, not a three-tier decision (task note).
+  - Payments carry embedded `lineItems` (single line = the package) so the detail page renders a real invoice; real
+    subject relations arrive with FastAPI. Package edit is via the list-row dialog (no package detail page); a
+    `GET /packages/:id` endpoint exists for completeness.
+- Suggested commit message:
+  `feat(promotions): doping packages CRUD + payments/refund vertical — guardrailed refunds vs MSW + audit`

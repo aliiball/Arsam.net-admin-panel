@@ -13,6 +13,8 @@
 - **009** — Lokasyonlar (il/ilçe/mahalle hiyerarşik CRUD, reorder, bulk-archive + audit; `lib/order` paylaşımı). ✅
 - **010** — Mesajlar & Şikayetler (şikayet kuyruğu list/detail, three-tier moderasyon + reason + audit; ilk
   gerçek page-error story'leri `seedQueryError` ile). ✅
+- **011** — Doping & Ödemeler (paket CRUD + aktif/arşiv; ödeme list/detail + guardrail'li iade [reason zorunlu +
+  tutar ≤ kalan, server-side 422] + audit; finance rolü). ✅
 
 ## Sıradaki fazlar
 - **006 — Aşama 2: Harita & dataviz katmanı** — `MapView` (React Leaflet + markercluster), ek grafik

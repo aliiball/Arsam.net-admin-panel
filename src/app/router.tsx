@@ -12,6 +12,7 @@ import { UsersListPage, OfficesListPage, UserDetailPage } from '@/features/users
 import { CategoriesListPage, CategoryDetailPage } from '@/features/categories';
 import { LocationsListPage, ProvinceDetailPage } from '@/features/locations';
 import { ReportsListPage, ReportDetailPage } from '@/features/messages';
+import { PackagesListPage, PaymentsListPage, PaymentDetailPage } from '@/features/promotions';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -94,11 +95,18 @@ export const router = createBrowserRouter([
         path: 'promotions',
         handle: meta({ title: 'Doping & Ödemeler', permission: 'promotion.sell', aiEntity: 'promotion' }),
         children: [
-          { index: true, Component: () => <PlaceholderPage title="Doping Paketleri" /> },
+          { index: true, Component: PackagesListPage },
           {
             path: 'payments',
-            Component: () => <PlaceholderPage title="Ödemeler & Faturalar" />,
             handle: meta({ title: 'Ödemeler & Faturalar', permission: 'payment.refund', aiEntity: 'payment' }),
+            children: [
+              { index: true, Component: PaymentsListPage },
+              {
+                path: ':id',
+                Component: PaymentDetailPage,
+                handle: meta({ title: 'Ödeme Detayı', permission: 'payment.refund', aiEntity: 'payment' }),
+              },
+            ],
           },
         ],
       },
