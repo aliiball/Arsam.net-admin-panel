@@ -713,3 +713,70 @@ Entry format:
     and the handler (422). `rbac.manage` is super-admin-only in the matrix, so only super-admin can reach `/rbac`.
 - Suggested commit message:
   `feat(rbac): runtime-editable role/permission matrix editor — live authz bridge + toggle vs MSW + audit`
+
+## 2026-07-25 Task 015 — Ayarlar / Config (Settings)
+- Built: `features/settings` — a tabbed **settings surface** (NOT a table vertical) over a new MSW-backed
+  `settings` resource, following the 014 write-vertical rhythm (schema → handlers+audit → hooks → components →
+  page → route → stories+tests). Three editable groups: (a) **Genel/sistem** (siteName/supportEmail/defaultLocale
+  [tr literal]/maintenanceMode); (b) **Özellik bayrakları** (a live feature-flag set); (c) **Görünüm varsayılanları**
+  (org-level layout mode/density/theme). **Live feature-flag bridge** (`src/lib/settings/feature-flags-store.ts`):
+  a `useSyncExternalStore` external store seeded from `DEFAULT_FLAGS`, mirroring the accepted `permission-store`
+  pattern — `getFeatureFlags`/`setFeatureFlags`/`resetFeatureFlags`/`useFeatureFlags`/`useFeatureFlag(key)`. The flag
+  CATALOG + defaults live in `src/lib/settings/feature-flags.ts` (single origin, like `config/layout.ts`); the feature
+  schema re-exports them. **Two flags gate REAL behavior on the listing detail page** (`useFeatureFlag` in
+  `ListingDetailPage`): `listingDetailMap` (the "Konum" map card) + `aiCopilotBadges` (the `AiSuggestionBadge`) —
+  proven live by a store-bridge unit test AND a `FlagsOff` Storybook story asserting both vanish. Zod-first schemas
+  (`generalSettingsSchema` [email refine], `featureFlagsSchema` [full record derived from the catalog],
+  `layoutDefaultsSchema` [mirrors `LayoutConfig`'s editable subset — no double-def], `settingsSchema` envelope, and a
+  `settingsPatchSchema` that `.partial()`s each group + uses `z.partialRecord` for single-flag PATCHes + refines
+  "≥1 group"). MSW `GET /settings` + `PATCH /settings` (safeParse → 422; general/layout re-parse the merge for a clean
+  typed value; each changed group/flag writes `lib/audit`: `settings.update` [resource `settings:general|layout`],
+  `flag.enable`/`flag.disable` [resource `flag:<key>`, idempotent no-op skip]); `resetSettingsDb()` + `getSettingsSnapshot()`;
+  registered in the central registry (exact `/settings`, no param collision). Hooks `useSettings()` + `useUpdateSettings()`
+  (optimistic re-parse of the merge → updates BOTH the query cache AND the live flag store; rollback both on error;
+  re-sync on success + sonner). Components: `SettingsSection` (titled card), `FeatureFlagList` (`catalog?`/`loading?`
+  props; each row = 44px-hit `Switch` + label + `FieldHelp` + `aria-labelledby`), `GeneralSettingsForm` (RHF +
+  `FormField`/FieldHelp on every field; `maintenanceMode` enable guarded by a `ConfirmDialog`, disable immediate),
+  `LayoutDefaultsForm` (three labelled Selects with a persistent id'd `sr-only` help span → `aria-describedby`
+  replicating `FormField`; "Bu cihaza uygula" pushes org defaults into the live `layout-context` on demand).
+  Page `SettingsPage`: three `Tabs` (44px triggers) + a `settings:*`/`flag:*`-filtered `AuditTimeline` change-history
+  panel; a `useEffect` syncs server flags → store while mounted. Router `/settings` PlaceholderPage → real page.
+  Full-DoD stories for all four components + the page (Default/Loading/Empty/Error/Mobile + play; page `Error` drives a
+  REAL `isError` via `seedQueryError`). Unit tests: `feature-flags-store.test.tsx` (a live `setFeatureFlags` edit
+  hides/shows a `useFeatureFlag` consumer + reset restores) and `api/handlers.test.ts` (seed envelope, general update +
+  audit, invalid-email 422, empty-patch 422, flag.disable audit, idempotent-flag no-audit, layout update audit).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (826/826, 140 files;
+  green on consecutive warm runs — the first cold run hit the known one-time Vite dep pre-bundle race from the 5 new
+  story files) · build PASS · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → 4 blocking gaps, ALL FIXED before checkpoint, then RE-REVIEWED →
+  "Ready to commit: YES", no blocking issues. Blocking fixes: (1) added missing co-located stories for
+  `LayoutDefaultsForm` + `SettingsSection` (full state matrix); (2) `LayoutDefaultsForm`'s three Selects bypassed
+  `FormField` and never wired `aria-describedby` → the `Row` helper now renders a persistent id'd `sr-only` help span
+  and each `SelectTrigger` points `aria-describedby` at it (mirrors `FormField`); (3) completed the
+  Default/Loading/Empty/Error/Mobile story-name matrix on `GeneralSettingsForm` + `FeatureFlagList` (the latter gained
+  `catalog?`/`loading?` props so its Empty/Loading branches are genuinely exercised, mirroring `PermissionMatrixEditor`);
+  (4) the new flag binding in `ListingDetailPage` had no flag-off coverage → added a `FlagsOff` story (story-level
+  `beforeEach` toggles the store off + resets on cleanup) asserting the map card + AI badge disappear, and `Default`
+  now asserts they're present. Non-blocking applied: `data-action`/`data-entity` on the general-form inputs; an aliased
+  `Empty` story on `SettingsPage`; a comment documenting the `FlagsOff` global-store isolation assumption.
+- Decisions/assumptions:
+  - **No double-source (task risk):** the user's LIVE layout preference stays owned by `layout-context` (localStorage);
+    `settings.layoutDefaults` is the ORG-level seed stored in MSW. Chosen rule: defaults are applied to the current
+    device only ON DEMAND via "Bu cihaza uygula" (no silent overwrite of the user's active layout on load).
+  - **Save UX is a deliberate mix** (task: "pick the simplest consistent UX"): the General text form uses a grouped
+    "Kaydet" button (a per-keystroke instant-save on text fields is bad UX); flags + layout defaults are instant/optimistic
+    toggles (matching the users/promotions/014 optimistic precedent). Documented so the inconsistency is intentional.
+  - **Flag catalog kept lean & honest** (2 flags, BOTH bound to real behavior) rather than padding with dead catalog-only
+    flags — the task requires "at least one" live-bound flag; both `listingDetailMap` + `aiCopilotBadges` gate real
+    listing-detail UI, so there is no dead affordance. More flags can be added later by dropping a key in
+    `feature-flags.ts` + wiring one `useFeatureFlag` call.
+  - Feature-flag store + the `settings` schema keep flag defaults in `lib/settings/feature-flags.ts` (source of truth);
+    the feature schema/data re-export, so there's no competing definition (same discipline as `config/layout.ts` +
+    `lib/order.ts` re-exports).
+  - `maintenanceMode` enable is the only high-consequence toggle → `ConfirmDialog` guard (destructive, explicit "site
+    kapatılacak" copy); disabling is immediate. `settings.manage` is super-admin-only and already route-guards `/settings`.
+  - `Error` stories on the presentational `FeatureFlagList`/`LayoutDefaultsForm` alias a benign render (these components
+    have no error branch of their own; the page owns errors) — matches the repo's loose-alias story-matrix convention
+    (`FormSection`/`ProvinceFormDialog`).
+- Suggested commit message:
+  `feat(settings): system settings + live feature-flag bridge + layout defaults vs MSW + audit`

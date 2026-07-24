@@ -8,6 +8,7 @@ import { LoadingState } from '@/components/feedback/LoadingState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { MapView } from '@/components/data/MapView';
 import { getAuditFor } from '@/lib/audit';
+import { useFeatureFlag } from '@/lib/settings/feature-flags-store';
 import { AuditTimeline } from '@/features/audit';
 import {
   CATEGORY_LABELS,
@@ -27,6 +28,9 @@ export function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: listing, isLoading, isError, refetch } = useListing(id);
   const moderate = useModerateListing(id ?? '');
+  // Feature-flag-gated behaviors (live-toggled from /settings).
+  const showMap = useFeatureFlag('listingDetailMap');
+  const showAiBadge = useFeatureFlag('aiCopilotBadges');
 
   if (isLoading) return <LoadingState label="İlan yükleniyor…" />;
   if (isError || !listing) return <ErrorState title="İlan bulunamadı" onRetry={() => void refetch()} />;
@@ -58,7 +62,9 @@ export function ListingDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <ListingStatusBadge status={listing.status} />
-              <AiSuggestionBadge suggestion={listing.aiSuggestion} reasons={listing.aiReasons} />
+              {showAiBadge && (
+                <AiSuggestionBadge suggestion={listing.aiSuggestion} reasons={listing.aiReasons} />
+              )}
             </div>
           </div>
         </CardHeader>
@@ -83,7 +89,7 @@ export function ListingDetailPage() {
         </CardContent>
       </Card>
 
-      {coords && (
+      {coords && showMap && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Konum</CardTitle>

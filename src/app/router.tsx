@@ -16,6 +16,7 @@ import { PackagesListPage, PaymentsListPage, PaymentDetailPage } from '@/feature
 import { ReportsPage } from '@/features/reports';
 import { AuditListPage } from '@/features/audit';
 import { RbacPage } from '@/features/rbac';
+import { SettingsPage } from '@/features/settings';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
 
@@ -142,7 +143,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        Component: () => <PlaceholderPage title="Ayarlar" />,
+        Component: SettingsPage,
         handle: meta({ title: 'Ayarlar', permission: 'settings.manage', aiEntity: 'settings' }),
       },
       { path: '*', Component: () => <PlaceholderPage title="Sayfa bulunamadı" description="Aradığınız sayfa mevcut değil." /> },
