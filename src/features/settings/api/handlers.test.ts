@@ -13,7 +13,7 @@ describe('settings handlers', () => {
     expect(s.general.siteName).toBe('arsam.net');
     expect(s.general.maintenanceMode).toBe(false);
     expect(s.flags.listingDetailMap).toBe(true);
-    expect(s.layoutDefaults.mode).toBe('sidebar');
+    expect(s.layoutDefaults.mode).toBe('dock');
   });
 
   it('updates general settings and writes a settings.update audit entry', async () => {
