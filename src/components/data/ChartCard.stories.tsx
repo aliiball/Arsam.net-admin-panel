@@ -37,16 +37,20 @@ export const Default: Story = {
     await expect(canvas.getByText('Kategoriye göre ilanlar')).toBeInTheDocument();
   },
 };
+/** Shape-matched loading: a bar-silhouette skeleton at the chart height. */
 export const Loading: Story = {
   render: () => (
     <div className="max-w-xl">
-      <ChartCard title="Yükleniyor" description="Veri getiriliyor">
+      <ChartCard title="Yükleniyor" description="Veri getiriliyor" loading>
         <BarChart data={[]}>
           <Bar dataKey="count" fill="var(--color-chart-1)" />
         </BarChart>
       </ChartCard>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('[data-slot="chart-skeleton"]')).not.toBeNull();
+  },
 };
 export const Empty: Story = {
   render: () => (

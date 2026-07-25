@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { AiSuggestionBadge } from './AiSuggestionBadge';
 
@@ -29,3 +29,23 @@ export const Loading: Story = { render: () => <div className="bg-muted h-5 w-20 
 export const Empty: Story = { args: { suggestion: 'uncertain', reasons: [] } };
 export const Error: Story = { args: { suggestion: 'nok', reasons: ['Eksik belge'] } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/**
+ * Reasons are reachable by click/tap (the trigger is a real button), not hover
+ * only — so touch + keyboard users can read them. Asserts the final open state.
+ */
+export const TapReasons: Story = {
+  args: { suggestion: 'nok', reasons: ['Eksik tapu', 'Fiyat piyasa dışı'] },
+  play: async ({ canvas }) => {
+    const trigger = canvas.getByRole('button', { name: /gerekçeleri gör/ });
+    // Touch target: the invisible ::after hit-area expander must clear the 44px
+    // minimum (locks in the -inset value against future regressions).
+    const rect = trigger.getBoundingClientRect();
+    await expect(rect.height + 24).toBeGreaterThanOrEqual(44); // -inset-3 adds 12px/side
+    await userEvent.click(trigger);
+    // PopoverContent renders in a portal → query the document body.
+    const body = within(document.body);
+    await expect(await body.findByText('AI gerekçeleri')).toBeInTheDocument();
+    await expect(await body.findByText('Eksik tapu')).toBeInTheDocument();
+  },
+};

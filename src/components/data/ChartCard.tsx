@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ChartSkeleton } from './ChartSkeleton';
 
 export interface ChartCardProps {
   title: ReactNode;
@@ -17,6 +18,8 @@ export interface ChartCardProps {
   action?: ReactNode;
   height?: number;
   className?: string;
+  /** Shape-matched loading state — renders a bar-silhouette skeleton at `height`. */
+  loading?: boolean;
   /**
    * Accessible text alternative for the (visual-only) chart. When provided it is
    * rendered `sr-only` and the SVG is hidden from assistive tech, so screen-reader
@@ -34,6 +37,7 @@ export function ChartCard({
   action,
   height = 260,
   className,
+  loading = false,
   summary,
   children,
 }: ChartCardProps) {
@@ -45,21 +49,27 @@ export function ChartCard({
         {action}
       </CardHeader>
       <CardContent>
-        {summary && (
-          <p className="sr-only" data-slot="chart-summary">
-            {summary}
-          </p>
+        {loading ? (
+          <ChartSkeleton height={height} />
+        ) : (
+          <>
+            {summary && (
+              <p className="sr-only" data-slot="chart-summary">
+                {summary}
+              </p>
+            )}
+            <div
+              data-slot="chart-viz"
+              style={{ height }}
+              className="w-full"
+              aria-hidden={summary ? true : undefined}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                {children}
+              </ResponsiveContainer>
+            </div>
+          </>
         )}
-        <div
-          data-slot="chart-viz"
-          style={{ height }}
-          className="w-full"
-          aria-hidden={summary ? true : undefined}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            {children}
-          </ResponsiveContainer>
-        </div>
       </CardContent>
     </Card>
   );

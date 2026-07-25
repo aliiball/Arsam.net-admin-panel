@@ -84,6 +84,36 @@ export const Error: Story = {
   ),
 };
 
+/**
+ * `interactive` — a clickable surface with a token-driven hover-lift and a
+ * focus-within ring (keyboard focus on the nested link/button is visible). Under
+ * `prefers-reduced-motion` the transform is dropped (shadow only). Asserts the
+ * end-state class wiring, not the animation.
+ */
+export const Interactive: Story = {
+  render: () => (
+    <Card interactive className="relative w-72">
+      <CardHeader>
+        <CardTitle>
+          <a href="#void" className="after:absolute after:inset-0 focus-visible:outline-none">
+            İlanları aç
+          </a>
+        </CardTitle>
+        <CardDescription>Üzerine gelince hafifçe yükselir</CardDescription>
+      </CardHeader>
+      <CardContent className="text-muted-foreground text-sm">
+        Yalnızca tıklanabilir kartlarda kullanılır.
+      </CardContent>
+    </Card>
+  ),
+  play: async ({ canvas }) => {
+    const card = canvas.getByText('İlanları aç').closest('[data-slot="card"]');
+    await expect(card).not.toBeNull();
+    await expect(card).toHaveClass('card-interactive');
+    await expect(card).toHaveAttribute('data-interactive');
+  },
+};
+
 export const Mobile: Story = {
   ...Default,
   parameters: { viewport: { defaultViewport: 'mobile1' } },

@@ -1,7 +1,7 @@
 import { Bot, CircleCheck, CircleHelp, CircleX } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { AiSuggestion } from '../schemas/listing';
 
 const MAP: Record<AiSuggestion, { label: string; variant: React.ComponentProps<typeof Badge>['variant']; icon: typeof Bot }> = {
@@ -10,27 +10,43 @@ const MAP: Record<AiSuggestion, { label: string; variant: React.ComponentProps<t
   nok: { label: 'AI: NOK', variant: 'destructive', icon: CircleX },
 };
 
-/** AI pre-score badge (proposes; human disposes). Reasons shown on hover. */
+/**
+ * AI pre-score badge (proposes; human disposes). Reasons open in a focus-managed
+ * Popover on click/tap/Enter — reachable by keyboard AND touch (the old hover-only
+ * Tooltip left touch users with no way in). Never uses the `title` attribute.
+ */
 export function AiSuggestionBadge({ suggestion, reasons = [] }: { suggestion: AiSuggestion; reasons?: string[] }) {
   const { label, variant, icon: Icon } = MAP[suggestion];
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span>
-          <Badge variant={variant} className="gap-1" data-entity="listing">
-            <Icon className="size-3" />
+    <Popover>
+      <PopoverTrigger asChild>
+        <Badge
+          asChild
+          variant={variant}
+          className="focus-visible:ring-ring relative cursor-pointer gap-1 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none after:absolute after:-inset-3 after:content-['']"
+          data-entity="listing"
+        >
+          <button type="button" aria-label={`${label} — gerekçeleri gör`}>
+            <Icon className="size-3" aria-hidden="true" />
             {label}
-          </Badge>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>
-        <div className="flex items-start gap-1.5">
-          <Bot className="mt-0.5 size-3.5 shrink-0" />
-          <ul className="list-inside list-disc">
-            {reasons.length ? reasons.map((r) => <li key={r}>{r}</li>) : <li>Gerekçe yok</li>}
-          </ul>
+          </button>
+        </Badge>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 text-sm">
+        <div className="flex items-start gap-2">
+          <Bot className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="mb-1 font-medium">AI gerekçeleri</p>
+            <ul className="text-muted-foreground list-inside list-disc space-y-0.5">
+              {reasons.length ? (
+                reasons.map((r) => <li key={r}>{r}</li>)
+              ) : (
+                <li>Gerekçe yok</li>
+              )}
+            </ul>
+          </div>
         </div>
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }

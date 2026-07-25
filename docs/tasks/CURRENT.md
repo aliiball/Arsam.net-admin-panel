@@ -1,36 +1,35 @@
 # Current Task
--> docs/tasks/022-motion-bento.md
+-> (none) — Aşama 6 (Modernizasyon) TAMAMLANDI. Sıradaki fazı seçmek için BACKLOG.md'ye bak.
 
-Status: NOT STARTED (Aşama 6 — Modernizasyon; SON faz: Motion & Bento).
-Tasks 000–021 (+ Aşama 1–5) complete — see PROGRESS.md. Task 021 kullanıcı commit'ini bekliyor.
+Status: Aşama 6 (Modernizasyon) COMPLETE. Tasks 000–022 (+ Aşama 1–5) tamam — PROGRESS.md'de detay.
+Task 022 (Motion & Bento, SON faz) kullanıcı commit'ini bekliyor.
 
-Task 021 (Floating Command Dock + Launcher) done: 3. layout modu `dock` (feature-flag'li, `dockLayout` kapalıysa
-`sidebar`'a düşer). Kalıcı sidebar/topnav YOK; üst-ortada **zengin-cam** `CommandDock` (Arsam launcher + `ContextPill`
-["Şu an: üst › sayfa" mini-breadcrumb + enjekte edilebilir saat `useNow`] + `NotificationBell` + `UserMenu`).
-`DockShell` mobilde **yüzen yuvarlak komut pill'i** (launcher + zil + UserMenu) + `MobileBottomNav`'a yakınsar (Golden Rule 3; tam nav card-grid launcher'dan, drawer yok). ⌘K → `CommandCardLauncher`
-(izinli modül KARTLARI + nested quick-action chip'leri + modül arama + NL kutusu [FieldHelp, onaydan önce uygulama
-yok; yazma → AI asistanı]); `CommandLauncher` mod'a göre `cards`/`list` seçer, sidebar/topnav'da eski `CommandPalette`
-regresyonsuz. `features/notifications`: saf `deriveNotifications` (moderasyon özeti [badge=pending] + son audit derin
-link) + `GET /notifications` MSW (mevcut mock DB'den, yeni kaynak yok). Cam token'ları `--glass*` (light+dark, 0.9
-opaklık, WCAG-güvenli; sadece chrome). Bayraklar `dockLayout`+`notificationCenter` (015 köprüsü, canlı aç/kapa).
-nav-schema'ya 10 modül `description`'ı. **4 agent çalıştı:** token-guardian CLEAN; a11y-sentinel 1 BLOCKER (44px,
-düzeltildi) + 1 WARN (glass-border kontrastı, düzeltildi); ux-critic 2 High (dock UserMenu + ContextPill üst-nav,
-düzeltildi) + orta/düşük (uygulandı); dod-reviewer NO→YES (flag-OFF + LayoutSwitcher story'leri + cast temizliği).
-lint 0-error · typecheck · test 923/923 · build · build-storybook hepsi yeşil.
+Task 022 (Motion & Bento) done: ölü `--duration-*`/`--ease-*` tokenları canlandırıldı + dashboard bento'ya geçti.
+- **Motion** (`theme.css`): `fade-in`/`fade-in-up`/`scale-in` keyframe'leri + `--animate-*` tokenları (duration/ease
+  güdümlü), `.card-interactive` hover-lift, `.stagger-children` util (`--stagger-step` adımlı), `--lift-y`. Reduced-motion
+  base kuralı `animation-delay`/`transition-delay`'i de sıfırlar + `.card-interactive` transform'u kapanır (shadow kalır).
+- **Card `interactive`** varyantı (cva): hover-lift + `focus-within` ring, sadece tıklanabilir kartlarda (dashboard
+  hızlı-erişim, stretched-link + `min-h-11`).
+- **KpiCard**: opsiyonel `trend` → ~40px recharts sparkline (chart-1, aria-hidden); simetrik delta pill (tint + ok +
+  `+/−` işaret; renk tek sinyal değil). Yeni `--destructive-tint-foreground` on-tint token'ı AA'yı geçirir
+  (6.99:1 light / 7.17:1 dark, pozitif branch'le simetrik). `DashboardStats`'e deterministik `makeTrend()` serisi.
+- **Bento dashboard**: tek responsive grid — mobil 1-up / lg(768) 2-up / xl(1024) 4-up, span-1/span-2 boşluksuz;
+  gerçek `isError`→`ErrorState` dalı; `EmptyState` tutarlılığı; `gap-4`; giriş stagger'ı. Canlı KPI'larda delta YOK
+  (gerçek baz dönem yok — sparkline yönü taşır); delta özelliği story'lerde tam kanıtlı.
+- **Shape-matched skeleton**: `ChartSkeleton` (bar silüeti) + `DonutSkeleton` (halka+legend); `ChartCard`/`DonutChartCard`
+  `loading` prop'u. Dashboard `Loading`/`Empty`/`Error` story'leri yeni `seedQueryLoading` ile GERÇEK query durumlarını sürer.
+- **AiSuggestionBadge** (020 devralınan): hover-only Tooltip → tap/klavye `Popover` (gerçek `<button>`, `title` yok),
+  `after:-inset-3` görünmez hit-area (≥44px, play testinde `getBoundingClientRect` ile kilitli).
 
-Mode: TASK (uygula → doğrula → DoD → PROGRESS checkpoint → sonraki görev dosyasını yaz → CURRENT ilerlet
-→ DUR → kullanıcı commit → /clear).
+**4 agent çalıştı, tüm blocking'ler kapandı:** token-guardian CLEAN; ux-critic 2 High (error state yok + sahte delta) +
+3 orta (hepsi düzeltildi); a11y-sentinel 1 BLOCKER (delta kontrastı, düzeltildi) + 2 WARN (dokunma hedefleri, düzeltildi);
+dod-reviewer 1 BLOCKER (badge 42px → `-inset-3` 46px, düzeltildi) → NO→YES.
+lint 0-error · typecheck · test 926/926 · build · build-storybook hepsi yeşil.
 
-Aşama 6 kilitli kararlar (BACKLOG.md'de detay):
-- Referans (sahibinden-v2): SEÇİCİ uyarlama, birebir klon değil (cream palet / beyaz liquid-glass / font trio ALINMAZ).
-- Motion: kendi `--duration-*`/`--ease-*` tokenlarımız; enterprise-sakin, `prefers-reduced-motion` MUTLAK korunur.
-- Yeni yüzeyler token-only + AI-first + Storybook-first; play testleri animasyon süresine yaslanmaz.
-- Faz sırası: 018 tooling → 019 breakpoint → 020 mobil → 021 dock/launcher → **022 motion/bento** (SON).
+Mode: TASK. Sıradaki adım: kullanıcı commit → `/clear`.
 
-022 girdisi (020/021'den tracked, non-blocking):
-- AiSuggestionBadge reasons hover-only (touch'ta ulaşılamaz) → 022'de tap Popover/Sheet.
-- KpiCard delta renk asimetrisi (success-foreground vs destructive) → 022 polish + ikon/işaret (renk tek sinyal değil).
-- FilterBar toolbar 320px'de sarıp içeriği aşağı itiyor → 022'de mobil filtre davranışını gözden geçir (ya da ayrı follow-up).
+Devralınan non-blocking (022 PROGRESS'te): motion vocabini app geneline yay (header `animate-fade-in`, tıklanabilir özet
+kartlarda `card-interactive`); KpiCard sağ-kolon yoğunluğu (sparkline varken ikon?); bento sadece xl'de tam mozaik.
 
 Backlog / faz sırası: docs/tasks/BACKLOG.md
 Resume: "docs/tasks/CURRENT.md ve PROGRESS.md'yi oku, devam et".

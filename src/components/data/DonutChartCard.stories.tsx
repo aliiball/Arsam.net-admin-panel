@@ -41,7 +41,13 @@ export const Default: Story = {
   },
 };
 
-export const Loading: Story = { args: { data: [], description: 'Veri getiriliyor' } };
+/** Shape-matched loading: a ring + legend-line silhouette. */
+export const Loading: Story = {
+  args: { data: [], description: 'Veri getiriliyor', loading: true },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('[data-slot="donut-skeleton"]')).not.toBeNull();
+  },
+};
 
 export const Empty: Story = {
   args: { data: [], description: 'Görüntülenecek kayıt yok' },

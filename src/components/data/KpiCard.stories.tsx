@@ -23,6 +23,25 @@ export const Default: Story = {
   },
 };
 export const Negative: Story = { args: { label: 'Bekleyen', value: 42, icon: Clock, delta: -8 } };
+/**
+ * With a `trend` series a compact sparkline (chart-1 token, no axes, ~40px) renders
+ * beside the icon. Decorative + aria-hidden — the value/delta carry the meaning.
+ */
+export const Sparkline: Story = {
+  args: { label: 'Toplam İlan', value: '1.284', delta: 12, hint: 'son 7 gün', trend: [40, 44, 42, 50, 55, 58, 60] },
+  render: (args) => (
+    <div className="w-72">
+      <KpiCard {...args} />
+    </div>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.getByText('1.284')).toBeInTheDocument();
+    // Sparkline slot present and hidden from assistive tech.
+    const spark = canvasElement.querySelector('[data-slot="kpi-sparkline"]');
+    await expect(spark).not.toBeNull();
+    await expect(spark).toHaveAttribute('aria-hidden', 'true');
+  },
+};
 export const Loading: Story = { args: { loading: true } };
 export const Empty: Story = { args: { value: 0, hint: 'veri yok' } };
 export const Error: Story = { args: { value: '—', hint: 'yüklenemedi' } };

@@ -26,7 +26,7 @@
   ux-design-critic/dead-code-hunter + `docs/AGENTS.md` roster; governance gevşetme: seçici uyarlama serbest/klon
   yasak; emoji temiz). Config-only, `src/` değişmedi. (tamam)
 
-## Sıradaki fazlar — Aşama 6: Modernizasyon (018 → 022)
+## Aşama 6: Modernizasyon (018 → 022) — ✅ TAMAMLANDI (022 kullanıcı commit'ini bekliyor)
 > Referans (sahibinden-v2) SEÇİCİ uyarlama: etkileşim/düzen fikirleri alınır, birebir klon (cream palet,
 > beyaz liquid-glass, font trio) ALINMAZ; her şey kendi OKLCH token'larımızla yeniden derilir.
 > Kararlar: zengin cam / kendi paletimiz · 3. layout modu `dock` (sidebar opsiyonel) · breakpoint strateji A
@@ -36,15 +36,16 @@
   xs320/sm480/md640/lg768/xl1024/2xl1280/3xl1536/4xl1920); **strateji A**: 1024 tablo/kabuk-switch'i korumak
   için gerçek **22 `lg:`** kullanımından ~13 shell/tablo-switch olanını `xl:`'e anlam-koruyucu remap (kalan ~9
   grid-yoğunluk kullanımı gözden geçirilir); Storybook viewport'ları 320/480/768; tüm story/test yeşil.
-  (Detay: `docs/tasks/019-breakpoint-adoption.md`.)
+  (Detay: `docs/tasks/019-breakpoint-adoption.md`.) (tamam)
 - **020 — Mobil UX düzeltmeleri** — pagination wrap/kompakt; her list'e `renderMobileCard`; KPI `grid-cols-1`;
-  dialog `max-w-[calc(100%-2rem)]`; RBAC matris + Reports Tabs mobil varyantı. (Yeni ölçeğe göre.)
+  dialog `max-w-[calc(100%-2rem)]`; RBAC matris + Reports Tabs mobil varyantı. (Yeni ölçeğe göre.) (tamam)
 - **021 — Floating Command Dock + Launcher** — 3. layout modu `dock` (sidebar gizli, command-driven nav);
   top-center pill = Arsam launcher + context pill ("Şu an: <sayfa>" + saat) + notification center (bell+badge,
   moderation/audit'ten türetilir); CommandPalette → card-grid launcher + nested quick-actions + NL kutusu
-  (parser `lib/ai` hazır); **zengin cam kendi paletimizle**, WCAG-kontrast güvenli; yeni yüzeyler feature-flag'li.
+  (parser `lib/ai` hazır); **zengin cam kendi paletimizle**, WCAG-kontrast güvenli; yeni yüzeyler feature-flag'li. (tamam)
 - **022 — Motion & Bento** — ölü motion token'larını canlandır (giriş/stagger/hover-lift, reduced-motion korunur);
-  interaktif Card hover-lift; KpiCard sparkline; dashboard bento düzeni; shape-matched skeleton'lar.
+  interaktif Card hover-lift; KpiCard sparkline; dashboard bento düzeni; shape-matched skeleton'lar; +delta AA
+  simetrisi (`--destructive-tint-foreground`), AiSuggestionBadge tap-erişimi, gerçek page Loading/Empty/Error. (tamam)
 
 ## Çalışma ritmi (her faz)
 1. Önceki fazı commit et (kullanıcı) → 2. `/clear` → 3. "docs/tasks/CURRENT.md oku, devam et" →

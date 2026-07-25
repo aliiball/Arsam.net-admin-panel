@@ -26,6 +26,11 @@
   --accent-foreground: oklch(0.2 0.03 210);
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.985 0.005 250);
+  /* Readable destructive TEXT on a light destructive tint (bg-destructive/10) —
+     analogous to --success-foreground/--warning-foreground. The solid
+     --destructive fails AA (~4.07:1) as text on its own /10 tint; this darkened
+     red clears 4.5:1. */
+  --destructive-tint-foreground: oklch(0.45 0.18 27);
   --success: oklch(0.62 0.15 150);
   --success-foreground: oklch(0.42 0.12 150); /* dark green text on light success tint */
   --warning: oklch(0.8 0.16 84);
@@ -75,6 +80,7 @@
   --accent-foreground: oklch(0.18 0.02 210);
   --destructive: oklch(0.62 0.2 27);
   --destructive-foreground: oklch(0.985 0.005 250);
+  --destructive-tint-foreground: oklch(0.8 0.14 27); /* light red text on dark destructive tint */
   --success: oklch(0.68 0.14 150);
   --success-foreground: oklch(0.82 0.14 150); /* light green text on dark success tint */
   --warning: oklch(0.82 0.15 84);
@@ -123,6 +129,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-tint-foreground: var(--destructive-tint-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -210,6 +217,14 @@
   /* Accordion open/close */
   --animate-accordion-down: accordion-down 0.2s var(--ease-standard);
   --animate-accordion-up: accordion-up 0.2s var(--ease-standard);
+
+  /* Entrance micro-motion (task 022). Token-driven duration/ease; `both` fill so
+     the start state is applied before the frame paints (no content flash) and the
+     end state persists after. Under prefers-reduced-motion the base layer collapses
+     the duration to ~0, so elements simply appear at their final state. */
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
+  --animate-fade-in-up: fade-in-up var(--duration-slow) var(--ease-standard) both;
+  --animate-scale-in: scale-in var(--duration-base) var(--ease-emphasized) both;
 }
 
 @keyframes accordion-down {
@@ -234,6 +249,92 @@
   --duration-fast: 120ms;
   --duration-base: 180ms;
   --duration-slow: 260ms;
+
+  /* Interactive-card hover-lift + staggered-reveal step (task 022). */
+  --lift-y: -2px; /* hover translate for `Card interactive` */
+  --stagger-step: 45ms; /* delay between successive staggered children */
+}
+
+/* Entrance keyframes (task 022) — transform/opacity only, GPU-cheap. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Interactive card hover-lift — token-driven, applied ONLY by `Card interactive`.
+   Hover lifts + deepens the shadow; the transition uses our motion tokens. Under
+   prefers-reduced-motion the transform is removed entirely (color/shadow only), per
+   the Aşama-6 rule that non-essential transform-motion is disabled. */
+@layer components {
+  .card-interactive {
+    transition:
+      transform var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
+  }
+  .card-interactive:hover {
+    transform: translateY(var(--lift-y));
+    box-shadow: var(--shadow-md);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card-interactive:hover {
+      transform: none; /* shadow still deepens; no positional motion */
+    }
+  }
+
+  /* Staggered reveal — direct children fade-in-up with an incremental, token-scaled
+     delay. Depth capped at 8; later children share the last step (graceful, not
+     invisible). Reduced-motion is handled by the base layer (duration → ~0). */
+  .stagger-children > * {
+    animation: var(--animate-fade-in-up);
+  }
+  .stagger-children > *:nth-child(1) {
+    animation-delay: calc(var(--stagger-step) * 0);
+  }
+  .stagger-children > *:nth-child(2) {
+    animation-delay: calc(var(--stagger-step) * 1);
+  }
+  .stagger-children > *:nth-child(3) {
+    animation-delay: calc(var(--stagger-step) * 2);
+  }
+  .stagger-children > *:nth-child(4) {
+    animation-delay: calc(var(--stagger-step) * 3);
+  }
+  .stagger-children > *:nth-child(5) {
+    animation-delay: calc(var(--stagger-step) * 4);
+  }
+  .stagger-children > *:nth-child(6) {
+    animation-delay: calc(var(--stagger-step) * 5);
+  }
+  .stagger-children > *:nth-child(7) {
+    animation-delay: calc(var(--stagger-step) * 6);
+  }
+  .stagger-children > *:nth-child(n + 8) {
+    animation-delay: calc(var(--stagger-step) * 7);
+  }
 }
 
 /* ===========================================================================
@@ -270,14 +371,19 @@
     font-size: 93.75%;
   }
 
-  /* Respect reduced motion: disable non-essential motion */
+  /* Respect reduced motion: disable non-essential motion. Delays are zeroed too so
+     staggered/delayed entrance animations (e.g. `.stagger-children`) don't leave
+     content invisible during a wait — under reduced motion everything appears at
+     once, immediately, at its final state. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
       scroll-behavior: auto !important;
     }
   }

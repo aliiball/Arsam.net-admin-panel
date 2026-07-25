@@ -18,6 +18,7 @@ import { KpiCard } from '@/components/data/KpiCard';
 import { ChartCard } from '@/components/data/ChartCard';
 import { DonutChartCard } from '@/components/data/DonutChartCard';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { ErrorState } from '@/components/feedback/ErrorState';
 import { getAuditLog } from '@/lib/audit';
 import type { TableQuery } from '@/components/data-table/types';
 import { CATEGORY_LABELS, LOCATIONS } from '@/features/listings/data/taxonomy';
@@ -33,15 +34,22 @@ const PENDING_QUERY: TableQuery = {
   q: '',
 };
 
+const QUICK_LINKS = [
+  { to: '/listings', label: 'İlanlar', icon: Building2 },
+  { to: '/listings/moderation', label: 'Moderasyon', icon: Clock },
+  { to: '/categories', label: 'Kategoriler', icon: FolderTree },
+  { to: '/locations', label: 'Lokasyonlar', icon: MapPin },
+];
+
 export function DashboardPage() {
-  const { data: stats, isLoading } = useDashboardStats();
+  const { data: stats, isLoading, isError, refetch } = useDashboardStats();
   const pendingQuery = useMemo(() => PENDING_QUERY, []);
   const { data: pending } = useListings(pendingQuery);
   const audit = getAuditLog().slice(0, 6);
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="animate-fade-in flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Genel Bakış</h1>
           <p className="text-muted-foreground text-sm">Pazaryerinin anlık durumu ve bekleyen işler.</p>
@@ -53,25 +61,65 @@ export function DashboardPage() {
         </Button>
       </header>
 
-      {/* KPI row — 4-up only at xl (1024). KpiCard values are unformatted/currency
-          integers at text-2xl tabular-nums; a 4-up step at lg (768) leaves ~79px of
-          usable text width per tile and clips 5-digit values, so the reflow stays at
-          1024 (2-up on tablet portrait is roomy and reads cleanly). */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Toplam İlan" value={stats?.totalListings ?? 0} icon={Building2} loading={isLoading} hint="tüm kategoriler" />
-        <KpiCard label="Bekleyen Moderasyon" value={stats?.pending ?? 0} icon={Clock} loading={isLoading} delta={-8} hint="son 7 gün" />
-        <KpiCard label="Yayında" value={stats?.active ?? 0} icon={CheckCircle2} loading={isLoading} delta={12} hint="son 7 gün" />
-        <KpiCard label="Reddedilen" value={stats?.rejected ?? 0} icon={XCircle} loading={isLoading} hint="toplam" />
-      </div>
+      {isError ? (
+        // Without this branch a failed stats fetch would fall back to `?? 0` / `[]`
+        // and render a confident zero-state indistinguishable from a genuinely empty
+        // marketplace — the most misleading failure mode for an overview page.
+        <ErrorState
+          title="Panel yüklenemedi"
+          description="Genel bakış verileri alınamadı. Lütfen tekrar deneyin."
+          onRetry={() => void refetch()}
+        />
+      ) : (
+      /* Bento — one responsive grid. Mobile 1-up; `lg` (768) 2-up; `xl` (1024) 4-up
+         with varied tile widths (span-1/span-2). Spans pack cleanly into rows of 2
+         (lg) and 4 (xl) with no gaps. Children fade-in-up in a token-driven stagger.
+         KPI band reflows 1→2-up at `lg` (768): unlike Reports' currency KpiCards
+         (which hold width until `md`), these are plain counts, so the earlier 2-up
+         reflow reads cleanly on tablet portrait. Deltas are intentionally omitted —
+         a signed % needs a real prior-period baseline the mock doesn't have; the
+         sparkline carries the direction-neutral trend instead. */
+      <div className="stagger-children grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        {/* KPI band — four 1×1 tiles (1-up mobile, 2-up lg, 4-up xl). */}
+        <KpiCard
+          label="Toplam İlan"
+          value={stats?.totalListings ?? 0}
+          icon={Building2}
+          loading={isLoading}
+          hint="tüm kategoriler"
+          trend={stats?.trends.totalListings}
+        />
+        <KpiCard
+          label="Bekleyen Moderasyon"
+          value={stats?.pending ?? 0}
+          icon={Clock}
+          loading={isLoading}
+          hint="kuyrukta"
+          trend={stats?.trends.pending}
+        />
+        <KpiCard
+          label="Yayında"
+          value={stats?.active ?? 0}
+          icon={CheckCircle2}
+          loading={isLoading}
+          hint="aktif ilan"
+          trend={stats?.trends.active}
+        />
+        <KpiCard
+          label="Reddedilen"
+          value={stats?.rejected ?? 0}
+          icon={XCircle}
+          loading={isLoading}
+          hint="toplam"
+          trend={stats?.trends.rejected}
+        />
 
-      {/* Charts row — 2-up at lg (768) so bar + donut sit side-by-side (~360px each,
-          the readable width the Reports trends row uses), 3-up at xl (1024). Avoids
-          a single 320→1024 column that leaves the fixed-260px donut stranded. */}
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {/* Category chart */}
+        {/* Category bar chart — 2-wide (half at xl, full at lg). */}
         <ChartCard
+          className="lg:col-span-2"
           title="Kategoriye göre ilanlar"
           description="Aktif taksonomi dağılımı"
+          loading={isLoading}
           summary={
             stats?.byCategory?.length
               ? `Kategoriye göre ilan sayıları: ${stats.byCategory
@@ -98,48 +146,20 @@ export function DashboardPage() {
           </BarChart>
         </ChartCard>
 
-        {/* Status distribution donut */}
+        {/* Status distribution donut — 2-wide (half at xl, full at lg). */}
         <DonutChartCard
+          className="lg:col-span-2"
           title="Duruma göre dağılım"
           description="İlan yaşam döngüsü"
           centerLabel="ilan"
+          loading={isLoading}
           data={(stats?.byStatus ?? [])
             .filter((s) => s.count > 0)
             .map((s) => ({ name: s.label, value: s.count }))}
         />
 
-        {/* Recent moderation decisions (audit) */}
-        <Card className="gap-3">
-          <CardHeader>
-            <CardTitle className="text-base">Son moderasyon kararları</CardTitle>
-            <CardDescription>Denetim kaydından</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {audit.length === 0 ? (
-              <p className="text-muted-foreground py-6 text-center text-sm">
-                Henüz karar yok. Moderasyon kuyruğundan başlayın.
-              </p>
-            ) : (
-              <ol className="space-y-2 text-sm">
-                {audit.map((entry) => (
-                  <li key={entry.id} className="flex items-center gap-2">
-                    <ScrollText className="text-muted-foreground size-3.5 shrink-0" />
-                    <span className="truncate">
-                      <span className="font-medium">{entry.action}</span>{' '}
-                      <span className="text-muted-foreground">{entry.resource}</span>
-                    </span>
-                    <span className="text-muted-foreground ml-auto font-mono text-xs">{entry.ts.slice(0, 10)}</span>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        {/* Pending queue preview */}
-        <Card className="gap-3 xl:col-span-2">
+        {/* Pending queue preview — 2-wide (half at xl, full at lg). */}
+        <Card className="gap-3 lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <div>
               <CardTitle className="text-base">Bekleyen ilanlar</CardTitle>
@@ -172,28 +192,63 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Quick links */}
+        {/* Recent moderation decisions (audit) — 1-wide. */}
+        <Card className="gap-3">
+          <CardHeader>
+            <CardTitle className="text-base">Son moderasyon kararları</CardTitle>
+            <CardDescription>Denetim kaydından</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {audit.length === 0 ? (
+              // Shared EmptyState (compact override) — same grammar as the pending-queue
+              // tile's empty state, not a bespoke <p>.
+              <EmptyState
+                className="border-0 px-0 py-6"
+                title="Henüz karar yok"
+                description="Moderasyon kuyruğundan başlayın."
+              />
+            ) : (
+              <ol className="space-y-2 text-sm">
+                {audit.map((entry) => (
+                  <li key={entry.id} className="flex items-center gap-2">
+                    <ScrollText className="text-muted-foreground size-3.5 shrink-0" />
+                    <span className="truncate">
+                      <span className="font-medium">{entry.action}</span>{' '}
+                      <span className="text-muted-foreground">{entry.resource}</span>
+                    </span>
+                    <span className="text-muted-foreground ml-auto font-mono text-xs">{entry.ts.slice(0, 10)}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick links — 1-wide; each tile is an interactive (hover-lift) link card. */}
         <Card className="gap-3">
           <CardHeader>
             <CardTitle className="text-base">Hızlı erişim</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
-            {[
-              { to: '/listings', label: 'İlanlar', icon: Building2 },
-              { to: '/listings/moderation', label: 'Moderasyon', icon: Clock },
-              { to: '/categories', label: 'Kategoriler', icon: FolderTree },
-              { to: '/locations', label: 'Lokasyonlar', icon: MapPin },
-            ].map((q) => (
-              <Button key={q.to} asChild variant="outline" className="h-auto justify-start gap-2 py-2">
-                <Link to={q.to} data-action="navigate" data-entity="module">
-                  <q.icon className="size-4" />
-                  {q.label}
-                </Link>
-              </Button>
+            {QUICK_LINKS.map((q) => (
+              <Card key={q.to} interactive className="relative gap-0 border-border/60 py-0 shadow-none">
+                <CardContent className="flex min-h-11 items-center gap-2 px-3 py-2 text-sm font-medium">
+                  <q.icon className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+                  <Link
+                    to={q.to}
+                    className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none"
+                    data-action="navigate"
+                    data-entity="module"
+                  >
+                    {q.label}
+                  </Link>
+                </CardContent>
+              </Card>
             ))}
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   );
 }

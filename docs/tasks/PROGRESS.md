@@ -1152,3 +1152,66 @@ Entry format:
   nav. Re-verified: lint·typecheck·test(923/923)·build·build-storybook green. NOTE: the reference's richer feel
   (serif greeting, bento sparkline cards, personalized header) is deliberately deferred to **Task 022 (Motion &
   Bento)** and/or excluded by Golden Rule 1 (serif/cream/liquid-glass never cloned).
+
+## 2026-07-25 Task 022 — Aşama 6: Motion & Bento (SON faz)
+- Built: brought the dormant motion tokens to life + gave the dashboard a bento layout, all token-driven and
+  reduced-motion-safe.
+  - **Motion primitives** (`src/styles/theme.css`): `@keyframes fade-in / fade-in-up / scale-in` (transform+opacity
+    only, GPU-cheap) + `--animate-fade-in* / --animate-scale-in` tokens (composed from `--duration-*`/`--ease-*`,
+    `both` fill so start-state paints before the frame — no flash); `.card-interactive` hover-lift class
+    (`transform: translateY(var(--lift-y)) + var(--shadow-md)`, `var(--duration-fast)`/`var(--ease-standard)`);
+    `.stagger-children` utility (per-child `animation-delay: calc(var(--stagger-step) * n)`, capped at 8). New
+    `--lift-y` / `--stagger-step` tokens. Base-layer reduced-motion rule EXTENDED to also zero `animation-delay` /
+    `transition-delay` (so staggered children don't sit invisible during a delay under reduced motion) and
+    `.card-interactive:hover { transform: none }` under reduced-motion (shadow still deepens, no positional motion).
+  - **`Card interactive` variant** (cva, `src/components/ui/card.tsx`): hover-lift + `focus-within` ring + cursor;
+    scoped ONLY to clickable cards. Applied to the dashboard quick-access tiles (stretched-link `after:absolute
+    inset-0` pattern; `min-h-11` 44px targets).
+  - **`KpiCard` sparkline + delta** (`src/components/data/KpiCard.tsx`): optional `trend` → ~40px recharts area
+    sparkline (chart-1 token, no axes, `isAnimationActive={false}`, `aria-hidden`); delta is a symmetric tinted pill
+    (tint + arrow icon + explicit `+`/`−` sign → color never the sole signal). `DashboardStats` gained a deterministic
+    `trends` series via a pure `makeTrend()` (no Date/random).
+  - **Bento dashboard** (`DashboardPage.tsx`): ONE responsive grid — mobile 1-up / `lg` (768) 2-up / `xl` (1024) 4-up
+    with span-1/span-2 tiles that pack gap-free into rows of 2 and 4 (KPI band, category chart span-2, donut span-2,
+    pending queue span-2, recent decisions span-1, quick-access span-1). Entrance via `.stagger-children` + header
+    `animate-fade-in`. Grid bumped to `gap-4` (heavier chart tiles). Deltas intentionally DROPPED from the live KPIs
+    (a signed % needs a real prior-period baseline the mock lacks; the sparkline carries the direction-neutral trend).
+  - **Shape-matched skeletons** (`src/components/data/ChartSkeleton.tsx` new): `ChartSkeleton` (bar silhouette) +
+    `DonutSkeleton` (ring + legend lines); `ChartCard`/`DonutChartCard` gained a `loading` prop.
+  - **`AiSuggestionBadge`** (020 tracked): hover-only Tooltip → tap/keyboard `Popover` (real `<button>` via Badge
+    `asChild`, `aria-label`, no `title`), with an invisible `after:-inset-3` hit-area expander to clear 44px.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (926/926, 153 files) ·
+  build PASS · build-storybook PASS.
+- **4 review agents run, all blockers closed before checkpoint:**
+  - `design-token-guardian`: CLEAN (token-only motion/shadow/color enforced).
+  - `ux-design-critic`: 2 High (no dashboard error state → confident zero-state on fetch failure; hardcoded deltas
+    disconnected from the shown trend) + 3 Medium (empty-state inconsistency, gap rhythm, KPI-reflow comment) — ALL
+    FIXED: added real `isError`→`ErrorState` branch, dropped the fake deltas, unified `EmptyState`, bumped to `gap-4`,
+    added the reflow rationale comment. Follow-ups (extend motion vocab app-wide; KPI-tile density) noted below.
+  - `a11y-sentinel`: 1 BLOCKER (negative delta pill `text-destructive` on `bg-destructive/10` = 4.07:1 light /
+    3.76:1 dark, fails AA — the pos/neg asymmetry persisted) + 2 WARN (touch targets) — ALL FIXED: added a dedicated
+    `--destructive-tint-foreground` on-tint token (light `oklch(0.45 0.18 27)` / dark `oklch(0.8 0.14 27)`), verified
+    6.99:1 light / 7.17:1 dark via OKLCH→sRGB WCAG math (symmetric with the positive branch's 7.15:1); added the badge
+    hit-area expander + quick-tile `min-h-11`.
+  - `dod-reviewer`: 1 BLOCKER (badge hit area still ~42px at `-inset-2.5`) — FIXED (`-inset-3` → ~46px) + added a
+    `getBoundingClientRect` touch-target assertion to the `TapReasons` play so the inset can't silently regress.
+    Re-verified green. Ready to commit: YES.
+- **Stories**: real result-state (not motion-duration) play tests — Card `Interactive`, KpiCard `Sparkline`,
+  ChartCard/DonutChartCard `Loading` (assert real skeleton slots), AiSuggestionBadge `TapReasons` (portal-aware +
+  touch-target), DashboardPage `Loading`/`Empty`/`Error` now drive the REAL query states via a new
+  `seedQueryLoading` helper in `page-story-utils` (mirrors the existing `seedQueryError`).
+- Decisions/assumptions:
+  - Motion stays "enterprise-calm": durations `fast`/`base`/`slow` only, transform+opacity keyframes, sparkline
+    animation off. `prefers-reduced-motion` is honored centrally (base layer) + the card transform override.
+  - New `--destructive-tint-foreground` token deliberately mirrors the `--success-foreground`/`--warning-foreground`
+    "on-tint readable text" family — `--destructive-foreground` stays the on-solid white and was NOT changed.
+  - Live dashboard KPIs show sparkline + hint but NO delta pill (honest-data restraint); the delta pill feature +
+    AA-symmetric colors are fully exercised by the KpiCard stories.
+  - Reduced-motion base rule now also zeroes delays — a general correctness fix, not just for this task's stagger.
+- Tracked non-blocking follow-ups (out of scope, for a later pass): (1) motion vocabulary (`animate-fade-in` on page
+  headers, `card-interactive` on genuinely-clickable summary cards) is only on the dashboard so far — extend app-wide
+  so it reads as a system decision; (2) KpiCard right-column stacks icon+sparkline+delta — consider dropping the icon
+  when a sparkline is present, or a full-width sparkline strip, at a later visual polish pass; (3) bento is a true
+  mosaic only at `xl` — at `lg` the three heavy tiles stack full-width (acceptable, documented).
+- Suggested commit message:
+  `feat(motion): entrance/hover motion tokens + bento dashboard, KpiCard sparkline, tap-accessible AI reasons`

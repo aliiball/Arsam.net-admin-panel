@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { DonutSkeleton } from './ChartSkeleton';
 
 export interface DonutSlice {
   name: string;
@@ -23,6 +24,8 @@ export interface DonutChartCardProps {
   centerLabel?: string;
   height?: number;
   className?: string;
+  /** Shape-matched loading state — renders a ring + legend silhouette. */
+  loading?: boolean;
 }
 
 /** Chart palette tokens, cycled across slices. */
@@ -47,6 +50,7 @@ export function DonutChartCard({
   centerLabel,
   height = 260,
   className,
+  loading = false,
 }: DonutChartCardProps) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const isEmpty = total === 0;
@@ -58,7 +62,9 @@ export function DonutChartCard({
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-        {isEmpty ? (
+        {loading ? (
+          <DonutSkeleton height={height} />
+        ) : isEmpty ? (
           <div
             style={{ height }}
             className="text-muted-foreground flex items-center justify-center text-sm"

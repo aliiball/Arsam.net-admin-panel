@@ -63,6 +63,18 @@ export function seedQueryError(qc: QueryClient, queryKey: readonly unknown[]): v
   });
 }
 
+/**
+ * Seed a query into a stuck `pending`/`fetching` state (no network) so page
+ * `Loading` stories render the real loading branch (shape-matched skeletons)
+ * instead of resolving. Marking `fetchStatus: 'fetching'` makes the observer
+ * dedupe against the (non-existent) in-flight fetch, so it never starts its own
+ * and the loading state sticks.
+ */
+export function seedQueryLoading(qc: QueryClient, queryKey: readonly unknown[]): void {
+  const query = qc.getQueryCache().build(qc, { queryKey: [...queryKey] });
+  query.setState({ status: 'pending', fetchStatus: 'fetching', data: undefined });
+}
+
 /** Wrap a page element in a seeded QueryClient + memory data-router. */
 export function renderPage(
   element: ReactElement,
