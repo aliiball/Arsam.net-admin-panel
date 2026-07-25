@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useFeatureFlag } from '@/lib/settings/feature-flags-store';
 import { CommandDock } from './CommandDock';
 import { DockLogo } from './DockLogo';
+import { EdgeDock } from './EdgeDock';
 import { NotificationBell } from './NotificationBell';
 import { UserMenu } from './UserMenu';
 import { useCommandPalette } from './command-palette-context';
@@ -25,6 +26,9 @@ export interface DockShellProps {
 export function DockShell({ children, now }: DockShellProps) {
   const { setOpen } = useCommandPalette();
   const notificationsEnabled = useFeatureFlag('notificationCenter');
+  const edgeBottom = useFeatureFlag('edgeDockBottom');
+  const edgeLeft = useFeatureFlag('edgeDockLeft');
+  const edgeRight = useFeatureFlag('edgeDockRight');
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -55,6 +59,12 @@ export function DockShell({ children, now }: DockShellProps) {
 
       {/* Floating dock (xl+). */}
       <CommandDock now={now} />
+
+      {/* Collapsible edge nav docks — bottom / left / right, each independently
+          flag-gated from Settings. Shown on desktop AND mobile; all share one nav source. */}
+      {edgeBottom && <EdgeDock edge="bottom" />}
+      {edgeLeft && <EdgeDock edge="left" />}
+      {edgeRight && <EdgeDock edge="right" />}
 
       <main className="flex-1 overflow-x-hidden p-4 pb-20 pt-20 xl:pb-6" data-density-scope>
         {children}

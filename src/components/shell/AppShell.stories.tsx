@@ -65,6 +65,24 @@ export const Dock: Story = {
 };
 
 /**
+ * Dock mode on a phone: unlike sidebar/topnav (which converge to the bottom nav),
+ * dock mode has NO bottom bar — navigation is carried by the floating command pill,
+ * the edge nav docks and ⌘K. Guards the AppShell `effectiveMode !== 'dock'` gate.
+ */
+export const DockMobile: Story = {
+  globals: { layout: 'dock' },
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  play: async ({ canvas }) => {
+    // The mobile bottom nav is intentionally absent in dock mode.
+    await expect(canvas.queryByRole('navigation', { name: 'Alt gezinme' })).toBeNull();
+    // The floating command pill's launcher carries navigation instead.
+    await expect(canvas.getByRole('button', { name: 'Menü ve komut aramayı aç' })).toBeInTheDocument();
+    // Edge nav docks render (their hint tabs are reachable).
+    await expect(canvas.getAllByRole('button', { name: /Gezinme dock.*aç/ }).length).toBeGreaterThan(0);
+  },
+};
+
+/**
  * Feature-flag safety: with `dockLayout` OFF, a persisted `dock` mode falls back
  * to `sidebar` — existing modes are never affected by the flag being off.
  */

@@ -49,7 +49,10 @@ export function AppShell({ children }: AppShellProps) {
         ) : (
           <TopnavShell>{content}</TopnavShell>
         )}
-        <MobileBottomNav />
+        {/* Mobile bottom nav is for sidebar/topnav modes only. In dock mode the
+            floating command pill + the (bottom/left/right) edge docks + ⌘K launcher
+            carry navigation, so the bottom bar is intentionally omitted. */}
+        {effectiveMode !== 'dock' && <MobileBottomNav />}
         <CommandLauncher variant={effectiveMode === 'dock' ? 'cards' : 'list'} />
         <AssistantDock />
       </div>

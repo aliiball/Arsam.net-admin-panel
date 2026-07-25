@@ -12,6 +12,9 @@ export const FEATURE_FLAG_KEYS = [
   'aiCopilotBadges',
   'dockLayout',
   'notificationCenter',
+  'edgeDockBottom',
+  'edgeDockLeft',
+  'edgeDockRight',
 ] as const;
 
 export type FeatureFlagKey = (typeof FEATURE_FLAG_KEYS)[number];
@@ -47,6 +50,21 @@ export const FEATURE_FLAGS: FeatureFlagMeta[] = [
     label: 'Bildirim merkezi',
     help: 'Dock yerleşimindeki bildirim zilini (moderasyon kuyruğu + son denetim kayıtlarından türetilir) gösterir. Kapalıyken zil gizlenir.',
   },
+  {
+    key: 'edgeDockBottom',
+    label: 'Kenar dock — alt',
+    help: 'Dock yerleşiminde ekranın ALT kenarında, kenardan açılan hızlı gezinme dock’unu gösterir. Kapalı tutamak nabız atar; hover/klavye/dokunma ile açılır. Kapalıyken hiç gösterilmez.',
+  },
+  {
+    key: 'edgeDockLeft',
+    label: 'Kenar dock — sol',
+    help: 'Dock yerleşiminde ekranın SOL kenarında, kenardan açılan hızlı gezinme dock’unu gösterir. Kapalı tutamak nabız atar; hover/klavye/dokunma ile açılır. Kapalıyken hiç gösterilmez.',
+  },
+  {
+    key: 'edgeDockRight',
+    label: 'Kenar dock — sağ',
+    help: 'Dock yerleşiminde ekranın SAĞ kenarında, kenardan açılan hızlı gezinme dock’unu gösterir. Kapalı tutamak nabız atar; hover/klavye/dokunma ile açılır. Kapalıyken hiç gösterilmez.',
+  },
 ];
 
 /** Default flag values — every catalog flag starts enabled. */
@@ -55,6 +73,9 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   aiCopilotBadges: true,
   dockLayout: true,
   notificationCenter: true,
+  edgeDockBottom: true,
+  edgeDockLeft: true,
+  edgeDockRight: true,
 };
 
 /** Type guard for a known flag key (used when parsing partial/legacy payloads). */

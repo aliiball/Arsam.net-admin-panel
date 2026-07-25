@@ -1324,3 +1324,46 @@ Entry format:
   The SC 2.2.2 (pause/stop/hide) advisory is a conscious, documented risk-acceptance at the user's request.
 - Verified: typecheck clean · DockLogo story green (asserts the animate-pulse-soft class, motion-independent) · build green.
 - If a calmer feel is ever wanted again: lower the 1.12 peak and/or switch `infinite` → a finite count in the token.
+
+## 2026-07-25 Task 025 — Edge nav dock (macOS-style magnifying dock, referans esinli)
+- Built: the reference (sahibinden-v2 `GlassDock`/`GlassDockVertical`) macOS-style magnifying edge dock, reinterpreted
+  in OUR `--glass*`/motion tokens (Golden Rule 1 — NOT the liquid-glass clone). `EdgeDock` renders up to 3× in DockShell
+  (bottom/left/right), each independently flag-gated (`edgeDockBottom`/`edgeDockLeft`/`edgeDockRight`), desktop AND mobile,
+  dock-layout only. (Heavily iterated with the user against the live reference.)
+  - **Collapsed:** a 44px hit-box hint button (holds the focus ring, never fades) wrapping a slim glass bar that PULSES
+    (heartbeat `animate-pulse-soft`, per-edge phase offset, `motion-reduce`-safe, origin puffs inward from the edge) and
+    fades to `opacity-0` when open (no grey tab lingers). Insets 1 off the true edge to avoid OS edge-swipe zones.
+  - **Open (hover / keyboard-focus / Enter / tap):** the stage (`inert` when closed) slides in. **Bottom** = magnifying
+    dock — icons scale toward the cursor (cosine proximity falloff derived directly from the pointer; CSS-transition
+    smoothed, no rAF loop); the glass pill stays STABLE (resting-width track + centered `offset`, magnified icons overflow).
+    **Left/right** = vertical dock with a sliding highlight + hover scale.
+  - **Module-name label** (aria-hidden decorative, `animate-fade-in`) driven by BOTH mouse-proximity AND keyboard focus.
+  - Nav = permitted primary modules (`usePrimaryNav(5)`, RBAC) + ⌘K "all" (opens CommandCardLauncher); active route
+    `aria-current` + `bg-primary/15`. Close: mouse-leave (focus outside) / Escape (restores focus) / focus-out / nav-pick.
+  - **AppShell:** MobileBottomNav now renders ONLY in non-dock modes; dock mode navigates via the pill + edge docks + ⌘K.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (938/938, 155 files) ·
+  build PASS · build-storybook PASS. (Intermittent full-suite browser-test flake — 1–3 stories, different each run,
+  all pass in isolation and on warm re-run; pre-existing env concurrency race, not a regression.)
+- **4 review agents, all findings closed:**
+  - `design-token-guardian`: CLEAN (our OKLCH glass + motion tokens; no liquid-glass/`--glass-tint`/SVG-distortion clone).
+  - `a11y-sentinel`: 2 BLOCKER → FIXED — (1) hint faded to opacity-0 while focused, killing the focus ring → ring now
+    lives on the never-fading 44px button, only the inner bar fades; (2) 40px/24px touch targets → BASE=44 + a 44px hint
+    hit box. 1 WARN → FIXED — hover-only `role="tooltip"` labels → aria-hidden decorative + keyboard-focus-driven.
+  - `ux-design-critic`: 2 High → FIXED — (1) the magnify pill's box breathed/recentered every mousemove → resting-width
+    track + centered offset (only icons breathe, pill is stable); (2) hint flush on the device edge vs OS gestures →
+    inset-1. 2 Medium → FIXED (label entrance `animate-fade-in`; bottom pulse phase de-synced from DockLogo). Lows: pulse
+    origin fixed; separate quieter amplitude + label padding left as deliberate.
+  - `dod-reviewer`: 2 BLOCKER → both FIXED — (1) the AppShell `MobileBottomNav` dock-mode gate had no coverage → added
+    an `AppShell` `DockMobile` story (dock layout + phone viewport) asserting NO "Alt gezinme" bottom nav + the command
+    pill launcher + edge-dock hints present; (2) `DockShell.stories` decorator force-mounted `MobileBottomNav` with a now-
+    false comment and Tablet/Phone asserted the bottom nav → dropped the forced nav, fixed the comment, and Tablet/Phone
+    now assert the pill + `queryByRole('Alt gezinme')` is null + edge docks present. Recommendations applied: task-file
+    checklist synced to "desktop+mobile / per-edge flags", EdgeDock story `!`-assertion replaced with an instanceof guard.
+    Re-verified green. Ready to commit: YES.
+- Decisions/assumptions:
+  - The reference effect is a macOS magnifying dock (proximity magnification), NOT a heartbeat — the heartbeat lives on
+    the COLLAPSED hint tab (user's explicit request), the magnify on the OPEN dock.
+  - Same nav on all three edges (one `usePrimaryNav` source); handle/stage `inert` + DOM order keep tab order correct.
+  - Magnification is a mouse affordance; touch/reduced-motion render a calm static dock (no magnify, no pulse).
+- Suggested commit message:
+  `feat(dock): macOS-style magnifying edge nav docks (collapsed heartbeat tab → magnify on open, labels, per-edge flags)`
