@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>arsam.net Yönetim Paneli — Yönetici Raporu</title>
+<meta name="description" content="arsam.net emlak pazaryeri yönetim paneli — yönetici özeti: neler inşa edildi, yetenekler, 12 modül, tasarım sistemi ve kalite süreci." />
+<style>
+  /*
+   * Self-contained report stylesheet — carries its OWN styling.
+   * NOT the app's Tailwind build (Tailwind is scoped away from docs/ via
+   * `@source not "../../docs"`). Colors are re-derived from the app's
+   * "Calm Signal" OKLCH palette (indigo primary / teal accent / slate neutrals)
+   * so the report reads as the same product without cloning the app CSS.
+   */
+  :root {
+    color-scheme: light dark;
+    --bg: oklch(0.994 0.002 250);
+    --bg-elev: oklch(1 0 0);
+    --fg: oklch(0.205 0.02 265);
+    --fg-muted: oklch(0.52 0.02 265);
+    --primary: oklch(0.52 0.18 264);
+    --primary-soft: oklch(0.52 0.18 264 / 0.10);
+    --accent: oklch(0.62 0.13 190);
+    --accent-soft: oklch(0.72 0.13 190 / 0.14);
+    --success: oklch(0.55 0.15 150);
+    --warning: oklch(0.62 0.16 84);
+    --border: oklch(0.92 0.008 250);
+    --border-strong: oklch(0.86 0.01 250);
+    --ring: oklch(0.52 0.18 264 / 0.35);
+    --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.08);
+    --shadow-md: 0 4px 12px oklch(0 0 0 / 0.07);
+    --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.10);
+    --c1: oklch(0.52 0.18 264);
+    --c2: oklch(0.72 0.13 190);
+    --c3: oklch(0.68 0.16 145);
+    --c4: oklch(0.80 0.16 84);
+    --c5: oklch(0.62 0.20 20);
+    --maxw: 1080px;
+    --radius: 14px;
+  }
+  :root[data-theme="dark"] {
+    --bg: oklch(0.205 0.015 265);
+    --bg-elev: oklch(0.245 0.017 265);
+    --fg: oklch(0.96 0.006 250);
+    --fg-muted: oklch(0.72 0.02 260);
+    --primary: oklch(0.70 0.15 264);
+    --primary-soft: oklch(0.70 0.15 264 / 0.16);
+    --accent: oklch(0.75 0.12 190);
+    --accent-soft: oklch(0.75 0.12 190 / 0.16);
+    --success: oklch(0.68 0.14 150);
+    --warning: oklch(0.82 0.15 84);
+    --border: oklch(0.31 0.02 265);
+    --border-strong: oklch(0.38 0.02 265);
+    --ring: oklch(0.70 0.15 264 / 0.45);
+    --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.4);
+    --shadow-md: 0 6px 16px oklch(0 0 0 / 0.45);
+    --shadow-lg: 0 16px 40px oklch(0 0 0 / 0.5);
+    --c1: oklch(0.70 0.15 264);
+    --c2: oklch(0.75 0.12 190);
+    --c3: oklch(0.72 0.15 145);
+    --c4: oklch(0.82 0.15 84);
+    --c5: oklch(0.68 0.18 20);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: oklch(0.205 0.015 265);
+      --bg-elev: oklch(0.245 0.017 265);
+      --fg: oklch(0.96 0.006 250);
+      --fg-muted: oklch(0.72 0.02 260);
+      --primary: oklch(0.70 0.15 264);
+      --primary-soft: oklch(0.70 0.15 264 / 0.16);
+      --accent: oklch(0.75 0.12 190);
+      --accent-soft: oklch(0.75 0.12 190 / 0.16);
+      --success: oklch(0.68 0.14 150);
+      --warning: oklch(0.82 0.15 84);
+      --border: oklch(0.31 0.02 265);
+      --border-strong: oklch(0.38 0.02 265);
+      --ring: oklch(0.70 0.15 264 / 0.45);
+      --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.4);
+      --shadow-md: 0 6px 16px oklch(0 0 0 / 0.45);
+      --shadow-lg: 0 16px 40px oklch(0 0 0 / 0.5);
+      --c1: oklch(0.70 0.15 264);
+      --c2: oklch(0.75 0.12 190);
+      --c3: oklch(0.72 0.15 145);
+      --c4: oklch(0.82 0.15 84);
+      --c5: oklch(0.68 0.18 20);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  .mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Top bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px clamp(16px, 4vw, 40px);
+    background: color-mix(in oklch, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; }
+  .logo-dot {
+    width: 26px; height: 26px; border-radius: 8px; flex: none;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    box-shadow: var(--shadow-sm);
+  }
+  .topbar .spacer { flex: 1; }
+  .topbar nav { display: flex; gap: 4px; }
+  .topbar nav a {
+    color: var(--fg-muted); text-decoration: none; font-size: 0.85rem;
+    padding: 6px 10px; border-radius: 8px;
+  }
+  .topbar nav a:hover { color: var(--fg); background: var(--primary-soft); }
+  @media (max-width: 780px) { .topbar nav { display: none; } }
+  .theme-btn {
+    appearance: none; border: 1px solid var(--border); background: var(--bg-elev);
+    color: var(--fg); border-radius: 9px; width: 38px; height: 38px; cursor: pointer;
+    font-size: 1rem; display: grid; place-items: center;
+  }
+  .theme-btn:hover { border-color: var(--border-strong); }
+  .theme-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  main { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+  section { padding: clamp(48px, 8vw, 88px) 0; border-top: 1px solid var(--border); }
+  section:first-of-type { border-top: 0; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.72rem; font-weight: 650; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--primary); margin: 0 0 14px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--primary); border-radius: 2px; }
+  h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 20px; font-weight: 700; }
+  h2 { font-size: clamp(1.5rem, 3.6vw, 2.1rem); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 16px; font-weight: 680; }
+  h3 { font-size: 1.05rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  p { margin: 0 0 16px; color: var(--fg); }
+  .lead { font-size: clamp(1.05rem, 2vw, 1.28rem); color: var(--fg-muted); max-width: 62ch; }
+  .muted { color: var(--fg-muted); }
+  a.inl { color: var(--primary); text-decoration: none; border-bottom: 1px solid var(--primary-soft); }
+
+  /* Hero */
+  .hero { padding-top: clamp(40px, 7vw, 72px); }
+  .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 26px 0 0; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.8rem; font-weight: 550;
+    padding: 7px 13px; border-radius: 999px;
+    background: var(--bg-elev); border: 1px solid var(--border); color: var(--fg);
+    box-shadow: var(--shadow-sm);
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+
+  /* Metric grid */
+  .grid { display: grid; gap: 16px; }
+  .metrics { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 8px; }
+  .metric {
+    background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+  }
+  .metric::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--accent)); opacity: 0.9; }
+  .metric .val { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .metric .lbl { color: var(--fg-muted); font-size: 0.82rem; margin-top: 8px; }
+
+  .cols { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card {
+    background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow-sm);
+  }
+  .card h3 { display: flex; align-items: center; gap: 10px; }
+  .card .ic {
+    width: 34px; height: 34px; border-radius: 9px; flex: none; display: grid; place-items: center;
+    background: var(--primary-soft); color: var(--primary); font-size: 1rem;
+  }
+  .card p { margin: 8px 0 0; color: var(--fg-muted); font-size: 0.92rem; }
+
+  /* Module list */
+  .modules { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .mod {
+    background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow-sm); transition: border-color .18s, transform .18s;
+  }
+  .mod:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .mod .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mod .name { font-weight: 620; font-size: 1rem; }
+  .mod .tag { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+  .mod p { margin: 8px 0 0; font-size: 0.88rem; color: var(--fg-muted); }
+
+  ul.feat { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ul.feat li { display: flex; gap: 12px; align-items: flex-start; }
+  ul.feat .check { flex: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: color-mix(in oklch, var(--success) 18%, transparent); color: var(--success); font-size: 0.8rem; margin-top: 2px; }
+  ul.feat b { font-weight: 620; }
+
+  /* Palette */
+  .swatches { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+  .sw { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); width: 130px; box-shadow: var(--shadow-sm); }
+  .sw .chipc { height: 62px; }
+  .sw .meta { padding: 8px 10px; font-size: 0.72rem; }
+  .sw .meta .n { font-weight: 620; }
+  .sw .meta .v { color: var(--fg-muted); }
+
+  .two { grid-template-columns: 1.4fr 1fr; align-items: start; }
+  @media (max-width: 820px) { .two { grid-template-columns: 1fr; } }
+
+  /* Pipeline / agents */
+  .agents { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .agent { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow-sm); }
+  .agent .an { font-family: ui-monospace, monospace; font-weight: 620; font-size: 0.9rem; color: var(--primary); }
+  .agent p { margin: 6px 0 0; font-size: 0.85rem; color: var(--fg-muted); }
+
+  /* Stack pills */
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { font-size: 0.82rem; padding: 7px 12px; border-radius: 8px; background: var(--bg-elev); border: 1px solid var(--border); color: var(--fg); }
+  .pill b { color: var(--primary); font-weight: 620; }
+
+  /* Timeline */
+  .timeline { position: relative; margin-top: 8px; padding-left: 26px; }
+  .timeline::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+  .tl { position: relative; padding: 0 0 22px; }
+  .tl::before { content: ""; position: absolute; left: -23px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+  .tl .ph { font-weight: 620; }
+  .tl .de { color: var(--fg-muted); font-size: 0.9rem; margin-top: 2px; }
+
+  footer { border-top: 1px solid var(--border); padding: 40px 0 60px; color: var(--fg-muted); font-size: 0.85rem; }
+  footer .fnav { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+  footer a { color: var(--fg-muted); text-decoration: none; }
+  footer a:hover { color: var(--fg); }
+
+  .note { font-size: 0.82rem; color: var(--fg-muted); border-left: 3px solid var(--border-strong); padding: 4px 0 4px 14px; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand"><span class="logo-dot" aria-hidden="true"></span>arsam.net Admin</span>
+  <span class="spacer"></span>
+  <nav aria-label="Rapor bölümleri">
+    <a href="#ozet">Özet</a>
+    <a href="#moduller">Modüller</a>
+    <a href="#tasarim">Tasarım</a>
+    <a href="#kalite">Kalite</a>
+    <a href="#yigin">Yığın</a>
+  </nav>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Aydınlık/karanlık tema değiştir" title="Tema değiştir">◐</button>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero" id="ozet">
+    <span class="eyebrow">Yönetici Raporu · 2026</span>
+    <h1>Emlak pazaryeri için<br>uçtan uca yönetim paneli.</h1>
+    <p class="lead">
+      arsam.net — Türkiye'ye özel, yalnızca emlak (konut / işyeri / arsa / devremülk / turistik)
+      ilan pazaryeri. Bu panel, iç ekiplerin ilanları modere ettiği, kullanıcı ve ofisleri
+      doğruladığı, taksonomiyi yönettiği ve pazarı analiz ettiği kurumsal arka ofis uygulamasıdır.
+      Tamamı modern bir ön yüz yığınıyla, erişilebilirlik ve kalite kapıları baştan gömülü olacak
+      şekilde inşa edildi.
+    </p>
+    <div class="hero-badges">
+      <span class="chip"><span class="dot"></span>938/938 test geçiyor</span>
+      <span class="chip"><span class="dot"></span>WCAG 2.2 AA</span>
+      <span class="chip"><span class="dot"></span>0 lint hatası</span>
+      <span class="chip"><span class="dot"></span>3 yerleşim modu</span>
+      <span class="chip"><span class="dot"></span>AI-first</span>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section>
+    <span class="eyebrow">Rakamlarla</span>
+    <h2>Bir bakışta ne teslim edildi</h2>
+    <p class="lead">Aşağıdaki değerler depodan doğrudan sayılmıştır — gerçek, ölçülmüş rakamlar.</p>
+    <div class="grid metrics">
+      <div class="metric"><div class="val num">12</div><div class="lbl">İş modülü (feature slice)</div></div>
+      <div class="metric"><div class="val num">938</div><div class="lbl">Otomatik test (155 dosya)</div></div>
+      <div class="metric"><div class="val num">133</div><div class="lbl">Storybook story dosyası</div></div>
+      <div class="metric"><div class="val num">56</div><div class="lbl">UI primitifi</div></div>
+      <div class="metric"><div class="val num">5</div><div class="lbl">Rol · 15 izin</div></div>
+      <div class="metric"><div class="val num">5</div><div class="lbl">Otomatik inceleme ajanı</div></div>
+    </div>
+    <p class="note">
+      Test seti hem birim testlerini hem de gerçek Chromium'da çalışan Storybook etkileşim +
+      erişilebilirlik (a11y) testlerini kapsar. Her modül MSW mock'larına karşı uçtan uca çalışır;
+      arka uç (FastAPI REST) sözleşmesi <span class="mono">GET /{kaynak}?page&amp;pageSize&amp;sort&amp;filters</span>
+      olarak sabitlenmiştir.
+    </p>
+  </section>
+
+  <!-- WHAT WE BUILT -->
+  <section>
+    <span class="eyebrow">Yetenekler</span>
+    <h2>Ne inşa ettik</h2>
+    <div class="grid two">
+      <ul class="feat">
+        <li><span class="check">✓</span><div><b>Üç kademeli moderasyon iş akışı.</b> AI ön puanlar; insan <em>Onayla / Belirsiz / Reddet</em> kararını verir. Yapay zekâ önerir, insan karar verir — her karar denetime yazılır.</div></li>
+        <li><span class="check">✓</span><div><b>Sunucu-güdümlü gelişmiş tablolar.</b> URL ile senkron sayfalama/sıralama/filtreleme, kayıtlı görünümler, çoklu seçim, dışa aktarma (CSV/Excel), 30+ satırda sanallaştırma, mobilde kart görünümü.</div></li>
+        <li><span class="check">✓</span><div><b>Zorunlu yardım affordance'ı olan formlar.</b> Her form alanında ikon tabanlı yardım; sihirbaz akışları (adım-adım doğrulama + taslak otomatik kaydı); kademeli il/ilçe/mahalle seçimleri.</div></li>
+        <li><span class="check">✓</span><div><b>Güven skoru & doğrulama.</b> Kullanıcı/ofis doğrulama kanalları, saf ve deterministik güven skoru hesabı, askıya alma/yasaklama guardrail'leri.</div></li>
+        <li><span class="check">✓</span><div><b>Harita & görselleştirme katmanı.</b> Token-stilli Leaflet haritası (kümeleme + erişilebilir işaretçi listesi), recharts KPI/çubuk/donut grafikleri, bento panosu.</div></li>
+        <li><span class="check">✓</span><div><b>Değişmez denetim kaydı.</b> Kim / ne / ne zaman — aktör <span class="mono">ai:&lt;agent&gt;</span> dahil; filtrelenebilir, salt-okunur, tüm detay sayfalarında paylaşılan zaman çizelgesi.</div></li>
+      </ul>
+      <div class="card">
+        <h3><span class="ic">◎</span>Tasarım felsefesi</h3>
+        <p>
+          "Calm Signal" — tüm gün kullanılan arka ofis için düşük yorgunlukta, serin slate zemin;
+          net indigo birincil, teal sinyal aksanı. Yoğun, hassas, gürültüsüz. Sayılar ve grafikler
+          birinci sınıf. Karanlık mod saf siyah değil, halelenmeyi azaltan yumuşak near-black.
+        </p>
+        <p style="margin-top:14px">
+          Her yüzey OKLCH token'larından türetilir; bileşenlerde tek bir sabit renk yoktur. Işık,
+          karanlık ve yüksek kontrast, L ve C değerleri öngörülebilir biçimde kaydırılarak elde edilir.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULES -->
+  <section id="moduller">
+    <span class="eyebrow">12 Modül</span>
+    <h2>Kapsanan iş alanları</h2>
+    <p class="lead">Her modül; Zod şemaları, MSW handler'ları, sorgu/mutasyon hook'ları, sayfalar, bileşenler ve tam Storybook + test kapsamıyla dikey bir dilim olarak inşa edildi.</p>
+    <div class="grid modules">
+      <div class="mod"><div class="top"><span class="name">Genel Bakış</span><span class="tag">Pano</span></div><p>KPI'lar, kuyruk özeti, son aktivite; bento düzeni, sparkline'lı KPI kartları ve durum donut'u.</p></div>
+      <div class="mod"><div class="top"><span class="name">İlanlar</span><span class="tag">Çekirdek</span></div><p>CRUD + moderasyon kuyruğu; kategori-güdümlü dinamik nitelikler, 4 adımlı oluşturma sihirbazı, AI ön-puan rozeti.</p></div>
+      <div class="mod"><div class="top"><span class="name">Kullanıcılar & Ofisler</span><span class="tag">Çekirdek</span></div><p>Üyeler, emlak ofisleri, doğrulama rozetleri, güven skoru göstergesi, doğrula/askıya al/yasakla.</p></div>
+      <div class="mod"><div class="top"><span class="name">Kategoriler & Nitelikler</span><span class="tag">Taksonomi</span></div><p>Yönetilebilir taksonomi; nitelik CRUD, sürükle-yeniden sırala, toplu arşiv; dinamik ilan formlarını besler.</p></div>
+      <div class="mod"><div class="top"><span class="name">Lokasyonlar</span><span class="tag">Taksonomi</span></div><p>İl / ilçe / mahalle üç seviyeli hiyerarşi; hiyerarşik CRUD, yeniden sıralama, plaka/anahtar benzersizliği.</p></div>
+      <div class="mod"><div class="top"><span class="name">Doping & Ödemeler</span><span class="tag">Finans</span></div><p>Doping paketleri CRUD; ödeme/fatura listesi + guardrail'li iade akışı (sunucu tarafı tutar/sebep doğrulaması).</p></div>
+      <div class="mod"><div class="top"><span class="name">Mesajlar & Şikayetler</span><span class="tag">Moderasyon</span></div><p>Şikayet kuyruğu; üç kademeli çözümle/yükselt/reddet, sebep zorunluluğu, deep-link'li konu bağlamı.</p></div>
+      <div class="mod"><div class="top"><span class="name">Raporlar & Analitik</span><span class="tag">Analitik</span></div><p>KPI, trend ve huni analizleri; token-renkli grafikler, dışa aktarılabilir görünümler.</p></div>
+      <div class="mod"><div class="top"><span class="name">Denetim Kaydı</span><span class="tag">Yönetişim</span></div><p>Filtrelenebilir, değişmez işlem geçmişi; 6 detay sayfasında yeniden kullanılan paylaşımlı zaman çizelgesi.</p></div>
+      <div class="mod"><div class="top"><span class="name">Roller & İzinler</span><span class="tag">Yönetişim</span></div><p>Çalışma zamanında düzenlenebilir rol/izin matrisi; canlı yetkilendirme köprüsü, denetime yazan geçişler.</p></div>
+      <div class="mod"><div class="top"><span class="name">Ayarlar</span><span class="tag">Sistem</span></div><p>Sistem ayarları + canlı özellik bayrağı köprüsü; yerleşim varsayılanları; her değişiklik denetime yazılır.</p></div>
+      <div class="mod"><div class="top"><span class="name">Bildirimler</span><span class="tag">Chrome</span></div><p>Dock modunda bildirim merkezi; rich-glass popover, okunmamış sayacı, token-stilli kaydırma alanı.</p></div>
+    </div>
+  </section>
+
+  <!-- LAYOUT MODES -->
+  <section>
+    <span class="eyebrow">Yapılandırılabilir Kabuk</span>
+    <h2>Tek nav şeması, üç yerleşim modu</h2>
+    <p class="lead">Tek bir navigasyon şeması üç kabuğu birden besler. Mod, kullanıcı başına kalıcıdır ve sayfa yenilemeden anında değişir. Mobilde hepsi çekmece + komut paletinde buluşur.</p>
+    <div class="grid cols">
+      <div class="card">
+        <h3><span class="ic">▤</span>Sidebar</h3>
+        <p>Daraltılabilir kenar çubuğu + üst bar. Klasik yoğun arka ofis düzeni; daraltıldığında ikon + tooltip.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">▭</span>Topnav</h3>
+        <p>Kenar çubuğu olmadan yatay navigasyon; ölçülen "priority-plus" taşma menüsü + komut paleti tam modül paritesini garanti eder.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">◈</span>Dock</h3>
+        <p>Yüzen rich-glass komut dock'u + kart-ızgara başlatıcı + bildirim merkezi. Nefes alan "kalp atışı" başlatıcı logosu.</p>
+      </div>
+    </div>
+    <div class="grid two" style="margin-top:16px">
+      <div class="card">
+        <h3><span class="ic">◲</span>Kenar dock (macOS büyüteç)</h3>
+        <p>
+          Dock modunda ekranın üç kenarına (alt/sol/sağ) bağımsız bayraklı büyüteç dock'ları eklenebilir.
+          Kapalıyken kenarda kalp atışı nabzı atan ince cam bar; açılınca imlece göre büyüyen (proximity)
+          ikonlar. Kendi <span class="mono">--glass</span> ve motion token'larımızla — referansın liquid-glass'ının klonu değil.
+        </p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">⛶</span>Erişilebilirlik & yoğunluk</h3>
+        <p>
+          8 kademeli isimli breakpoint ölçeği (320 → 1920), <span class="mono">comfortable</span>/<span class="mono">compact</span>
+          yoğunluk, 44px dokunma hedefleri, görünür odak, tam klavye desteği ve
+          <span class="mono">prefers-reduced-motion</span> saygısı baştan gömülü.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DESIGN SYSTEM -->
+  <section id="tasarim">
+    <span class="eyebrow">Calm Signal</span>
+    <h2>Özgün tasarım sistemi</h2>
+    <p class="lead">Tümüyle özgün, OKLCH tabanlı bir renk sistemi. Bileşenler yalnızca semantik token'ları kullanır — sabit hex/rgb yasak. Aşağıdaki paletin bu raporun kendi stili de dahil, ürünün her yüzeyini besler.</p>
+    <div class="swatches">
+      <div class="sw"><div class="chipc" style="background:var(--c1)"></div><div class="meta"><div class="n">Primary</div><div class="v mono">indigo · 264°</div></div></div>
+      <div class="sw"><div class="chipc" style="background:var(--c2)"></div><div class="meta"><div class="n">Accent</div><div class="v mono">teal · 190°</div></div></div>
+      <div class="sw"><div class="chipc" style="background:var(--c3)"></div><div class="meta"><div class="n">Chart 3</div><div class="v mono">green · 145°</div></div></div>
+      <div class="sw"><div class="chipc" style="background:var(--c4)"></div><div class="meta"><div class="n">Chart 4</div><div class="v mono">amber · 84°</div></div></div>
+      <div class="sw"><div class="chipc" style="background:var(--c5)"></div><div class="meta"><div class="n">Chart 5</div><div class="v mono">coral · 20°</div></div></div>
+    </div>
+    <div class="grid two" style="margin-top:28px">
+      <div class="card">
+        <h3><span class="ic">Aa</span>Tipografi</h3>
+        <p><b>Geist</b> (UI + gövde) ve <b>Geist Mono</b> (sayı / ID) değişken fontları. Veri olan her yerde <span class="mono">tabular-nums</span> ile hizalı sütunlar. Serif yok, dekoratif gürültü yok.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">◔</span>Hareket</h3>
+        <p>Kurumsal-sakin motion: süreler <span class="mono">fast&nbsp;120ms</span> / <span class="mono">base&nbsp;180ms</span> / <span class="mono">slow&nbsp;260ms</span>. Yalnızca transform + opacity; giriş/hover token'ları; reduced-motion merkezî olarak onurlandırılır.</p>
+      </div>
+    </div>
+    <p class="note">
+      Tüm metin/zemin çiftleri WCAG 2.2 AA için seçilmiştir (≥ 4.5:1 gövde, ≥ 3:1 büyük/UI).
+      Tinted durum yüzeyleri için ayrıca kontrastı garanti eden "on-tint" foreground token'ları türetilmiştir.
+    </p>
+  </section>
+
+  <!-- AI-FIRST + RBAC -->
+  <section>
+    <span class="eyebrow">AI-first & Yönetişim</span>
+    <h2>Ajana hazır, denetlenebilir, yetkilendirilmiş</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3><span class="ic">✷</span>AI-first mimari</h3>
+        <p>
+          Etkileşimli öğeler <span class="mono">data-action</span> / <span class="mono">data-entity</span> taşır;
+          rotalar <span class="mono">routeMeta</span> ile tanımlıdır. Deterministik bir asistan çekirdeği doğal-dil
+          filtre/niyet ayrıştırması yapar; guardrail'li AI toplu-onay akışı denetime yazar. Yapay zekâ önerir —
+          insan onaylar; her AI eylemi <span class="mono">ai:&lt;agent&gt;</span> aktörüyle iz bırakır.
+        </p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">⛨</span>RBAC + Denetim</h3>
+        <p>
+          5 rol (Süper Admin · Moderatör · Destek · Finans · Analist) ve 15 izin. Rol/izin matrisi çalışma
+          zamanında düzenlenebilir; hem navigasyon hem rota seviyesinde yetki kapıları vardır (yetkisiz rol için
+          403). Kategori, kullanıcı, ilan, ödeme, lokasyon, ayar ve rol değişikliklerinin tümü değişmez denetim
+          kaydına akar.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUALITY -->
+  <section id="kalite">
+    <span class="eyebrow">Kalite Süreci</span>
+    <h2>Her görevde otomatik inceleme kapıları</h2>
+    <p class="lead">Her önemli değişiklikten sonra, commit öncesi beş uzman inceleme ajanı çalışır. Bulgular bloklayıcıysa checkpoint'ten önce kapatılır. Definition of Done, kolay atlanamayacak biçimde süreçte yaşar.</p>
+    <div class="grid agents">
+      <div class="agent"><div class="an">design-token-guardian</div><p>Golden Rule 2'yi mekanik uygular: sabit renk, token-dışı gölge, sihirli boşluk, <span class="mono">title</span>-tooltip taraması.</p></div>
+      <div class="agent"><div class="an">a11y-sentinel</div><p>WCAG 2.2 AA: 44px hedef, <span class="mono">aria-describedby</span> bağlama, "renk asla tek sinyal değil", odak yönetimi.</p></div>
+      <div class="agent"><div class="an">ux-design-critic</div><p>Görsel hiyerarşi, boşluk ritmi, motion tutarlılığı, boş/yükleme/hata cilası, mobil ergonomi.</p></div>
+      <div class="agent"><div class="an">dod-reviewer</div><p>Commit öncesi çalışan ağacı Definition of Done'a karşı denetler; bloklayıcı boşlukları raporlar.</p></div>
+      <div class="agent"><div class="an">dead-code-hunter</div><p>Kullanılmayan export/dosya/bağımlılık, ulaşılamaz kod ve öksüz story/test avlar.</p></div>
+    </div>
+    <div class="grid cols" style="margin-top:20px">
+      <div class="card"><h3><span class="ic">✓</span>Doğrulama hattı</h3><p>Her görev: <span class="mono">lint</span> · <span class="mono">typecheck</span> · <span class="mono">test</span> · <span class="mono">build</span> · <span class="mono">build-storybook</span> — hepsi yeşil olmadan checkpoint yok.</p></div>
+      <div class="card"><h3><span class="ic">◆</span>Storybook-first</h3><p>Her bileşen default/loading/empty/error/mobile story'leri ve etkileşim (play) testleriyle gelir; kabuk bileşenleri her iki yerleşim modunu da kanıtlar.</p></div>
+      <div class="card"><h3><span class="ic">▣</span>TypeScript strict</h3><p><span class="mono">strict</span> + <span class="mono">noUncheckedIndexedAccess</span> + <span class="mono">exactOptionalPropertyTypes</span>. 0 lint hatası, non-null assertion yasak.</p></div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section id="yigin">
+    <span class="eyebrow">Teknoloji Yığını</span>
+    <h2>Modern, kilitli, kanıtlanmış</h2>
+    <p class="lead">Yığın baştan sabitlendi; SSR/RSC/Next.js kapsam dışı bırakıldı — bu bir SPA arka ofisidir.</p>
+    <div class="stack">
+      <span class="pill"><b>React 19</b> + TypeScript</span>
+      <span class="pill"><b>Vite</b> SPA</span>
+      <span class="pill"><b>Tailwind v4</b> CSS-first <span class="mono">@theme</span></span>
+      <span class="pill"><b>shadcn/ui</b> new-york</span>
+      <span class="pill"><b>React Router v7</b> data mode</span>
+      <span class="pill"><b>TanStack</b> Query · Table · Virtual</span>
+      <span class="pill"><b>React Hook Form</b> + Zod</span>
+      <span class="pill"><b>Storybook 10</b> + a11y + vitest</span>
+      <span class="pill"><b>MSW</b> mock katmanı</span>
+      <span class="pill"><b>React Leaflet</b> + markercluster</span>
+      <span class="pill"><b>recharts</b></span>
+      <span class="pill"><b>lucide-react</b> · sonner · cva</span>
+    </div>
+    <p class="note">Arka uç sonra gelecek (FastAPI REST). Şu an tüm modüller MSW mock'larına karşı çalışır; sözleşme sabittir, bu yüzden gerçek API'ye geçiş yerelleştirilmiş bir değişimdir.</p>
+  </section>
+
+  <!-- TIMELINE -->
+  <section>
+    <span class="eyebrow">Yol Haritası</span>
+    <h2>Temelden modernizasyona</h2>
+    <div class="timeline">
+      <div class="tl"><div class="ph">Temel (000–002)</div><div class="de">Vite + React 19 + TS iskelesi, Calm Signal token'ları, yapılandırılabilir AppShell (sidebar/topnav), P0 primitifleri + geri bildirim bileşenleri.</div></div>
+      <div class="tl"><div class="ph">Form & Tablo sistemi (003–004)</div><div class="de">FieldHelp-zorunlu FormField, sihirbaz, hata özeti; URL-senkron DataTable — filtreler, toplu eylemler, dışa aktarma, sanallaştırma.</div></div>
+      <div class="tl"><div class="ph">İlk dikey dilim + pano (005 →)</div><div class="de">İlanlar uçtan uca; gerçek pano (KPI + grafik + istatistik); harita & dataviz katmanı.</div></div>
+      <div class="tl"><div class="ph">İş modülleri (007–011)</div><div class="de">Kullanıcılar & ofisler, kategoriler, lokasyonlar, mesajlar & şikayetler, doping & ödemeler — her biri denetim + guardrail'lerle.</div></div>
+      <div class="tl"><div class="ph">Yönetişim & AI</div><div class="de">Denetim tablosu, çalışma-zamanı RBAC matrisi, sistem ayarları + özellik bayrakları, deterministik AI asistanı + guardrail'li toplu onay.</div></div>
+      <div class="tl"><div class="ph">Aşama 6 — Modernizasyon (019–025)</div><div class="de">Kalite ajanları, 8-kademeli breakpoint ölçeği, mobil kart görünümleri, komut dock'u, motion/bento, macOS büyüteç kenar dock'ları.</div></div>
+      <div class="tl" style="padding-bottom:0"><div class="ph">Sırada</div><div class="de">Bu yönetici raporu, ardından GitHub Pages dağıtımı (uygulama + Storybook + rapor).</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="fnav">
+      <a href="#ozet">Özet</a>
+      <a href="#moduller">Modüller</a>
+      <a href="#tasarim">Tasarım sistemi</a>
+      <a href="#kalite">Kalite</a>
+      <a href="#yigin">Teknoloji</a>
+    </div>
+    <p style="margin:0">
+      arsam.net Yönetim Paneli — kurumsal emlak pazaryeri arka ofisi. Bu rapor, depodan doğrudan
+      sayılan gerçek verilerle üretilmiştir. Solo geliştirme, Claude Code ile ajanik çalışma.
+    </p>
+  </footer>
+
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeBtn');
+    var stored = null;
+    try { stored = localStorage.getItem('arsam.report.theme'); } catch (e) {}
+    if (stored === 'light' || stored === 'dark') root.setAttribute('data-theme', stored);
+    btn.addEventListener('click', function () {
+      var current = root.getAttribute('data-theme');
+      if (!current) {
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        current = prefersDark ? 'dark' : 'light';
+      }
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('arsam.report.theme', next); } catch (e) {}
+    });
+  })();
+</script>
+
+</body>
+</html>

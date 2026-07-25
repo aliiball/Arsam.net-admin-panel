@@ -1367,3 +1367,29 @@ Entry format:
   - Magnification is a mouse affordance; touch/reduced-motion render a calm static dock (no magnify, no pulse).
 - Suggested commit message:
   `feat(dock): macOS-style magnifying edge nav docks (collapsed heartbeat tab → magnify on open, labels, per-edge flags)`
+
+## 2026-07-25 Task 026 — Manager report (`docs/report.html`)
+- Built: a single-file, self-contained, executive-summary-weighted report of the whole product at `docs/report.html`
+  (+ task file `docs/tasks/026-manager-report.md`). Lives in the repo (NOT a Claude Artifact) so Task 027 can serve it
+  at `/report`. Carries its OWN styling — an inline `<style>` re-deriving the Calm Signal palette via `oklch()` custom
+  properties (indigo primary / teal accent / slate charts), NOT the app's Tailwind build. Tailwind already scopes class
+  detection away from `docs/` (`@source not "../../docs"`, Task 024), so the report does not reintroduce app-CSS coupling.
+  Theme-aware (light/dark via `prefers-color-scheme` + a manual toggle persisted in localStorage), responsive (sticky
+  top bar, wrapping metric/module/card grids, mobile nav collapse), reduced-motion safe. Sections: hero + exec summary →
+  at-a-glance metrics → capabilities → 12-module grid → 3 layout modes + edge dock/heartbeat → Calm Signal design system
+  (live OKLCH swatches, typography, motion) → AI-first + RBAC/audit → quality process (5 review agents + verification
+  pipeline + DoD) → tech stack → roadmap timeline.
+- REAL data only (counted from the repo, no fabrication, no production-data claims): 12 feature modules · 938 tests /
+  155 test files · 133 Storybook story files · 56 UI primitives · 5 roles / 15 permissions · 5 review agents · 3 layout
+  modes · Calm Signal / 8-token breakpoints / WCAG 2.2 AA / 0 lint errors. No impersonation — our own work-product.
+- Verification: `npm run build` PASS (typecheck + build green; docs/ not scanned by Tailwind, no regression). Rendered
+  headless (playwright-core, real Chromium) in BOTH light and dark at desktop 1200px + mobile 390px → **0 console errors**,
+  no external network requests, all four screenshots clean.
+- Decisions/assumptions:
+  - Fonts use a system stack (not the app's self-hosted Geist) to keep the file truly self-contained/offline; the report
+    is a repo HTML artifact, not the app, so font parity is intentionally not required.
+  - Numbers are capabilities/coverage facts only; mock/seed row counts (e.g. demo payments/reports) are deliberately NOT
+    surfaced as marketplace figures to avoid implying production data.
+  - Report is NOT published as a Claude Artifact (per the task): it is a plain repo file for the Pages deploy in Task 027.
+- Suggested commit message:
+  `docs(report): self-contained executive report (docs/report.html) — Calm Signal styling, real repo metrics`
