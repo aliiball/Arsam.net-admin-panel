@@ -1,8 +1,14 @@
 # Current Task
--> docs/tasks/018-quality-agents-tooling.md
+-> docs/tasks/019-breakpoint-adoption.md
 
-Status: NOT STARTED (Aşama 6 — Modernizasyon; ilk faz: Kalite Agent'ları & Tooling).
-Tasks 000–017 (+ Aşama 1–5) complete — see PROGRESS.md. Task 017 kullanıcı commit'i bekliyor.
+Status: NOT STARTED (Aşama 6 — Modernizasyon; 2. faz: Breakpoint adopsiyonu + responsive re-audit).
+Tasks 000–018 (+ Aşama 1–5) complete — see PROGRESS.md. Task 018 kullanıcı commit'i bekliyor.
+
+Task 018 (Kalite Agent'ları) done: 4 read-only Tier-1 agent (`.claude/agents/`: design-token-guardian,
+a11y-sentinel, ux-design-critic, dead-code-hunter) + `docs/AGENTS.md` roster; governance gevşetildi
+(seçici uyarlama serbest / klon yasak — CLAUDE.md GR1 + DESIGN_SYSTEM.md); emoji taraması temiz. Config-only,
+`src/` değişmedi. **Yeni agent'lar SONRAKİ oturumda `subagent_type` ile çağrılabilir.** 018 smoke-run bulguları
+(a11y 44px/aria, dead-code 3 confirmed, ux notları) PROGRESS'te "Tracked" altında — 019/020 girdisi.
 
 Mode: TASK (uygula → doğrula → DoD → PROGRESS checkpoint → sonraki görev dosyasını yaz → CURRENT ilerlet
 → DUR → kullanıcı commit → /clear).

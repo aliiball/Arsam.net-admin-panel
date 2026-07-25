@@ -896,3 +896,62 @@ Entry format:
     backend hardening.
 - Suggested commit message:
   `perf(polish): route-level code-split + 44px touch targets, table column pinning/reorder, chart a11y, real page-error stories`
+
+## 2026-07-25 Task 018 — Aşama 6: Kalite Agent'ları & Tooling
+- **Config-only phase — ZERO `src/` changes** (verification stays green by construction). Touched only
+  `.claude/agents/*`, `CLAUDE.md`, `docs/*`.
+- Built: 4 project-specific **read-only** Tier-1 review agents under `.claude/agents/` (frontmatter + checklist +
+  severity-tagged `file:line` output format; never edit files, never git-write):
+  1. **design-token-guardian** (haiku) — Golden Rule 2 mechanically: hardcoded colors (hex/rgb/hsl/oklch) outside
+     `src/styles/theme.css`, native `title=` help attribute, hardcoded shadows, raw magic spacing, sahibinden-v2
+     palette/font/glass leaks.
+  2. **a11y-sentinel** (sonnet) — WCAG 2.2 AA vs OUR conventions: ≥44px targets, `aria-describedby` field binding,
+     color-not-sole-signal, Tooltip-not-`title`, focus management, roles/names, `prefers-reduced-motion`.
+  3. **ux-design-critic** (sonnet) — heuristic design review: hierarchy, spacing rhythm, motion-token consistency,
+     empty/loading/error polish, mobile ergonomics (320/480/768), cross-feature consistency, DESIGN_SYSTEM adherence.
+  4. **dead-code-hunter** (haiku) — unused exports/files/deps + orphan stories via `npx knip`/`ts-prune`/`depcheck`
+     on demand (NO permanent dep); verifies each candidate by grep, separates CONFIRMED from SUSPECTED.
+- **Smoke-run (all 4 produced structured, actionable, severity-tagged `file:line` output):**
+  - token-guardian (ran its greps directly): **CLEAN** — 0 hardcoded colors outside `theme.css`; 0 native `title=`
+    on intrinsic elements (the 55 `title=` hits are legit component PROPS on EmptyState/ErrorState/ConfirmDialog/…).
+    This smoke run REFINED checks #2 in token-guardian + #4 in a11y-sentinel to exclude that false-positive class.
+  - a11y-sentinel (seeded into a general-purpose agent, since new agent types register only at session start):
+    11 findings — 1 BLOCKER (`FilterBar.tsx` NL-filter raw Label+Textarea in a Popover, no `aria-describedby`) +
+    10 WARN (sub-44px targets: radio-group 16px, DataTable reorder/resize/sort handles, pagination `size-8`
+    overrides, BulkActionBar/FilterBar chip-remove buttons; two DatePickers without distinct names). Confirmed the
+    exemplary paths (FormField/FieldHelp, TrustScoreMeter, VerificationBadges) pass.
+  - ux-design-critic: strong actionable critique of `features/promotions` (High: PackageKindBadge borrows state
+    colors for a taxonomy dimension; Mediums: PaymentDetail header echoes the `dl`, payments expand-row duplicates
+    columns, bespoke NL parser vs shared `lib/ai`; consistency + empty-state notes).
+  - dead-code-hunter (`npx knip`): 3 CONFIRMED dead (`src/app/pages/DemoPage.tsx`, devDep
+    `@testing-library/user-event`, dep `@radix-ui/react-visually-hidden`) + ~113 tool-flagged exports correctly
+    classified as known false positives (Zod schema-first exports, shadcn sub-exports, MSW registries, CSF re-exports).
+- **Governance updated** (user authorized the loosening; must be in docs or the next session reverts to "forbidden"):
+  `CLAUDE.md` Golden Rule 1 + `docs/DESIGN_SYSTEM.md` top note now read "**selective adaptation allowed, verbatim
+  cloning forbidden**" — reference ideas may inspire interaction/layout, always re-derived in OUR OKLCH tokens/type
+  scale/elevation; measured token-based transparency/blur allowed when it passes WCAG. Still never cloned: cream/brown
+  palette, Inter/Lora/JetBrains trio, liquid-glass chrome.
+- **Emoji cleanup:** repo-wide pictographic-emoji scan (excluding typographic arrows `→`) → **NONE remain** anywhere
+  (`src/` + docs + configs). No-op — already clean.
+- **`docs/AGENTS.md` roster written:** Tier-0 (dod-reviewer) + Tier-1 (the 4 new) + Tier-2 deferred (security-sentinel,
+  code-standards-enforcer) tables, when-to-use, how they compose with dod-reviewer + the built-in `/code-review`/
+  `/security-review`, scope-discipline note, and a future "release-readiness" parallel-fan-out Workflow idea.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test/build UNCHANGED (no `src/`
+  diff — last green at Task 017: test 860/860, build 543 kB). `git status -- src/` empty (proof of no code change).
+- Decisions/assumptions:
+  - Step 5 (optional Stop/pre-commit hook running token-grep + typecheck) **deferred to 019** per the task's
+    "risk görülürse 019'a devret" — kept this phase config-only + green; a hook edits `settings.json` and is better
+    validated alongside real code changes.
+  - New `.claude/agents/*.md` register only at SESSION START, so the 3 judgment agents couldn't be invoked by type
+    mid-session; smoke-run faithfully exercised each agent's exact prompt text by seeding it into a general-purpose
+    agent. From the NEXT session they're callable directly as `subagent_type: <name>`.
+  - Agent findings are INPUT for later phases, NOT fixed now (config-only phase): the a11y 44px/aria findings feed
+    020 (mobil UX); the FilterBar BLOCKER + dead-code confirmations are tracked below.
+- Tracked (feed into later phases, non-blocking):
+  - **a11y (→ 020 mobil):** FilterBar NL-box `aria-describedby` BLOCKER; sub-44px targets across radio-group +
+    DataTable handles + pagination/bulk `size-8` overrides + filter chip-remove; two unnamed DatePickers.
+  - **dead code (→ any cleanup):** remove `DemoPage.tsx` (keep the `/ping` contract test pointing elsewhere or drop
+    with it), devDep `@testing-library/user-event`, dep `@radix-ui/react-visually-hidden` — all 0-ref confirmed.
+  - **ux (→ 022 / feature touch-ups):** PackageKindBadge state-color misuse; promotions NL parser → shared `lib/ai`.
+- Suggested commit message:
+  `chore(agents): add Tier-1 review agents (token/a11y/ux/dead-code) + AGENTS roster; governance: selective-adaptation`

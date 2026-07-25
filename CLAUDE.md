@@ -22,7 +22,7 @@ Enterprise admin panel for **arsam.net**, a Turkish real-estate-only classifieds
 - `npm run build-storybook` — static Storybook
 
 ## Golden Rules
-1. **Original design system.** Use ONLY tokens from `docs/DESIGN_SYSTEM.md`. NEVER copy sahibinden-v2 visuals (no warm-paper cream/brown palette, no Inter/Lora/JetBrains trio, no coffee-cream inversion, no liquid-glass dock). sahibinden-v2 is a COMPONENT-TYPE reference only, reinterpreted in our language.
+1. **Original design system — selective adaptation allowed, verbatim cloning forbidden.** Use ONLY tokens from `docs/DESIGN_SYSTEM.md`. Reference sources (sahibinden-v2) may inspire *interaction and layout ideas*, but every surface is always re-derived in OUR OKLCH tokens, OUR type scale, and OUR elevation. NEVER clone verbatim: the warm-paper cream/brown palette, the Inter/Lora/JetBrains font trio, the coffee-cream inversion, or the reference's liquid-glass chrome. Measured, token-based transparency/blur IS allowed when it passes WCAG contrast. sahibinden-v2 stays a COMPONENT-TYPE reference only, reinterpreted in our language.
 2. **Token-only styling.** No hardcoded hex/rgb/oklch in components. Use semantic Tailwind tokens (`bg-background`, `text-foreground`, `border-border`, ...).
 3. **Mobile-first.** Build the smallest breakpoint first. Both layout modes converge to drawer + bottom nav + command palette on mobile.
 4. **AI-first.** Interactive elements carry `data-action`/`data-entity`; routes carry `routeMeta`. See `docs/AI_FIRST.md`.

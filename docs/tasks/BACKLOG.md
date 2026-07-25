@@ -22,6 +22,9 @@
 - **016 / Aşama 4** — AI-first katman (deterministik parser/intent core, guardrail'li AI toplu-onay vs audit). (tamam)
 - **017 / Aşama 5** — Enterprise cila (route-level code-split 2.04MB→543KB, 44px hedefler, DataTable kolon
   pinning + drag-reorder + klavye alternatifi, ChartCard a11y, gerçek page-error story'leri). (tamam)
+- **018 / Aşama 6** — Kalite Agent'ları & Tooling (4 read-only Tier-1 agent: design-token-guardian/a11y-sentinel/
+  ux-design-critic/dead-code-hunter + `docs/AGENTS.md` roster; governance gevşetme: seçici uyarlama serbest/klon
+  yasak; emoji temiz). Config-only, `src/` değişmedi. (tamam)
 
 ## Sıradaki fazlar — Aşama 6: Modernizasyon (018 → 022)
 > Referans (sahibinden-v2) SEÇİCİ uyarlama: etkileşim/düzen fikirleri alınır, birebir klon (cream palet,
@@ -29,12 +32,11 @@
 > Kararlar: zengin cam / kendi paletimiz · 3. layout modu `dock` (sidebar opsiyonel) · breakpoint strateji A
 > (1024 tablo-switch korunur) · yeni yüzeyler feature-flag'li (canlı aç/kapa, geri alınabilir).
 
-- **018 — Kalite Agent'ları & Tooling** — proje-özel Tier-1 subagent'lar (design-token-guardian,
-  a11y-sentinel, ux-design-critic, dead-code-hunter) + `docs/AGENTS.md` roster; governance doc güncelleme
-  (Golden Rule 1 → "seçici uyarlama serbest / klon yasak"); docs emoji temizliği. Sonraki fazlar bu gate'lerden geçer.
 - **019 — Breakpoint adopsiyonu + responsive re-audit** — 8-token ölçek (`@theme` --breakpoint-* :
   xs320/sm480/md640/lg768/xl1024/2xl1280/3xl1536/4xl1920); **strateji A**: 1024 tablo/kabuk-switch'i korumak
-  için 27 `lg:`→`xl:` anlam-koruyucu remap; Storybook viewport'ları 320/480/768; tüm story/test yeşil.
+  için gerçek **22 `lg:`** kullanımından ~13 shell/tablo-switch olanını `xl:`'e anlam-koruyucu remap (kalan ~9
+  grid-yoğunluk kullanımı gözden geçirilir); Storybook viewport'ları 320/480/768; tüm story/test yeşil.
+  (Detay: `docs/tasks/019-breakpoint-adoption.md`.)
 - **020 — Mobil UX düzeltmeleri** — pagination wrap/kompakt; her list'e `renderMobileCard`; KPI `grid-cols-1`;
   dialog `max-w-[calc(100%-2rem)]`; RBAC matris + Reports Tabs mobil varyantı. (Yeni ölçeğe göre.)
 - **021 — Floating Command Dock + Launcher** — 3. layout modu `dock` (sidebar gizli, command-driven nav);
