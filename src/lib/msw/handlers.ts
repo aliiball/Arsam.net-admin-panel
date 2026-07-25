@@ -9,6 +9,7 @@ import { locationsHandlers } from '@/features/locations/api/handlers';
 import { reportsHandlers } from '@/features/messages/api/handlers';
 import { promotionsHandlers } from '@/features/promotions/api/handlers';
 import { dashboardHandlers } from '@/features/dashboard/api/handlers';
+import { notificationsHandlers } from '@/features/notifications/api/handlers';
 import { reportsHandlers as analyticsHandlers } from '@/features/reports/api/handlers';
 import { auditHandlers } from '@/features/audit/api/handlers';
 import { rbacHandlers } from '@/features/rbac/api/handlers';
@@ -60,6 +61,7 @@ export const handlers = [
   ...reportsHandlers,
   ...promotionsHandlers,
   ...dashboardHandlers,
+  ...notificationsHandlers,
   // Exact `/audit` route; no param-route prefix collision (audit is read-only).
   ...auditHandlers,
   // Exact `/rbac/matrix` routes; no param-route prefix collision.

@@ -54,7 +54,7 @@ export const featureFlagsSchema = z.object(
 // Layout defaults — mirror `LayoutConfig`'s editable subset (no double-def)
 // ---------------------------------------------------------------------------
 
-const layoutModeEnum = z.enum(['sidebar', 'topnav']) as z.ZodType<LayoutMode>;
+const layoutModeEnum = z.enum(['sidebar', 'topnav', 'dock']) as z.ZodType<LayoutMode>;
 const densityEnum = z.enum(['comfortable', 'compact']) as z.ZodType<Density>;
 const themeEnum = z.enum(['light', 'dark', 'system']) as z.ZodType<ThemePreference>;
 

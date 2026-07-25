@@ -7,7 +7,12 @@
  * add the key here, wire the hook where the behavior lives, and the settings
  * screen edits it automatically.
  */
-export const FEATURE_FLAG_KEYS = ['listingDetailMap', 'aiCopilotBadges'] as const;
+export const FEATURE_FLAG_KEYS = [
+  'listingDetailMap',
+  'aiCopilotBadges',
+  'dockLayout',
+  'notificationCenter',
+] as const;
 
 export type FeatureFlagKey = (typeof FEATURE_FLAG_KEYS)[number];
 
@@ -32,12 +37,24 @@ export const FEATURE_FLAGS: FeatureFlagMeta[] = [
     label: 'AI kopilot rozetleri',
     help: 'AI ön-değerlendirme rozetlerini (OK / Belirsiz / NOK) ilan detayında gösterir.',
   },
+  {
+    key: 'dockLayout',
+    label: 'Komut dock yerleşimi',
+    help: 'Üçüncü bir yerleşim modunu (Dock) etkinleştirir: kenar çubuğu/üst menü yerine üstte yüzen bir komut çubuğu. Kapalıyken Dock seçeneği gizlenir ve mevcut yerleşimler değişmez.',
+  },
+  {
+    key: 'notificationCenter',
+    label: 'Bildirim merkezi',
+    help: 'Dock yerleşimindeki bildirim zilini (moderasyon kuyruğu + son denetim kayıtlarından türetilir) gösterir. Kapalıyken zil gizlenir.',
+  },
 ];
 
 /** Default flag values — every catalog flag starts enabled. */
 export const DEFAULT_FLAGS: FeatureFlags = {
   listingDetailMap: true,
   aiCopilotBadges: true,
+  dockLayout: true,
+  notificationCenter: true,
 };
 
 /** Type guard for a known flag key (used when parsing partial/legacy payloads). */

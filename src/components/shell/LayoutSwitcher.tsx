@@ -1,4 +1,4 @@
-import { PanelLeft, PanelTop, Check } from 'lucide-react';
+import { PanelLeft, PanelTop, LayoutGrid, Check } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,11 +10,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useLayout } from '@/lib/layout/layout-context';
+import { useFeatureFlag } from '@/lib/settings/feature-flags-store';
 import type { Density, LayoutMode } from '@/config/layout';
+
+const MODE_ICONS: Record<LayoutMode, typeof PanelLeft> = {
+  sidebar: PanelLeft,
+  topnav: PanelTop,
+  dock: LayoutGrid,
+};
 
 const MODES: { value: LayoutMode; label: string; icon: typeof PanelLeft }[] = [
   { value: 'sidebar', label: 'Kenar çubuğu', icon: PanelLeft },
   { value: 'topnav', label: 'Üst menü', icon: PanelTop },
+  { value: 'dock', label: 'Komut dock', icon: LayoutGrid },
 ];
 
 const DENSITIES: { value: Density; label: string }[] = [
@@ -25,6 +33,10 @@ const DENSITIES: { value: Density; label: string }[] = [
 /** Switch layout mode (sidebar/topnav) and density; persists via LayoutProvider. */
 export function LayoutSwitcher() {
   const { config, setMode, setDensity } = useLayout();
+  const dockEnabled = useFeatureFlag('dockLayout');
+  // Hide the Dock option when its flag is off (existing modes unaffected).
+  const modes = dockEnabled ? MODES : MODES.filter((m) => m.value !== 'dock');
+  const TriggerIcon = MODE_ICONS[config.mode];
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,12 +47,12 @@ export function LayoutSwitcher() {
           data-action="open-layout-switcher"
           data-entity="layout"
         >
-          {config.mode === 'sidebar' ? <PanelLeft className="size-4" /> : <PanelTop className="size-4" />}
+          <TriggerIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel>Yerleşim modu</DropdownMenuLabel>
-        {MODES.map(({ value, label, icon: Icon }) => (
+        {modes.map(({ value, label, icon: Icon }) => (
           <DropdownMenuItem
             key={value}
             onSelect={() => setMode(value)}

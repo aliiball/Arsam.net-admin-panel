@@ -13,7 +13,7 @@ export interface LayoutDefaultsFormProps {
   disabled?: boolean;
 }
 
-const MODE_LABELS: Record<LayoutMode, string> = { sidebar: 'Kenar çubuğu', topnav: 'Üst menü' };
+const MODE_LABELS: Record<LayoutMode, string> = { sidebar: 'Kenar çubuğu', topnav: 'Üst menü', dock: 'Komut dock' };
 const DENSITY_LABELS: Record<Density, string> = { comfortable: 'Ferah', compact: 'Sıkışık' };
 const THEME_LABELS: Record<ThemePreference, string> = { light: 'Açık', dark: 'Koyu', system: 'Sistem' };
 

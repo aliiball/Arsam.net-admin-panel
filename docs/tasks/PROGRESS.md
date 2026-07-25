@@ -1074,3 +1074,81 @@ Entry format:
     so the hit-area no longer overlaps the title link.
 - Suggested commit message:
   `feat(mobile): MobileListCard on all 9 lists, compact pagination, 1-up KPI, mobile dialog + a11y 44px/aria fixes`
+
+## 2026-07-25 Task 021 — Aşama 6: Floating Command Dock + Launcher
+- Built: A THIRD layout mode `dock` (behind a live feature flag), a chrome-light command-driven nav — no persistent
+  sidebar/topnav; a floating **rich-glass** command dock top-center + a ⌘K **card-grid launcher**. Fed by the SAME
+  `config/nav-schema.ts` as the other shells (Golden Rule 8). Pieces:
+  - **Mode plumbing:** `LayoutMode` gains `'dock'` (`config/layout.ts` type + guard + settings `layoutModeEnum`).
+    `AppShell` renders `DockShell` when the effective mode is `dock`, with a **flag fallback**: `dock` selected but
+    `dockLayout` off ⇒ falls back to `sidebar` (existing modes never affected). `LayoutSwitcher` gains a flag-gated
+    "Komut dock" option (hidden when `dockLayout` off) + a `LayoutGrid` trigger icon; `LayoutDefaultsForm` mode map
+    gains `dock`. `.storybook/preview` layout toolbar gains a Dock item.
+  - **DockShell** (`components/shell`): full-width content; floating `CommandDock` (xl+); below xl converges to a
+    top command bar (drawer + Brand + search + notification bell + user menu) + the shared `MobileBottomNav`
+    (Golden Rule 3). `main` gets `xl:pt-20` clearance under the floating dock.
+  - **CommandDock:** top-center rich-glass pill (`max-w-[min(92vw,44rem)]`) — Arsam launcher (opens ⌘K,
+    `aria-keyshortcuts`) + `ContextPill` + notification bell (flag-gated) + `UserMenu`. Desktop only; the mobile bar
+    covers phones.
+  - **ContextPill:** "Şu an: [üst ›] <aktif sayfa>" (mini-breadcrumb — parent renders as an up-a-level `Link` md+)
+    + a live clock via injectable `useNow(injected?)` (`lib/shell/useNow.ts`; no timer when injected → deterministic
+    tests) + pure `formatClock`.
+  - **NotificationBell:** bell + count badge (aria-hidden; count folded into the button `aria-label`) + a Popover
+    list (moderation summary + recent audit, deep-linked), with the mandatory skeleton/empty/error/populated states.
+  - **CommandCardLauncher** (dock ⌘K): permitted module CARDS (icon + label + blurb + nested quick-action chips) +
+    a module search + an **NL box** (FieldHelp + `aria-describedby`) that PROPOSES a navigate/filter intent applied
+    only on confirm (guardrail); write-class (bulk) intents hand off to the AI assistant's confirm flow. Quick
+    actions grouped (Genel / Görünüm / Tema). `CommandLauncher` is the shared entry: `variant='cards'` (dock) vs
+    `'list'` (the unchanged `CommandPalette` for sidebar/topnav — zero regression).
+  - **Notifications feature** (`features/notifications`): PURE `deriveNotifications(listings, audit)` (moderation
+    summary item with badge = pending count + recent audit deep links via `auditResourceRoute` + Turkish
+    `formatAuditTitle`), `GET /notifications` MSW handler reading the EXISTING mock DB (`getListingsSnapshot()` +
+    `getAuditLog()`) — no new source of truth, `useNotifications` query, registered in the MSW registry.
+  - **Rich-glass tokens:** `--glass` / `--glass-foreground` / `--glass-border` (`:root` + `.dark`, 0.9-opacity base
+    so opaque foreground keeps AA over blur) + `@theme` `--color-glass*`; documented in `DESIGN_SYSTEM.md`. Used as
+    `bg-glass text-glass-foreground border-glass-border` + `backdrop-blur` — chrome only, never on content cards.
+  - **Feature flags:** `dockLayout` + `notificationCenter` added to the 015 catalog (defaults true); live on/off via
+    the settings screen; when off the dock/bell disappear and sidebar/topnav are untouched.
+  - **nav-schema:** each of the 10 top-level modules gains a short Turkish `description` (surfaced on the launcher
+    cards) — single source of truth.
+- Stories/tests: full-DoD stories for DockShell (Desktop/Tablet/Phone/SmallPhone), CommandDock (Default +
+  NotificationsOff), ContextPill (Default/Nested/Mobile), NotificationBell (Default/Empty/Loading/Error/Mobile),
+  CommandCardLauncher (Default/NaturalLanguage/Search/EmptySearch/Mobile), CommandLauncher (List/Cards); AppShell
+  gains Dock + DockFlagOff (proves the sidebar fallback); LayoutSwitcher gains Dock + DockFlagOff (proves the option
+  vanishes). Pure `deriveNotifications`/`auditResourceRoute`/`formatAuditTitle` unit tests + a `/notifications`
+  handler test (payload derived from the live mock DB). Deterministic clock injected everywhere.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (923/923, 153 files) ·
+  build PASS · build-storybook PASS. (One full-suite run showed transient timeout flakes in UNRELATED pre-existing
+  `Error` stories under heavy concurrent agent load; a calm re-run is 923/923 green.)
+- DoD self-check: ran all four Tier-1 agents. **design-token-guardian:** CLEAN. **a11y-sentinel:** 1 BLOCKER
+  (CommandCardLauncher chips/buttons `min-h-8/9` < 44px) → all bumped to `min-h-11`; 1 WARN (`--glass-border` < 3:1
+  vs near-white bg, SC 1.4.11) → darkened/denser border (light 0.82L/0.9α, dark 0.42L/0.85α), shadow-lg documented
+  as the primary edge cue. **ux-design-critic:** 2 High (no `UserMenu` reachable in dock → added to dock + mobile
+  bar; `ContextPill` lost breadcrumb up-nav → parent now a `Link`) + Mediums (quick-actions grouped; dock pill
+  `max-w` guard; added ContextPill story) + Lows (kbd `bg-background/40`; lighter first separator) — all applied.
+  **dod-reviewer:** initially NO (no story proved flag-OFF behavior; LayoutSwitcher stories not updated;
+  ContextPill unchecked `as` cast) → added DockFlagOff/NotificationsOff/EmptySearch/CommandLauncher stories,
+  replaced the cast with a `hasRouteMeta` guard at the use site → **re-verified Ready to commit: YES**.
+- Decisions/assumptions:
+  - Notifications go through an MSW endpoint + TanStack Query (app convention) rather than reading the in-memory
+    snapshot directly from the hook — the derivation stays PURE + unit-testable, the endpoint just feeds it the live
+    mock DB (task's "no new source of truth" honored).
+  - The launcher NL box intentionally handles only navigate/filter (non-write) inline; bulk/write intents are handed
+    to the existing AssistantPanel confirm flow rather than duplicating the queue+ConfirmDialog wiring.
+  - `useNow` uses `new Date()` in app code (allowed; only workflow scripts ban argless `new Date()`); stories/tests
+    inject a fixed clock so the dock time is deterministic.
+  - Both dock/notification flags default ON (consistent with the other catalog flags) — the flag-OFF path is proven
+    by dedicated stories, not left to code reading.
+  - Rich glass is CHROME ONLY (dock/launcher/notification/mobile bar); content cards stay opaque per DESIGN_SYSTEM.
+- Suggested commit message:
+  `feat(dock): third `dock` layout — floating rich-glass command dock + card-grid launcher + notification center (flag-gated)`
+- Follow-up (same task, post-review, user request): the dock's MOBILE chrome was a full-width sticky command bar;
+  the user wanted it to read like the reference's floating capsule. Reworked `DockShell` so below `xl` it renders a
+  **floating rounded rich-glass command pill** (`fixed inset-x-4 top-3 rounded-full bg-glass backdrop-blur`) — Arsam
+  launcher (opens the ⌘K card grid) + notification bell (flag) + `UserMenu`. Dropped the mobile hamburger drawer in
+  dock mode (full nav is already reachable via the card-grid launcher + bottom nav, so the drawer was redundant);
+  `main` now clears the floating pill with `pt-20` at all sizes. Interaction/interpretation only — still OUR tokens,
+  no reference clone (no serif/cream/liquid-glass). Story: DockShell `Phone` now asserts the pill launcher + bottom
+  nav. Re-verified: lint·typecheck·test(923/923)·build·build-storybook green. NOTE: the reference's richer feel
+  (serif greeting, bento sparkline cards, personalized header) is deliberately deferred to **Task 022 (Motion &
+  Bento)** and/or excluded by Golden Rule 1 (serif/cream/liquid-glass never cloned).

@@ -89,13 +89,14 @@ const preview: Preview = {
       },
     },
     layout: {
-      description: 'Yerleşim modu (sidebar/topnav)',
+      description: 'Yerleşim modu (sidebar/topnav/dock)',
       toolbar: {
         title: 'Yerleşim',
         icon: 'sidebar',
         items: [
           { value: 'sidebar', title: 'Sidebar' },
           { value: 'topnav', title: 'Topnav' },
+          { value: 'dock', title: 'Dock' },
         ],
         dynamicTitle: true,
       },

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { DEFAULT_FLAGS } from '@/lib/settings/feature-flags';
+import { setFeatureFlags, resetFeatureFlags } from '@/lib/settings/feature-flags-store';
 import { AppShell } from './AppShell';
 import { shellRouterDecorator } from './story-helpers';
 
@@ -44,6 +46,38 @@ export const Mobile: Story = {
   parameters: { viewport: { defaultViewport: 'mobile1' } },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('navigation', { name: 'Alt gezinme' })).toBeInTheDocument();
+  },
+};
+
+/**
+ * `dock` mode (behind the `dockLayout` flag, on by default): no persistent
+ * sidebar/topnav — a floating rich-glass command dock with a context pill.
+ */
+export const Dock: Story = {
+  globals: { layout: 'dock' },
+  play: async ({ canvas }) => {
+    // No persistent sidebar/topnav chrome in dock mode.
+    await expect(canvas.queryByTestId('sidebar')).toBeNull();
+    await expect(canvas.queryByTestId('topnav')).toBeNull();
+    // The floating dock's context pill is present.
+    await expect(canvas.getByText(/Şu an:/)).toBeInTheDocument();
+  },
+};
+
+/**
+ * Feature-flag safety: with `dockLayout` OFF, a persisted `dock` mode falls back
+ * to `sidebar` — existing modes are never affected by the flag being off.
+ */
+export const DockFlagOff: Story = {
+  globals: { layout: 'dock' },
+  beforeEach: () => {
+    setFeatureFlags({ ...DEFAULT_FLAGS, dockLayout: false });
+    return () => resetFeatureFlags();
+  },
+  play: async ({ canvas }) => {
+    // Fell back to sidebar: the sidebar chrome is present, no dock pill.
+    await expect(canvas.getByTestId('sidebar')).toBeInTheDocument();
+    await expect(canvas.queryByText(/Şu an:/)).toBeNull();
   },
 };
 

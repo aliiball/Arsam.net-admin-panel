@@ -1,36 +1,36 @@
 # Current Task
--> docs/tasks/021-command-dock-launcher.md
+-> docs/tasks/022-motion-bento.md
 
-Status: NOT STARTED (Aşama 6 — Modernizasyon; 4. faz: Floating Command Dock + Launcher).
-Tasks 000–020 (+ Aşama 1–5) complete — see PROGRESS.md. Task 020 kullanıcı commit'i bekliyor.
+Status: NOT STARTED (Aşama 6 — Modernizasyon; SON faz: Motion & Bento).
+Tasks 000–021 (+ Aşama 1–5) complete — see PROGRESS.md. Task 021 kullanıcı commit'ini bekliyor.
 
-Task 020 (Mobil UX) done: shared `MobileListCard` helper (title/link → badges → 2-up meta → actions) wired into
-ALL 9 list pages (generic dl/dt/dd fallback now dead everywhere; select+bulk preserved). Compact mobile
-pagination (`<sm` first/last collapse + `x/y` counter). KPI 1-up on smallest screen (Dashboard `sm:grid-cols-2`,
-Reports `md:grid-cols-2` for wide ₺ values) + `KpiCard` `truncate`/responsive value. Dialog mobile width
-`w-[calc(100%-2rem)]`+`max-h dvh`+scroll. RBAC matrix sticky-left scroll + `<xl` gesture hint. DataTable loading
-skeleton now shape-matched (mobile card skeleton `xl:hidden`); density/colvis hidden below xl. **018/019 tracked
-a11y BLOCKERs CLOSED:** FilterBar NL `aria-describedby` (+visible helper, `useId`), both date-range DatePickers
-`aria-label`, radio/chip-remove 44px pseudo hit-area, `size-8` overrides dropped (pagination/bulk → 44px),
-resize/reorder handle hit-zones widened. 4 agents ran: token CLEAN, a11y 0 BLOCKER/3 WARN (all fixed),
-ux-critic 1 High+4 Medium (fixed; 3 deferred/tracked), dod-reviewer NO→YES after adding KpiCard/Dashboard bpXs
-regression-guard stories. lint·typecheck·test(889/889)·build·build-storybook hepsi yeşil.
+Task 021 (Floating Command Dock + Launcher) done: 3. layout modu `dock` (feature-flag'li, `dockLayout` kapalıysa
+`sidebar`'a düşer). Kalıcı sidebar/topnav YOK; üst-ortada **zengin-cam** `CommandDock` (Arsam launcher + `ContextPill`
+["Şu an: üst › sayfa" mini-breadcrumb + enjekte edilebilir saat `useNow`] + `NotificationBell` + `UserMenu`).
+`DockShell` mobilde **yüzen yuvarlak komut pill'i** (launcher + zil + UserMenu) + `MobileBottomNav`'a yakınsar (Golden Rule 3; tam nav card-grid launcher'dan, drawer yok). ⌘K → `CommandCardLauncher`
+(izinli modül KARTLARI + nested quick-action chip'leri + modül arama + NL kutusu [FieldHelp, onaydan önce uygulama
+yok; yazma → AI asistanı]); `CommandLauncher` mod'a göre `cards`/`list` seçer, sidebar/topnav'da eski `CommandPalette`
+regresyonsuz. `features/notifications`: saf `deriveNotifications` (moderasyon özeti [badge=pending] + son audit derin
+link) + `GET /notifications` MSW (mevcut mock DB'den, yeni kaynak yok). Cam token'ları `--glass*` (light+dark, 0.9
+opaklık, WCAG-güvenli; sadece chrome). Bayraklar `dockLayout`+`notificationCenter` (015 köprüsü, canlı aç/kapa).
+nav-schema'ya 10 modül `description`'ı. **4 agent çalıştı:** token-guardian CLEAN; a11y-sentinel 1 BLOCKER (44px,
+düzeltildi) + 1 WARN (glass-border kontrastı, düzeltildi); ux-critic 2 High (dock UserMenu + ContextPill üst-nav,
+düzeltildi) + orta/düşük (uygulandı); dod-reviewer NO→YES (flag-OFF + LayoutSwitcher story'leri + cast temizliği).
+lint 0-error · typecheck · test 923/923 · build · build-storybook hepsi yeşil.
 
 Mode: TASK (uygula → doğrula → DoD → PROGRESS checkpoint → sonraki görev dosyasını yaz → CURRENT ilerlet
 → DUR → kullanıcı commit → /clear).
 
 Aşama 6 kilitli kararlar (BACKLOG.md'de detay):
 - Referans (sahibinden-v2): SEÇİCİ uyarlama, birebir klon değil (cream palet / beyaz liquid-glass / font trio ALINMAZ).
-- Görsel: zengin cam / kendi OKLCH paletimiz, WCAG-kontrast güvenli.
-- Nav: 3. layout modu `dock` (sidebar opsiyonel) + card-grid launcher + NL + context pill + notification center.
-- Breakpoint: 8-token named ölçek (019); yeni yüzeyler `xs`/`sm` token'larını kullanır (yeni kodda `sm`=480, `md`=640, `lg`=768, `xl`=1024, `2xl`=1280).
-- Yeni yüzeyler feature-flag'li (canlı aç/kapa, geri alınabilir/revize edilebilir).
-- Faz sırası: 018 tooling → 019 breakpoint → 020 mobil → **021 dock/launcher** → 022 motion/bento.
+- Motion: kendi `--duration-*`/`--ease-*` tokenlarımız; enterprise-sakin, `prefers-reduced-motion` MUTLAK korunur.
+- Yeni yüzeyler token-only + AI-first + Storybook-first; play testleri animasyon süresine yaslanmaz.
+- Faz sırası: 018 tooling → 019 breakpoint → 020 mobil → 021 dock/launcher → **022 motion/bento** (SON).
 
-021 girdisi (020'den tracked, non-blocking — 021'de değil, ilgili fazlarda ele alınacak):
-- AiSuggestionBadge reasons hover-only (touch'ta ulaşılamaz) → 022 motion/interaction fazında tap Popover/Sheet.
-- KpiCard delta renk asimetrisi (success-foreground vs destructive) → 022 polish.
-- FilterBar toolbar 320px'de sarıp içeriği aşağı itiyor → ayrı follow-up (mobil filtre sheet'i düşün).
+022 girdisi (020/021'den tracked, non-blocking):
+- AiSuggestionBadge reasons hover-only (touch'ta ulaşılamaz) → 022'de tap Popover/Sheet.
+- KpiCard delta renk asimetrisi (success-foreground vs destructive) → 022 polish + ikon/işaret (renk tek sinyal değil).
+- FilterBar toolbar 320px'de sarıp içeriği aşağı itiyor → 022'de mobil filtre davranışını gözden geçir (ya da ayrı follow-up).
 
 Backlog / faz sırası: docs/tasks/BACKLOG.md
 Resume: "docs/tasks/CURRENT.md ve PROGRESS.md'yi oku, devam et".

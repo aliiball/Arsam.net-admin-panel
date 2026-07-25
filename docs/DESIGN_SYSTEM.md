@@ -44,6 +44,9 @@ Defined in `src/styles/theme.css` via `:root` / `.dark` + exposed with `@theme i
   --sidebar-accent-foreground: oklch(0.30 0.03 265);
   --sidebar-border: oklch(0.92 0.008 250);
   --sidebar-ring: oklch(0.52 0.18 264);
+  --glass: oklch(0.994 0.002 250 / 0.9);      /* chrome-only rich glass (task 021) */
+  --glass-foreground: oklch(0.205 0.02 265);
+  --glass-border: oklch(0.82 0.01 250 / 0.9); /* clears 1.4.11 3:1 vs near-white bg */
   --radius: 0.625rem;
 }
 .dark {
@@ -81,6 +84,9 @@ Defined in `src/styles/theme.css` via `:root` / `.dark` + exposed with `@theme i
   --sidebar-accent-foreground: oklch(0.96 0.006 250);
   --sidebar-border: oklch(0.31 0.02 265);
   --sidebar-ring: oklch(0.70 0.15 264);
+  --glass: oklch(0.245 0.017 265 / 0.9);      /* chrome-only rich glass (task 021) */
+  --glass-foreground: oklch(0.96 0.006 250);
+  --glass-border: oklch(0.42 0.02 265 / 0.85);
 }
 ```
 All text/background pairs are chosen for WCAG 2.2 AA (>= 4.5:1 body, >= 3:1 large/UI). Dark mode intentionally uses a soft near-black surface (approx oklch 0.205 L) rather than pure black to reduce halation and eye fatigue.
@@ -104,6 +110,11 @@ All text/background pairs are chosen for WCAG 2.2 AA (>= 4.5:1 body, >= 3:1 larg
 - `shadow-md`: 0 4px 8px oklch(0 0 0 / 0.08)
 - `shadow-lg` (popovers/menus): 0 8px 24px oklch(0 0 0 / 0.12)
 Dark mode uses borders + slightly stronger shadow alpha for separation.
+
+## Rich glass (chrome-only surfaces)
+Measured, token-based transparency/blur in OUR palette (task 021) — NOT the reference's white liquid-glass. Used ONLY on chrome: the floating command dock, the notification popover, and the dock's mobile command bar. Never on content cards.
+- Tokens (`src/styles/theme.css`): `--glass` (semi-opaque surface base, **0.9 opacity** so opaque `--glass-foreground` text keeps AA contrast over blurred content), `--glass-foreground` (opaque text/icon color), `--glass-border` (denser/darker-than-plain-border hairline chosen to clear WCAG 1.4.11 3:1 vs the near-white background; `shadow-lg` is the primary edge cue). Exposed as `--color-glass` / `--color-glass-foreground` / `--color-glass-border`.
+- Usage: `bg-glass text-glass-foreground border-glass-border` + a `backdrop-blur-*` utility. Light AND dark are contrast-verified. Hardcoded color/opacity hacks are forbidden — the glass effect is entirely token + `backdrop-blur`.
 
 ## Motion tokens
 - Durations: `fast 120ms`, `base 180ms`, `slow 260ms`.

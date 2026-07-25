@@ -2,10 +2,12 @@ import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { useLayout } from '@/lib/layout/layout-context';
+import { useFeatureFlag } from '@/lib/settings/feature-flags-store';
 import { AssistantDock } from '@/components/ai';
 import { PageSkeleton } from '@/app/pages/PageSkeleton';
 import { CommandPaletteProvider } from './command-palette-context';
-import { CommandPalette } from './CommandPalette';
+import { CommandLauncher } from './CommandLauncher';
+import { DockShell } from './DockShell';
 import { MobileBottomNav } from './MobileNav';
 import { RouteGuard } from './RouteGuard';
 import { SidebarShell } from './SidebarShell';
@@ -17,12 +19,18 @@ export interface AppShellProps {
 }
 
 /**
- * Configurable shell — renders SidebarShell or TopnavShell from a single nav
- * schema, driven by `config.mode`, switchable at runtime without reload.
- * Both modes converge to drawer + bottom nav + command palette below `xl` (1024).
+ * Configurable shell — renders SidebarShell, TopnavShell, or (behind the
+ * `dockLayout` flag) DockShell from a single nav schema, driven by `config.mode`
+ * and switchable at runtime without reload. All modes converge to drawer +
+ * bottom nav + command launcher below `xl` (1024). When `dock` is selected but
+ * the flag is off, we fall back to `sidebar` so existing behavior is untouched.
  */
 export function AppShell({ children }: AppShellProps) {
   const { config } = useLayout();
+  const dockEnabled = useFeatureFlag('dockLayout');
+  const effectiveMode =
+    config.mode === 'dock' && !dockEnabled ? 'sidebar' : config.mode;
+
   const content = children ?? (
     <RouteGuard>
       <Suspense fallback={<PageSkeleton />}>
@@ -33,14 +41,16 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <CommandPaletteProvider>
-      <div data-shell-mode={config.mode}>
-        {config.mode === 'sidebar' ? (
+      <div data-shell-mode={effectiveMode}>
+        {effectiveMode === 'dock' ? (
+          <DockShell>{content}</DockShell>
+        ) : effectiveMode === 'sidebar' ? (
           <SidebarShell>{content}</SidebarShell>
         ) : (
           <TopnavShell>{content}</TopnavShell>
         )}
         <MobileBottomNav />
-        <CommandPalette />
+        <CommandLauncher variant={effectiveMode === 'dock' ? 'cards' : 'list'} />
         <AssistantDock />
       </div>
     </CommandPaletteProvider>

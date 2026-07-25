@@ -23,6 +23,8 @@ export interface NavItem {
   id: string;
   /** English key; Turkish UI label shown to end users. */
   label: string;
+  /** Short Turkish blurb — surfaced on the dock card-grid launcher. */
+  description?: string;
   icon: LucideIcon;
   to: string;
   permission?: Permission;
@@ -38,6 +40,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'dashboard',
     label: 'Genel Bakış',
+    description: 'KPI’lar, kuyruk özeti ve son aktivite',
     icon: LayoutDashboard,
     to: '/',
     aiEntity: 'dashboard',
@@ -46,6 +49,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'listings',
     label: 'İlanlar',
+    description: 'İlan yönetimi ve moderasyon kuyruğu',
     icon: Building2,
     to: '/listings',
     permission: 'listing.view',
@@ -59,6 +63,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'users',
     label: 'Kullanıcılar & Ofisler',
+    description: 'Üyeler, ofisler, doğrulama ve güven skoru',
     icon: Users,
     to: '/users',
     permission: 'user.view',
@@ -72,6 +77,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'categories',
     label: 'Kategoriler & Nitelikler',
+    description: 'Taksonomi ve dinamik nitelik setleri',
     icon: FolderTree,
     to: '/categories',
     permission: 'category.manage',
@@ -80,6 +86,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'locations',
     label: 'Lokasyonlar',
+    description: 'İl / ilçe / mahalle hiyerarşisi',
     icon: MapPin,
     to: '/locations',
     permission: 'location.manage',
@@ -88,6 +95,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'promotions',
     label: 'Doping & Ödemeler',
+    description: 'Doping paketleri, ödemeler ve iadeler',
     icon: BadgePercent,
     to: '/promotions',
     permission: 'promotion.sell',
@@ -100,6 +108,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'messages',
     label: 'Mesajlar & Şikayetler',
+    description: 'Şikayet kuyruğu ve üç kademeli moderasyon',
     icon: MessagesSquare,
     to: '/messages',
     permission: 'message.moderate',
@@ -109,6 +118,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'reports',
     label: 'Raporlar & Analitik',
+    description: 'KPI, trend ve huni analizleri',
     icon: BarChart3,
     to: '/reports',
     permission: 'report.view',
@@ -117,6 +127,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'audit',
     label: 'Denetim Kaydı',
+    description: 'Filtrelenebilir, değişmez işlem geçmişi',
     icon: ScrollText,
     to: '/audit',
     permission: 'audit.view',
@@ -125,6 +136,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'rbac',
     label: 'Roller & İzinler',
+    description: 'Rol/izin matrisi ve canlı yetkilendirme',
     icon: ShieldCheck,
     to: '/rbac',
     permission: 'rbac.manage',
@@ -133,6 +145,7 @@ export const navSchema: NavItem[] = [
   {
     id: 'settings',
     label: 'Ayarlar',
+    description: 'Sistem ayarları ve özellik bayrakları',
     icon: Settings,
     to: '/settings',
     permission: 'settings.manage',

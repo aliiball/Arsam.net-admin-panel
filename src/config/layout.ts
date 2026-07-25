@@ -3,7 +3,7 @@
  * Persistence is localStorage now; swap to an API later behind this same
  * interface (load/save signatures stay stable).
  */
-export type LayoutMode = 'sidebar' | 'topnav';
+export type LayoutMode = 'sidebar' | 'topnav' | 'dock';
 export type Density = 'comfortable' | 'compact';
 export type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -25,7 +25,7 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
 export const LAYOUT_STORAGE_KEY = 'arsam.layout';
 
 function isLayoutMode(v: unknown): v is LayoutMode {
-  return v === 'sidebar' || v === 'topnav';
+  return v === 'sidebar' || v === 'topnav' || v === 'dock';
 }
 function isDensity(v: unknown): v is Density {
   return v === 'comfortable' || v === 'compact';
