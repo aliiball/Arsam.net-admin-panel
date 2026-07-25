@@ -71,7 +71,9 @@ export function ReportsPage() {
               e.g. formatTry ₺184.500) needs the width — under the old default scale
               6-up also lived at 1280, so this preserves legibility while still gaining
               the earlier 3-up reflow at lg (768) for tablet portrait. */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
+          {/* Currency KPI values (formatTry) need width: stay 1-up until md (640)
+              so a `text-2xl` ₺ figure isn't ellipsized in a half-width 480 column. */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
             <KpiCard label="Toplam İlan" value={kpis?.totalListings ?? 0} icon={Building2} loading={isLoading} hint="seçili aralık" />
             <KpiCard label="Yayında" value={kpis?.activeListings ?? 0} icon={CheckCircle2} loading={isLoading} hint="aktif ilan" />
             <KpiCard label="Toplam Gelir" value={kpis ? formatTry(kpis.totalRevenue) : '—'} icon={Wallet} loading={isLoading} hint="ödeme − iade" />

@@ -50,8 +50,14 @@ export function PermissionMatrixEditor({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border" data-entity="rbac">
-      <table className="w-full border-collapse text-sm" role="grid">
+    <div className="space-y-2" data-entity="rbac">
+      {/* Phones: the matrix scrolls horizontally with a sticky permission column;
+          hint the gesture since roles can fall off-screen below md (640). */}
+      <p className="text-muted-foreground text-xs xl:hidden" role="note">
+        Rolleri görmek için tabloyu yana kaydırın; izin sütunu sabit kalır.
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full border-collapse text-sm" role="grid">
         <caption className="sr-only">Rol ve izin matrisi — hücreleri değiştirerek izin verin veya kaldırın.</caption>
         <thead>
           <tr className="border-b border-border bg-muted/40">
@@ -116,7 +122,8 @@ export function PermissionMatrixEditor({
             ))}
           </tbody>
         ))}
-      </table>
+        </table>
+      </div>
     </div>
   );
 }

@@ -25,3 +25,19 @@ export const Loading: Story = { render: () => <div className="bg-muted h-10 w-fu
 export const Empty: Story = { args: { total: 0, page: 1 } };
 export const Error: Story = { args: { total: 0, page: 1 } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px): first/last collapse; a compact `x/y` counter + prev/next remain. */
+export const PhoneCompact: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('button', { name: 'İlk sayfa' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Önceki sayfa' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Sonraki sayfa' })).toBeInTheDocument();
+  },
+};
+/** Phone (480px): the full control row returns with first/last buttons. */
+export const PhoneWide: Story = {
+  parameters: { viewport: { defaultViewport: 'bpSm' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'İlk sayfa' })).toBeInTheDocument();
+  },
+};

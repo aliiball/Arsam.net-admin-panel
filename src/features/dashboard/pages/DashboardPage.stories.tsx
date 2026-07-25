@@ -75,6 +75,19 @@ export const Default: Story = {
   },
 };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px) — KPI band drops to 1-up; all four tiles stay legible. */
+export const Phone: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { name: 'Genel Bakış' })).toBeInTheDocument();
+    // All four KPI tiles render (1-up column at this width). "Yayında" also appears
+    // as a donut legend label, so assert presence via findAllByText.
+    await expect(await canvas.findByText('Toplam İlan')).toBeInTheDocument();
+    await expect(canvas.getByText('Bekleyen Moderasyon')).toBeInTheDocument();
+    await expect((await canvas.findAllByText('Yayında')).length).toBeGreaterThan(0);
+    await expect(canvas.getByText('Reddedilen')).toBeInTheDocument();
+  },
+};
 /** Tablet portrait (768px) — KPI row 2-up, charts 2-up (task 019 content-grid regression guard). */
 export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
 /** Desktop (1024px) — KPI 4-up, charts/panels 3-up. */

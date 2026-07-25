@@ -57,7 +57,7 @@ export function DashboardPage() {
           integers at text-2xl tabular-nums; a 4-up step at lg (768) leaves ~79px of
           usable text width per tile and clips 5-digit values, so the reflow stays at
           1024 (2-up on tablet portrait is roomy and reads cleanly). */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Toplam İlan" value={stats?.totalListings ?? 0} icon={Building2} loading={isLoading} hint="tüm kategoriler" />
         <KpiCard label="Bekleyen Moderasyon" value={stats?.pending ?? 0} icon={Clock} loading={isLoading} delta={-8} hint="son 7 gün" />
         <KpiCard label="Yayında" value={stats?.active ?? 0} icon={CheckCircle2} loading={isLoading} delta={12} hint="son 7 gün" />

@@ -21,7 +21,10 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'border-input text-primary focus-visible:ring-ring/50 aria-invalid:border-destructive size-4 shrink-0 rounded-full border shadow-xs outline-none transition-shadow focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary',
+        'border-input text-primary focus-visible:ring-ring/50 aria-invalid:border-destructive relative size-4 shrink-0 rounded-full border shadow-xs outline-none transition-shadow focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary',
+        // ≥44px WCAG 2.5.5 hit target via a transparent pseudo-element; the 16px
+        // visual dot is preserved. (Same idiom as Checkbox / FieldHelp.)
+        "after:absolute after:-inset-3.5 after:content-['']",
         className,
       )}
       {...props}

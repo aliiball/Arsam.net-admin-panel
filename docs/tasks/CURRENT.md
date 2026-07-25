@@ -1,34 +1,36 @@
 # Current Task
--> docs/tasks/020-mobile-ux.md
+-> docs/tasks/021-command-dock-launcher.md
 
-Status: NOT STARTED (Aşama 6 — Modernizasyon; 3. faz: Mobil UX düzeltmeleri).
-Tasks 000–019 (+ Aşama 1–5) complete — see PROGRESS.md. Task 019 kullanıcı commit'i bekliyor.
+Status: NOT STARTED (Aşama 6 — Modernizasyon; 4. faz: Floating Command Dock + Launcher).
+Tasks 000–020 (+ Aşama 1–5) complete — see PROGRESS.md. Task 020 kullanıcı commit'i bekliyor.
 
-Task 019 (Breakpoint Adopsiyonu) done: 8-token named scale (`@theme --breakpoint-*`:
-xs320/sm480/md640/lg768/xl1024/2xl1280/3xl1536/4xl1920). **Strateji A** — Tailwind v4'te `@theme`'e
-`--breakpoint-*` eklemek TÜM default ölçeği kaydırdığı için (sm/md/lg/xl/2xl), her mevcut prefix bir token
-YUKARI kaydırılarak (sm→md, md→lg, lg→xl) 640/768/1024/1280 eşikleri BİREBİR korundu; shell/tablo convergence
-hâlâ 1024'te. Yeni `xs`(320)/`sm`(480) token'ları 020/021 için additive. Content-grid'ler (Dashboard/Reports)
-tek tek gerekçeyle remap/bırakıldı (KPI clip regresyonları düzeltildi). Storybook viewport'ları named ölçeğe
-hizalandı + Tablet/Desktop convergence story'leri (viewport test runner'da gerçekten uygulanıyor).
-4 agent çalıştı: token-guardian CLEAN, a11y PASS, ux-critic 2 High (fixed), dod-reviewer 4 blocking (hepsi fixed —
-en kritiği: denetlenmemiş collateral sm/md kayması → up-one-token shift ile çözüldü). lint·typecheck·test(870/870,
-2× yeşil)·build·build-storybook hepsi yeşil.
+Task 020 (Mobil UX) done: shared `MobileListCard` helper (title/link → badges → 2-up meta → actions) wired into
+ALL 9 list pages (generic dl/dt/dd fallback now dead everywhere; select+bulk preserved). Compact mobile
+pagination (`<sm` first/last collapse + `x/y` counter). KPI 1-up on smallest screen (Dashboard `sm:grid-cols-2`,
+Reports `md:grid-cols-2` for wide ₺ values) + `KpiCard` `truncate`/responsive value. Dialog mobile width
+`w-[calc(100%-2rem)]`+`max-h dvh`+scroll. RBAC matrix sticky-left scroll + `<xl` gesture hint. DataTable loading
+skeleton now shape-matched (mobile card skeleton `xl:hidden`); density/colvis hidden below xl. **018/019 tracked
+a11y BLOCKERs CLOSED:** FilterBar NL `aria-describedby` (+visible helper, `useId`), both date-range DatePickers
+`aria-label`, radio/chip-remove 44px pseudo hit-area, `size-8` overrides dropped (pagination/bulk → 44px),
+resize/reorder handle hit-zones widened. 4 agents ran: token CLEAN, a11y 0 BLOCKER/3 WARN (all fixed),
+ux-critic 1 High+4 Medium (fixed; 3 deferred/tracked), dod-reviewer NO→YES after adding KpiCard/Dashboard bpXs
+regression-guard stories. lint·typecheck·test(889/889)·build·build-storybook hepsi yeşil.
 
 Mode: TASK (uygula → doğrula → DoD → PROGRESS checkpoint → sonraki görev dosyasını yaz → CURRENT ilerlet
 → DUR → kullanıcı commit → /clear).
 
 Aşama 6 kilitli kararlar (BACKLOG.md'de detay):
-- Referans (sahibinden-v2): SEÇİCİ uyarlama, birebir klon değil.
+- Referans (sahibinden-v2): SEÇİCİ uyarlama, birebir klon değil (cream palet / beyaz liquid-glass / font trio ALINMAZ).
 - Görsel: zengin cam / kendi OKLCH paletimiz, WCAG-kontrast güvenli.
-- Nav: 3. layout modu `dock` (sidebar opsiyonel) + card-grid launcher + NL + context pill + notification.
-- Breakpoint: 8-token named ölçek KURULDU (019); yeni yüzeyler `xs`/`sm` token'larını kullanabilir.
+- Nav: 3. layout modu `dock` (sidebar opsiyonel) + card-grid launcher + NL + context pill + notification center.
+- Breakpoint: 8-token named ölçek (019); yeni yüzeyler `xs`/`sm` token'larını kullanır (yeni kodda `sm`=480, `md`=640, `lg`=768, `xl`=1024, `2xl`=1280).
 - Yeni yüzeyler feature-flag'li (canlı aç/kapa, geri alınabilir/revize edilebilir).
-- Faz sırası: 018 agent tooling → 019 breakpoint → **020 mobil** → 021 dock/launcher → 022 motion/bento.
+- Faz sırası: 018 tooling → 019 breakpoint → 020 mobil → **021 dock/launcher** → 022 motion/bento.
 
-020 girdisi (019/018'den tracked): hiçbir list page `renderMobileCard` geçmiyor (hepsi generic dl/dt/dd) →
-020'nin ana işi; a11y BLOCKER'lar (FilterBar NL aria-describedby, sub-44px radio/handle/pagination/bulk/chip
-targets, isimsiz DatePicker'lar).
+021 girdisi (020'den tracked, non-blocking — 021'de değil, ilgili fazlarda ele alınacak):
+- AiSuggestionBadge reasons hover-only (touch'ta ulaşılamaz) → 022 motion/interaction fazında tap Popover/Sheet.
+- KpiCard delta renk asimetrisi (success-foreground vs destructive) → 022 polish.
+- FilterBar toolbar 320px'de sarıp içeriği aşağı itiyor → ayrı follow-up (mobil filtre sheet'i düşün).
 
 Backlog / faz sırası: docs/tasks/BACKLOG.md
 Resume: "docs/tasks/CURRENT.md ve PROGRESS.md'yi oku, devam et".

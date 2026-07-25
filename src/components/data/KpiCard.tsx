@@ -36,7 +36,7 @@ export function KpiCard({
           {loading ? (
             <div className="bg-muted h-7 w-20 animate-pulse rounded" />
           ) : (
-            <p className="text-2xl font-semibold tabular-nums">{value}</p>
+            <p className="truncate text-xl font-semibold tabular-nums sm:text-2xl">{value}</p>
           )}
           {delta !== undefined && !loading && (
             <p

@@ -34,14 +34,14 @@ export function DataTablePagination({
   const to = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-col items-center justify-between gap-3 px-1 py-2 md:flex-row">
-      <div className="text-muted-foreground text-sm tabular-nums">
+    <div className="flex flex-col items-stretch gap-3 px-1 py-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-muted-foreground order-2 text-center text-sm tabular-nums sm:order-1 sm:text-left">
         {selectedCount > 0 && <span className="mr-2">{selectedCount} seçili ·</span>}
         {from}–{to} / {total} kayıt
       </div>
-      <div className="flex items-center gap-4">
+      <div className="order-1 flex items-center justify-between gap-2 sm:order-2 sm:justify-end sm:gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm">Sayfa boyutu</span>
+          <span className="text-muted-foreground hidden text-sm sm:inline">Sayfa boyutu</span>
           <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
             <SelectTrigger size="sm" className="w-[4.5rem]" aria-label="Sayfa boyutu">
               <SelectValue />
@@ -55,22 +55,27 @@ export function DataTablePagination({
             </SelectContent>
           </Select>
         </div>
-        <div className="text-muted-foreground text-sm tabular-nums">
-          Sayfa {page} / {pageCount}
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="size-8" disabled={page <= 1} onClick={() => onPageChange(0)} aria-label="İlk sayfa">
-            <ChevronsLeft className="size-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="size-8" disabled={page <= 1} onClick={() => onPageChange(page - 2)} aria-label="Önceki sayfa">
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="size-8" disabled={page >= pageCount} onClick={() => onPageChange(page)} aria-label="Sonraki sayfa">
-            <ChevronRight className="size-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="size-8" disabled={page >= pageCount} onClick={() => onPageChange(pageCount - 1)} aria-label="Son sayfa">
-            <ChevronsRight className="size-4" />
-          </Button>
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Compact `x/y` counter on phones; full label from sm (480) up. */}
+          <span className="text-muted-foreground whitespace-nowrap text-sm tabular-nums">
+            <span className="hidden sm:inline">Sayfa </span>
+            {page}/{pageCount}
+          </span>
+          <div className="flex items-center gap-1">
+            {/* First/last hidden on the smallest widths; prev/next always shown. */}
+            <Button variant="outline" size="icon" className="hidden sm:inline-flex" disabled={page <= 1} onClick={() => onPageChange(0)} aria-label="İlk sayfa">
+              <ChevronsLeft className="size-4" />
+            </Button>
+            <Button variant="outline" size="icon" disabled={page <= 1} onClick={() => onPageChange(page - 2)} aria-label="Önceki sayfa">
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button variant="outline" size="icon" disabled={page >= pageCount} onClick={() => onPageChange(page)} aria-label="Sonraki sayfa">
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="hidden sm:inline-flex" disabled={page >= pageCount} onClick={() => onPageChange(pageCount - 1)} aria-label="Son sayfa">
+              <ChevronsRight className="size-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

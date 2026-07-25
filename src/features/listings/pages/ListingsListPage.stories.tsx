@@ -40,6 +40,18 @@ export const Sidebar: Story = {
 };
 export const Topnav: Story = { globals: { layout: 'topnav' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px): the curated mobile card renders and the desktop table is hidden. */
+export const PhoneCard: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    // The curated card renders the title as an open-detail link (desktop table
+    // is display:none below xl, so its duplicate link is not in the a11y tree).
+    const links = await canvas.findAllByRole('link', { name: 'İstanbul konut ilanı 1' });
+    await expect(links.length).toBeGreaterThan(0);
+    // No accessible columnheader below xl — the table view is hidden on phones.
+    await expect(canvas.queryByRole('columnheader')).toBeNull();
+  },
+};
 /** Tablet portrait (768px) — card list still active; table view takes over at `xl` (1024). */
 export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
 /** Desktop (1024px) — the `xl` switch point; table view active. */

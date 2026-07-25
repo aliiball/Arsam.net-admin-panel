@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -21,6 +22,9 @@ import {
   REPORT_SUBJECT_TYPES,
 } from '../data/reports';
 import { reportColumns } from '../components/reportColumns';
+import { ReportStatusBadge } from '../components/ReportStatusBadge';
+import { ReportPriorityBadge } from '../components/ReportPriorityBadge';
+import { ReasonCategoryBadge } from '../components/ReasonCategoryBadge';
 import { ReportActionDialog } from '../components/ReportActionDialog';
 import { useReports, reportKeys } from '../api/queries';
 import type { Report, ReportActionInput } from '../schemas/report';
@@ -118,6 +122,31 @@ export function ReportsListPage() {
             </div>
             <p className="text-muted-foreground">{row.description}</p>
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.subjectLabel}
+            to={`/messages/${row.id}`}
+            entity="report"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.subjectLabel} şikayetini seç`}
+            badges={
+              <>
+                <ReportStatusBadge status={row.status} />
+                <ReportPriorityBadge priority={row.priority} />
+              </>
+            }
+            meta={[
+              { label: 'Tür', value: REPORT_SUBJECT_TYPE_LABELS[row.subjectType] },
+              { label: 'Şikayet eden', value: row.reporterName },
+              { label: 'Sebep', value: <ReasonCategoryBadge category={row.reasonCategory} />, full: true },
+              {
+                label: 'Tarih',
+                value: <span className="tabular-nums">{new Date(row.createdAt).toLocaleDateString('tr-TR')}</span>,
+              },
+            ]}
+          />
         )}
         bulkActions={(ids, _all, clear) => <BulkReportActions ids={ids} clear={clear} />}
         onExport={async (format, scope, ctx) => {

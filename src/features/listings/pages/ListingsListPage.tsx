@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -16,12 +17,15 @@ import type { Listing } from '../schemas/listing';
 import {
   CATEGORIES,
   CATEGORY_LABELS,
+  LOCATIONS,
   STATUSES,
   STATUS_LABELS,
   ilOptions,
 } from '../data/taxonomy';
 import { listingFilterContext } from '../lib/nl-context';
 import { listingColumns } from '../components/listingColumns';
+import { ListingStatusBadge } from '../components/ListingStatusBadge';
+import { AiSuggestionBadge } from '../components/AiSuggestionBadge';
 import { useListings } from '../api/queries';
 
 const filters: FilterConfig[] = [
@@ -112,6 +116,27 @@ export function ListingsListPage() {
             <Detail label="Brüt m²" value={row.attributes.grossArea?.toString() ?? '—'} />
             <Detail label="Oda" value={row.attributes.rooms ?? '—'} />
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.title}
+            to={`/listings/${row.id}`}
+            entity="listing"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.title} satırını seç`}
+            badges={
+              <>
+                <ListingStatusBadge status={row.status} />
+                <AiSuggestionBadge suggestion={row.aiSuggestion} reasons={row.aiReasons} />
+              </>
+            }
+            meta={[
+              { label: 'Kategori', value: CATEGORY_LABELS[row.category] },
+              { label: 'Şehir', value: LOCATIONS[row.il]?.label ?? row.il },
+              { label: 'Fiyat', value: `${row.price.toLocaleString('tr-TR')} ₺`, full: true },
+            ]}
+          />
         )}
         bulkActions={(ids, _all, clear) => (
           <Can permission="listing.approve">

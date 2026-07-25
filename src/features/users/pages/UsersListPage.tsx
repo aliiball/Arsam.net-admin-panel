@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -19,6 +20,9 @@ import {
   VERIFICATION_LEVELS,
 } from '../data/users';
 import { userColumns } from '../components/userColumns';
+import { UserStatusBadge } from '../components/UserStatusBadge';
+import { TrustScoreMeter } from '../components/TrustScoreMeter';
+import { VerificationBadges } from '../components/VerificationBadges';
 import { UserActionDialog } from '../components/UserActionDialog';
 import { useUsers, userKeys } from '../api/queries';
 import type { User, UserActionInput } from '../schemas/user';
@@ -109,6 +113,27 @@ export function UsersListPage() {
             <Detail label="Telefon" value={row.phone} />
             <Detail label="Ofis" value={row.office?.title ?? row.officeName ?? '—'} />
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.name}
+            to={`/users/${row.id}`}
+            entity="user"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.name} satırını seç`}
+            badges={<UserStatusBadge status={row.status} />}
+            meta={[
+              { label: 'Tip', value: USER_TYPE_LABELS[row.type] },
+              { label: 'Şehir', value: LOCATIONS[row.il]?.label ?? row.il },
+              { label: 'Güven', value: <TrustScoreMeter score={row.trustScore} compact />, full: true },
+              {
+                label: 'Doğrulama',
+                value: <VerificationBadges verification={row.verification} hideNone />,
+                full: true,
+              },
+            ]}
+          />
         )}
         bulkActions={(ids, _all, clear) => <BulkUserActions ids={ids} clear={clear} />}
         onExport={async (format, scope, ctx) => {

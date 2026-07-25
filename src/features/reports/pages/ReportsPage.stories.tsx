@@ -76,6 +76,14 @@ export const Error: Story = {
 };
 
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px) — KPI band drops to 1-up; the range tab strip wraps. */
+export const Phone: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { name: 'Raporlar & Analitik' })).toBeInTheDocument();
+    await expect((await canvas.findAllByText('Toplam İlan')).length).toBeGreaterThan(0);
+  },
+};
 /** Tablet portrait (768px) — KPI 3-up, trends 2-up, breakdowns stacked (task 019 regression guard). */
 export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
 /** Desktop (1024px) — KPI 3-up (6-up returns at 2xl/1280), breakdowns 3-up. */

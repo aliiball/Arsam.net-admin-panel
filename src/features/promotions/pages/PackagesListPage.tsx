@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -18,9 +19,11 @@ import {
 } from '../data/promotions';
 import { packageColumns, type PackageTableMeta } from '../components/packageColumns';
 import { PackageFormDialog } from '../components/PackageFormDialog';
+import { PackageStatusBadge } from '../components/PackageStatusBadge';
+import { PackageKindBadge } from '../components/PackageKindBadge';
 import { usePackages, packageKeys } from '../api/queries';
 import { useArchivePackage, useUpsertPackage } from '../api/mutations';
-import { packageFormToPayload, sortByOrder, type DopingPackage } from '../schemas/promotion';
+import { formatTry, packageFormToPayload, sortByOrder, type DopingPackage } from '../schemas/promotion';
 
 const filters: FilterConfig[] = [
   {
@@ -105,6 +108,38 @@ export function PackagesListPage() {
             onNaturalLanguage={parseNaturalLanguage}
           />
         }
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.name}
+            entity="package"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.name} paketini seç`}
+            badges={
+              <>
+                <PackageStatusBadge status={row.status} />
+                <PackageKindBadge kind={row.kind} />
+              </>
+            }
+            meta={[
+              { label: 'Süre', value: <span className="tabular-nums">{row.durationDays} gün</span> },
+              { label: 'Fiyat', value: <span className="tabular-nums">{formatTry(row.price)}</span> },
+            ]}
+            actions={
+              <Can permission="promotion.sell">
+                <PackageFormDialog
+                  pkg={row}
+                  onSubmit={(values) => meta.onEdit(row, values)}
+                  trigger={
+                    <Button variant="outline" size="sm" data-action="edit" data-entity="package">
+                      Düzenle
+                    </Button>
+                  }
+                />
+              </Can>
+            }
+          />
+        )}
         bulkActions={(ids, _all, clear) => (
           <BulkPackageActions packages={ordered.filter((p) => ids.includes(p.id))} clear={clear} />
         )}

@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -15,6 +16,7 @@ import {
   ACTOR_KIND_LABELS,
 } from '../data/audit';
 import { auditColumns } from '../components/auditColumns';
+import { AuditActorBadge } from '../components/AuditActorBadge';
 import { AuditTimeline } from '../components/AuditTimeline';
 import { useAuditLog } from '../api/queries';
 import { auditReason } from '../lib/audit-utils';
@@ -98,6 +100,24 @@ export function AuditListPage() {
           <div className="max-w-3xl">
             <AuditTimeline entries={[row]} />
           </div>
+        )}
+        renderMobileCard={(row) => (
+          <MobileListCard
+            title={<span className="font-medium">{row.action}</span>}
+            badges={<AuditActorBadge actor={row.actor} />}
+            meta={[
+              {
+                label: 'Zaman',
+                value: (
+                  <span className="font-mono text-xs tabular-nums">
+                    {row.ts.slice(0, 16).replace('T', ' ')}
+                  </span>
+                ),
+              },
+              { label: 'Kaynak', value: <span className="font-mono text-xs break-all">{row.resource}</span> },
+              { label: 'Gerekçe', value: auditReason(row) ?? '—', full: true },
+            ]}
+          />
         )}
         onExport={async (format, scope) => {
           try {

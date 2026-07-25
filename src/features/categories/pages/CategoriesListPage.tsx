@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -14,6 +15,7 @@ import { api } from '@/lib/api/client';
 import { Can } from '@/lib/permissions/permission-context';
 import { CATEGORY_STATUSES, CATEGORY_STATUS_LABELS } from '../data/categories';
 import { categoryColumns, type CategoryTableMeta } from '../components/categoryColumns';
+import { CategoryStatusBadge } from '../components/CategoryStatusBadge';
 import { CategoryFormDialog } from '../components/CategoryFormDialog';
 import { useCategories, categoryKeys } from '../api/queries';
 import { useReorderCategories, useUpsertCategory } from '../api/mutations';
@@ -126,6 +128,22 @@ export function CategoriesListPage() {
               </p>
             )}
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.label}
+            to={`/categories/${row.id}`}
+            entity="category"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.label} satırını seç`}
+            badges={<CategoryStatusBadge status={row.status} />}
+            meta={[
+              { label: 'Sıra', value: <span className="tabular-nums">{row.order + 1}</span> },
+              { label: 'Nitelik', value: <span className="tabular-nums">{row.attributes.length}</span> },
+              { label: 'Anahtar', value: <code className="text-muted-foreground text-xs">{row.key}</code>, full: true },
+            ]}
+          />
         )}
         onExport={(format) => {
           try {

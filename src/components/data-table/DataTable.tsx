@@ -185,8 +185,12 @@ export function DataTable<TData>({
       <div className="flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">{filterBar}</div>
         <div className="flex items-center gap-2">
-          <DensityToggle />
-          <ColumnVisibility table={table} enableControls={columnControls} />
+          {/* Density + column controls only affect the desktop table (hidden below
+              xl), so keep them off the tight phone toolbar where they'd be inert. */}
+          <div className="hidden items-center gap-2 xl:flex">
+            <DensityToggle />
+            <ColumnVisibility table={table} enableControls={columnControls} />
+          </div>
           {onExport && <ExportMenu selectedCount={selectedIds.length} onExport={handleExport} />}
         </div>
       </div>
@@ -254,7 +258,7 @@ export function DataTable<TData>({
                                 dragCol.current = null;
                               }}
                               aria-label="Kolonu taşımak için sürükle"
-                              className="text-muted-foreground/50 hover:text-foreground mr-1 inline-flex cursor-grab align-middle outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+                              className="text-muted-foreground/50 hover:text-foreground relative mr-1 inline-flex cursor-grab align-middle outline-none after:absolute after:-inset-3 after:content-[''] focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
                               data-action="drag-column"
                               data-entity="table"
                             >
@@ -265,7 +269,9 @@ export function DataTable<TData>({
                             <div
                               onMouseDown={header.getResizeHandler()}
                               onTouchStart={header.getResizeHandler()}
-                              className="hover:bg-border absolute right-0 top-0 h-full w-1 cursor-col-resize touch-none select-none"
+                              // Thin 1px visual grip, but a wider transparent hit
+                              // zone (pseudo-element) so the resizer is graspable.
+                              className="hover:bg-border absolute right-0 top-0 h-full w-1 cursor-col-resize touch-none select-none after:absolute after:inset-y-0 after:-left-5 after:right-0 after:content-['']"
                               aria-hidden="true"
                             />
                           )}
@@ -380,15 +386,36 @@ export function DataTable<TData>({
 
 function LoadingRows({ columns }: { columns: number }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
-      <div className="bg-muted/60 h-11 border-b border-border" />
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 border-b border-border px-3 py-2 last:border-b-0">
-          {Array.from({ length: Math.min(columns || 5, 6) }).map((_, j) => (
-            <Skeleton key={j} className="h-4 flex-1" />
-          ))}
-        </div>
-      ))}
-    </div>
+    <>
+      {/* Desktop table skeleton (xl+) */}
+      <div className="hidden overflow-hidden rounded-lg border border-border xl:block">
+        <div className="bg-muted/60 h-11 border-b border-border" />
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 border-b border-border px-3 py-2 last:border-b-0">
+            {Array.from({ length: Math.min(columns || 5, 6) }).map((_, j) => (
+              <Skeleton key={j} className="h-4 flex-1" />
+            ))}
+          </div>
+        ))}
+      </div>
+      {/* Mobile card skeleton (below xl) — shape-matched to MobileListCard. */}
+      <div className="space-y-2 xl:hidden">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="bg-card flex items-start gap-3 rounded-lg border border-border p-3">
+            <Skeleton className="mt-1 size-4 shrink-0 rounded-[4px]" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

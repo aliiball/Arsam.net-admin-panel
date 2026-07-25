@@ -41,6 +41,17 @@ export const Sidebar: Story = {
 };
 export const Topnav: Story = { globals: { layout: 'topnav' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px): the curated mobile card renders; the desktop table is hidden. */
+export const PhoneCard: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    // The card keeps a selectable checkbox (bulk still works); the desktop
+    // checkbox is hidden below xl, so only the card's is in the a11y tree.
+    const boxes = await canvas.findAllByRole('checkbox', { name: 'Öne Çıkar 7 Gün paketini seç' });
+    await expect(boxes.length).toBeGreaterThan(0);
+    await expect(canvas.queryByRole('columnheader')).toBeNull();
+  },
+};
 export const Loading: Story = {
   render: () =>
     renderPage(<PackagesListPage />, {

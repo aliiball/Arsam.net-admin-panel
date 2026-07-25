@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -14,6 +15,7 @@ import { api } from '@/lib/api/client';
 import { Can } from '@/lib/permissions/permission-context';
 import { LOCATION_STATUSES, LOCATION_STATUS_LABELS } from '../data/locations';
 import { provinceColumns, type ProvinceTableMeta } from '../components/provinceColumns';
+import { LocationStatusBadge } from '../components/LocationStatusBadge';
 import { ProvinceFormDialog } from '../components/ProvinceFormDialog';
 import { useProvinces, provinceKeys } from '../api/queries';
 import { useReorderProvinces, useUpsertProvince } from '../api/mutations';
@@ -124,6 +126,22 @@ export function LocationsListPage() {
               <p className="text-muted-foreground">Bu ile bağlı ilçe yok.</p>
             )}
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.label}
+            to={`/locations/${row.id}`}
+            entity="province"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.label} satırını seç`}
+            badges={<LocationStatusBadge status={row.status} />}
+            meta={[
+              { label: 'Plaka', value: <span className="tabular-nums">{row.code}</span> },
+              { label: 'İlçe', value: <span className="tabular-nums">{row.districts.length}</span> },
+              { label: 'Sıra', value: <span className="tabular-nums">{row.order + 1}</span> },
+            ]}
+          />
         )}
         onExport={(format) => {
           try {

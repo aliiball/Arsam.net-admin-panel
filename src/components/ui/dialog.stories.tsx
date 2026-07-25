@@ -87,3 +87,5 @@ export const Error: Story = {
   ),
 };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px): the content keeps a 1rem gutter (`w-[calc(100%-2rem)]`). */
+export const Phone: Story = { parameters: { viewport: { defaultViewport: 'bpXs' } } };

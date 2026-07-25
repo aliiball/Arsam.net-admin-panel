@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Bookmark, Filter, ListFilter, Plus, Search, Sparkles, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -54,6 +54,8 @@ export function FilterBar({
   onNaturalLanguage,
 }: FilterBarProps) {
   const { views, saveView, deleteView } = useSavedViews(tableKey);
+  const nlHelpId = useId();
+  const nlInputId = useId();
   const [nlText, setNlText] = useState('');
   const [nlProposal, setNlProposal] = useState<Record<string, string | string[]> | null>(null);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -92,14 +94,18 @@ export function FilterBar({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80">
             <div className="space-y-3">
-              <Label htmlFor="nl-input">Doğal dille filtre</Label>
+              <Label htmlFor={nlInputId}>Doğal dille filtre</Label>
               <Textarea
-                id="nl-input"
+                id={nlInputId}
                 value={nlText}
                 onChange={(e) => setNlText(e.target.value)}
                 placeholder="Örn. İstanbul'da 500 m² üzeri bekleyen arsa"
                 rows={2}
+                aria-describedby={nlHelpId}
               />
+              <p id={nlHelpId} className="text-muted-foreground text-xs">
+                Sade Türkçe yazın; önerilen filtreleri uygulamadan önce onaylarsınız.
+              </p>
               <Button
                 size="sm"
                 className="w-full"
@@ -253,7 +259,12 @@ function Chip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <Badge variant="secondary" className="gap-1 py-1 pl-2 pr-1">
       <span className="max-w-40 truncate">{label}</span>
-      <button type="button" onClick={onClear} className="hover:bg-background/60 rounded-sm p-0.5" aria-label={`${label} filtresini kaldır`}>
+      <button
+        type="button"
+        onClick={onClear}
+        className="hover:bg-background/60 relative rounded-sm p-0.5 after:absolute after:-inset-3.5 after:content-['']"
+        aria-label={`${label} filtresini kaldır`}
+      >
         <X className="size-3" />
       </button>
     </Badge>
@@ -354,11 +365,19 @@ function DateRangeFilter({ filter, state }: { filter: FilterConfig; state: Table
       <PopoverContent align="start" className="w-64 space-y-2">
         <div className="grid gap-1.5">
           <span className="text-muted-foreground text-xs">Başlangıç</span>
-          <DatePicker value={parse(fromStr)} onChange={(d) => state.setFilter(`${filter.id}From`, toIso(d))} />
+          <DatePicker
+            value={parse(fromStr)}
+            onChange={(d) => state.setFilter(`${filter.id}From`, toIso(d))}
+            aria-label={`${filter.label} başlangıç tarihi`}
+          />
         </div>
         <div className="grid gap-1.5">
           <span className="text-muted-foreground text-xs">Bitiş</span>
-          <DatePicker value={parse(toStr)} onChange={(d) => state.setFilter(`${filter.id}To`, toIso(d))} />
+          <DatePicker
+            value={parse(toStr)}
+            onChange={(d) => state.setFilter(`${filter.id}To`, toIso(d))}
+            aria-label={`${filter.label} bitiş tarihi`}
+          />
         </div>
       </PopoverContent>
     </Popover>

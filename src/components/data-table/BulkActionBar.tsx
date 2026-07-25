@@ -30,7 +30,7 @@ export function BulkActionBar({
       aria-live="polite"
       className="bg-card flex flex-wrap items-center gap-3 rounded-lg border border-border px-3 py-2 shadow-sm"
     >
-      <Button variant="ghost" size="icon" className="size-8" onClick={onClear} aria-label="Seçimi temizle" data-action="clear-selection" data-entity="table">
+      <Button variant="ghost" size="icon" onClick={onClear} aria-label="Seçimi temizle" data-action="clear-selection" data-entity="table">
         <X className="size-4" />
       </Button>
       <span className="text-sm font-medium tabular-nums">

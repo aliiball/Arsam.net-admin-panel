@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig } from '@/components/data-table/types';
@@ -14,6 +15,8 @@ import {
   PAYMENT_STATUS_LABELS,
 } from '../data/promotions';
 import { paymentColumns } from '../components/paymentColumns';
+import { PaymentStatusBadge } from '../components/PaymentStatusBadge';
+import { PaymentMethodBadge } from '../components/PaymentMethodBadge';
 import { usePayments } from '../api/queries';
 import { formatTry, type Payment } from '../schemas/promotion';
 
@@ -95,6 +98,28 @@ export function PaymentsListPage() {
               <p className="text-muted-foreground">İade edilen: {formatTry(row.refundedAmount)}</p>
             ) : null}
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={<span className="tabular-nums">{row.invoiceNo}</span>}
+            to={`/promotions/payments/${row.id}`}
+            entity="payment"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.invoiceNo} faturasını seç`}
+            badges={<PaymentStatusBadge status={row.status} />}
+            meta={[
+              { label: 'Kullanıcı', value: row.userName },
+              { label: 'Paket', value: row.packageName },
+              { label: 'Tutar', value: <span className="tabular-nums">{formatTry(row.amount)}</span> },
+              { label: 'Yöntem', value: <PaymentMethodBadge method={row.method} /> },
+              {
+                label: 'Tarih',
+                value: <span className="tabular-nums">{new Date(row.createdAt).toLocaleDateString('tr-TR')}</span>,
+                full: true,
+              },
+            ]}
+          />
         )}
         onExport={async (format, scope, ctx) => {
           try {

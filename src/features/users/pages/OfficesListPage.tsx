@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/data-table/DataTable';
+import { MobileListCard } from '@/components/data-table/MobileListCard';
 import { FilterBar } from '@/components/data-table/FilterBar';
 import { useTableUrlState } from '@/components/data-table/use-table-url-state';
 import type { FilterConfig, TableQuery } from '@/components/data-table/types';
@@ -15,6 +16,9 @@ import {
   VERIFICATION_LEVELS,
 } from '../data/users';
 import { officeColumns } from '../components/officeColumns';
+import { UserStatusBadge } from '../components/UserStatusBadge';
+import { TrustScoreMeter } from '../components/TrustScoreMeter';
+import { VerificationBadges } from '../components/VerificationBadges';
 import { useUsers } from '../api/queries';
 import type { User } from '../schemas/user';
 
@@ -86,6 +90,28 @@ export function OfficesListPage() {
             />
             <Detail label="Üye Danışmanlar" value={row.office?.memberAgents.join(', ') ?? '—'} />
           </div>
+        )}
+        renderMobileCard={(row, selected, toggle) => (
+          <MobileListCard
+            title={row.name}
+            to={`/users/${row.id}`}
+            entity="agent"
+            selected={selected}
+            onToggleSelect={toggle}
+            selectLabel={`${row.name} satırını seç`}
+            badges={<UserStatusBadge status={row.status} />}
+            meta={[
+              { label: 'Vergi No', value: <span className="tabular-nums">{row.office?.taxId ?? '—'}</span> },
+              { label: 'Şehir', value: LOCATIONS[row.il]?.label ?? row.il },
+              { label: 'Üye Danışman', value: <span className="tabular-nums">{row.office?.memberAgents.length ?? 0}</span> },
+              { label: 'Güven', value: <TrustScoreMeter score={row.trustScore} compact />, full: true },
+              {
+                label: 'Doğrulama',
+                value: <VerificationBadges verification={row.verification} hideNone />,
+                full: true,
+              },
+            ]}
+          />
         )}
         onExport={async (format, scope, ctx) => {
           try {

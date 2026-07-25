@@ -42,6 +42,14 @@ export const Sidebar: Story = {
 };
 export const Topnav: Story = { globals: { layout: 'topnav' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px): the curated mobile card renders; the desktop table is hidden. */
+export const PhoneCard: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    await expect((await canvas.findAllByText('listing.approve')).length).toBeGreaterThan(0);
+    await expect(canvas.queryByRole('columnheader')).toBeNull();
+  },
+};
 export const Loading: Story = {
   render: () =>
     renderPage(<AuditListPage />, {

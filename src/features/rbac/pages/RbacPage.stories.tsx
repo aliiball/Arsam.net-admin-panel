@@ -68,3 +68,12 @@ export const Error: Story = {
 };
 
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Smallest phone (320px): the matrix scrolls horizontally; the gesture hint is shown. */
+export const PhoneScroll: Story = {
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(/tabloyu yana kaydırın/i)).toBeVisible();
+    // The sticky permission column keeps a known cell reachable while scrolling.
+    await expect(canvas.getByRole('checkbox', { name: 'Moderatör için listing.approve' })).toBeInTheDocument();
+  },
+};

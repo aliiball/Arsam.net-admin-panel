@@ -1025,3 +1025,52 @@ Entry format:
   no list page passes `renderMobileCard` yet (all use the generic dl/dt/dd fallback) — 020's core work.
 - Suggested commit message:
   `feat(responsive): 8-token breakpoint scale + Strategy-A remap (preserve 1024 convergence); tablet re-audit`
+
+## 2026-07-25 Task 020 — Aşama 6: Mobil UX Düzeltmeleri
+- Built: Shared `MobileListCard` helper (`components/data-table`; title/link → status badges → 2-up meta
+  grid [`full` spans both cols] → optional actions slot; 44px checkbox from the Checkbox primitive so select
+  + bulk keep working on phones; token-only). Wired `renderMobileCard` into ALL 9 list pages (listings, users,
+  offices, categories, locations, messages/reports, promotions/payments, promotions/packages, audit) with a
+  purpose-built, prioritized card each — the generic `dl/dt/dd` fallback is now dead on every list. Packages'
+  card hosts the edit dialog (gated by `promotion.sell`); audit's card is select-less (no selection column).
+  `DataTablePagination` compact mobile variant (`<sm` stacks; first/last page buttons collapse, a compact
+  `x/y` counter + prev/next remain; page-size label hidden on phones). `KpiCard` value now `text-xl sm:text-2xl`
+  + `truncate` (currency figures ellipsize instead of overflowing). Dashboard KPI grid `grid-cols-1 sm:grid-cols-2
+  xl:grid-cols-4`; Reports KPI grid `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6` (1-up until 640
+  so wide ₺ values keep width — ux-critic fix). Dialog mobile width `w-[calc(100%-2rem)]` + `max-h-[calc(100dvh-2rem)]`
+  + `overflow-y-auto` (never touches edges / overflows on phones). RBAC matrix keeps its sticky-left permission
+  column + horizontal scroll and now shows a `<xl` gesture hint (`role="note"`). Reports range Tabs stay
+  `flex-wrap` (all 4 ranges visible, no overflow). DataTable loading skeleton is now shape-matched: desktop
+  table skeleton (`xl:block`) + a MobileListCard-shaped card skeleton (`xl:hidden`). Density + column-visibility
+  controls hidden below `xl` (they only drive the hidden desktop table).
+- a11y (018/019 tracked BLOCKERs CLOSED): FilterBar NL textarea now has `aria-describedby` → a visible helper
+  `<p>` (ids via `useId`, no collision); both date-range `DatePicker`s got `aria-label` (DatePicker now
+  forwards `aria-label`); `RadioGroup` item gained the 44px `after:-inset-3.5` pseudo hit-area (Checkbox idiom);
+  FilterBar chip-remove `×` got the same; `size-8` overrides dropped from BulkActionBar clear + all
+  DataTablePagination icon buttons (default `size="icon"` = 44px); DataTable resize handle + reorder grip hit
+  zones widened.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (889/889, 145 files) ·
+  build PASS · build-storybook PASS.
+- DoD self-check: ran all 4 Tier-1 agents. design-token-guardian CLEAN. a11y-sentinel 0 BLOCKER / 3 WARN — all
+  addressed: resize handle hit-zone widened (`after:-left-5`), reorder grip widened (`after:-inset-3`),
+  MobileListCard `gap-3`→`gap-4` (kills the ~2px checkbox/title hit-area overlap). ux-design-critic: 1 High + 4
+  Medium — High (mobile-shaped loading skeleton) FIXED; Medium density/colvis-hidden-on-mobile FIXED, RBAC hint
+  breakpoint `md`→`xl` FIXED, Reports KPI 2-up moved to `md` FIXED; deferred (tracked): AiSuggestionBadge
+  reasons are hover-only (pre-existing tooltip pattern shared across badges — fold into a tap Popover in the
+  motion/interaction phase), KpiCard delta color asymmetry (pre-existing, Aşama 1), FilterBar toolbar wrap on
+  320px pushing content down (follow-up). dod-reviewer initially NO (missing `KpiCard`/`DashboardPage` bpXs
+  regression-guard stories) → both added (KpiCard long-value truncate assertion; Dashboard 1-up Phone story) →
+  now Ready.
+- Stories: `MobileListCard.stories` (Default/WithActions/ReadOnly + play); `bpXs` PhoneCard play stories on all 9
+  list pages (assert the curated card renders + no accessible `columnheader` below xl); `bpXs`/`bpSm` compact
+  stories on DataTablePagination; `bpXs` Phone stories on Dashboard, Reports, RBAC (scroll hint), Dialog,
+  KpiCard. Viewport-driven visibility is really applied in the browser test runner (verified).
+- Decisions/assumptions:
+  - Reorder on mobile cards is intentionally omitted (categories/locations show the order number as meta);
+    reordering is a desktop power-feature with a keyboard alternative — the card stays simple.
+  - Resize handle / reorder grip target 24–38px (WCAG 2.5.8 AA), not a full 44px: a 44px target would swallow
+    the adjacent sort button / neighbor column; both are desktop-only with keyboard alternatives.
+  - MobileListCard checkbox uses the primitive's built-in 44px pseudo hit-area; `gap-4` (16px) ≥ the 14px inset
+    so the hit-area no longer overlaps the title link.
+- Suggested commit message:
+  `feat(mobile): MobileListCard on all 9 lists, compact pagination, 1-up KPI, mobile dialog + a11y 44px/aria fixes`

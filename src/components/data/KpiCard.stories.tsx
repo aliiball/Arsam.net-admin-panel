@@ -27,3 +27,22 @@ export const Loading: Story = { args: { loading: true } };
 export const Empty: Story = { args: { value: 0, hint: 'veri yok' } };
 export const Error: Story = { args: { value: '—', hint: 'yüklenemedi' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/**
+ * Smallest phone (320px), narrow container, long currency value: the value uses
+ * `truncate` so it ellipsizes gracefully instead of overflowing the card.
+ */
+export const PhoneLongValue: Story = {
+  args: { label: 'Toplam Gelir', value: '₺1.234.567.890', hint: 'seçili aralık' },
+  parameters: { viewport: { defaultViewport: 'bpXs' } },
+  render: (args) => (
+    <div className="w-40">
+      <KpiCard {...args} />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const value = canvas.getByText('₺1.234.567.890');
+    await expect(value).toHaveClass('truncate');
+    // Truncated element never overflows its container's width.
+    await expect(value.scrollWidth).toBeGreaterThanOrEqual(value.clientWidth);
+  },
+};

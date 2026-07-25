@@ -17,6 +17,7 @@ export interface DatePickerProps {
   className?: string;
   'aria-invalid'?: boolean;
   'aria-describedby'?: string;
+  'aria-label'?: string;
 }
 
 /** Single-date picker: Button trigger + Popover calendar (Turkish locale). */
@@ -40,6 +41,7 @@ export function DatePicker({
           disabled={disabled}
           aria-invalid={aria['aria-invalid']}
           aria-describedby={aria['aria-describedby']}
+          aria-label={aria['aria-label']}
           className={cn('w-full justify-start gap-2 font-normal', !value && 'text-muted-foreground', className)}
           data-action="open-datepicker"
           data-entity="field"
