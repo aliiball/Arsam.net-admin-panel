@@ -36,11 +36,12 @@ export const List: Story = {
   },
 };
 
-/** dock variant — the card-grid launcher. */
+/** dock variant — the icon-tile command center (identity header + navigation). */
 export const Cards: Story = {
   args: { variant: 'cards' },
   play: async () => {
     const dialog = await within(document.body).findByRole('dialog');
-    await expect(within(dialog).getByText('Komut merkezi')).toBeInTheDocument();
+    await expect(within(dialog).getByRole('button', { name: /Genel Bakış/ })).toBeInTheDocument();
+    await expect(within(dialog).getByText('AI hazır')).toBeInTheDocument();
   },
 };

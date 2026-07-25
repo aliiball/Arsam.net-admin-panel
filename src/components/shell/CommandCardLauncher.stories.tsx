@@ -22,21 +22,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Card grid of permitted modules + a natural-language box. */
+/** Identity header + navigation icon-tiles + a natural-language box. */
 export const Default: Story = {
   play: async () => {
     const dialog = await within(document.body).findByRole('dialog');
-    await expect(within(dialog).getByText('Komut merkezi')).toBeInTheDocument();
-    // Module cards render (İlanlar is visible to the default role).
-    await expect(within(dialog).getByText('İlanlar')).toBeInTheDocument();
+    // Identity header: default user name + role badge (ref #47 chrome).
+    await expect(within(dialog).getByText('Ahmet Yönetici')).toBeInTheDocument();
+    await expect(within(dialog).getByText('Süper Admin')).toBeInTheDocument();
 
-    // Affordance split: a LEAF module (Genel Bakış, no children) is a single click
-    // target → shared `Card interactive` hover-lift. A PARENT module (İlanlar, has
-    // child quick-action chips) is multi-action → plain container, NOT interactive.
-    const leaf = within(dialog).getByText('Genel Bakış').closest('[data-slot="card"]');
-    await expect(leaf).not.toBeNull();
-    await expect(leaf).toHaveAttribute('data-interactive');
-    await expect(within(dialog).getByText('İlanlar').closest('[data-slot="card"]')).toBeNull();
+    // Modules render as navigable icon-tiles; the active module (route `/`) is marked.
+    const overview = within(dialog).getByRole('button', { name: /Genel Bakış/ });
+    await expect(overview).toHaveAttribute('aria-current', 'page');
+    const listings = within(dialog).getByRole('button', { name: /İlanlar/ });
+    await expect(listings).toBeInTheDocument();
+    await expect(listings).not.toHaveAttribute('aria-current');
+
+    // Footer status is present.
+    await expect(within(dialog).getByText('AI hazır')).toBeInTheDocument();
   },
 };
 

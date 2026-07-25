@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useMatches, useNavigate } from 'react-router-dom';
+import { useLocation, useMatches, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   Bot,
@@ -17,9 +17,9 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -36,9 +36,10 @@ import { setAssistantOpen } from '@/lib/ai';
 import { applyIntent, parseCommand, type Intent } from '@/lib/ai';
 import { useSession } from '@/lib/permissions/permission-context';
 import { usePermissionMatrix } from '@/lib/permissions/permission-store';
+import { ROLE_LABELS } from '@/lib/permissions/permissions';
 import { navSchema } from '@/config/nav-schema';
 import { buildAssistantContext } from '@/components/ai/assistant-context';
-import { filterNavByRole } from './nav-utils';
+import { filterNavByRole, isNavItemActive } from './nav-utils';
 import { useCommandPalette } from './command-palette-context';
 
 const NL_EXAMPLES = [
@@ -47,18 +48,33 @@ const NL_EXAMPLES = [
   'aktif ilanları göster',
 ];
 
+const KBD =
+  'bg-muted text-muted-foreground pointer-events-none inline-flex select-none items-center rounded border border-border px-1 font-mono text-[0.625rem]';
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((p) => p[0] ?? '')
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 /**
- * Card-grid launcher — the ⌘K surface in `dock` mode. Permitted modules render
- * as cards (icon + label + blurb + nested quick-actions), with a module search
- * and a natural-language box on top. The NL box keeps the guardrail: it PROPOSES
- * a navigate/filter intent that applies only on the user's confirm; write-class
- * (bulk) intents are handed off to the AI assistant (which has the confirm flow).
- * The list palette (`CommandPalette`) still serves sidebar/topnav unchanged.
+ * Command center — the ⌘K surface in `dock` mode. Re-derived to the reference
+ * DynamicIsland palette shape (identity header → natural-language box → module
+ * search → NAVIGATION icon-tile grid → quick actions → keyboard-hint footer), in
+ * OUR tokens. Permitted modules render as compact icon tiles; the active module
+ * is marked. The NL box keeps the guardrail: it PROPOSES a navigate/filter intent
+ * that applies only on the user's confirm; write-class (bulk) intents are handed
+ * off to the AI assistant (which owns the confirm flow). The list palette
+ * (`CommandPalette`) still serves sidebar/topnav unchanged.
  */
 export function CommandCardLauncher() {
   const { open, setOpen } = useCommandPalette();
   const navigate = useNavigate();
   const matches = useMatches();
+  const { pathname } = useLocation();
   const { user } = useSession();
   const matrix = usePermissionMatrix();
   const { setMode, setTheme, toggleDensity } = useLayout();
@@ -118,14 +134,28 @@ export function CommandCardLauncher() {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] gap-4 overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="text-primary size-4" aria-hidden /> Komut merkezi
-          </DialogTitle>
-          <DialogDescription>
-            İzinli modüllere geçin, komut arayın veya doğal dille bir eylem önerin.
-          </DialogDescription>
+      {/* Morph-open: anchored just below the dock pill (top-16) and scaled up from
+          its top edge (origin-top + slide-from-top) over a longer, eased duration,
+          so the command center reads as expanding OUT of the pill rather than
+          popping in the screen center. Overrides the Dialog's default centered zoom. */}
+      <DialogContent className="top-16 max-h-[calc(100dvh-5rem)] w-[calc(100%-2rem)] origin-top translate-y-0 gap-4 overflow-y-auto duration-500 data-[state=closed]:slide-out-to-top-8 data-[state=open]:slide-in-from-top-8 sm:max-w-2xl">
+        {/* Identity header (avatar + name + role badge). The built-in close X sits
+            top-right; the accessible title/description satisfy the Dialog contract. */}
+        <DialogHeader className="flex-row items-center gap-3 space-y-0 pr-10 text-left">
+          <Avatar className="size-9 shrink-0">
+            <AvatarFallback>{initials(user.name)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <span className="truncate">{user.name}</span>
+              <Badge variant="secondary" className="shrink-0 font-normal">
+                {ROLE_LABELS[user.role]}
+              </Badge>
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              İzinli modüllere geçin, komut arayın veya doğal dille bir eylem önerin.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
         {/* Natural-language box (propose → confirm; no write without approval) */}
@@ -193,77 +223,51 @@ export function CommandCardLauncher() {
           />
         </div>
 
-        {/* Module card grid */}
-        {filtered.length === 0 ? (
-          <p className="text-muted-foreground py-6 text-center text-sm">Sonuç bulunamadı.</p>
-        ) : (
-          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {filtered.map((mod) => {
-              const Icon = mod.icon;
-              const children = mod.children ?? [];
-              const hasChildren = children.length > 0;
-              // Leaf modules are a single click target → use the shared `Card interactive`
-              // hover-lift + stretched-link (`after:inset-0`), same grammar as the
-              // dashboard quick-access tiles. Parent modules carry child quick-action
-              // chips (multi-action) → keep the plain color-only hover, since a whole-card
-              // lift would falsely imply one click target.
-              const moduleButton = (
-                <button
-                  type="button"
-                  onClick={() => go(mod.to)}
-                  className={cn(
-                    'focus-visible:ring-ring flex w-full items-start gap-3 rounded-md text-left outline-none focus-visible:ring-2',
-                    !hasChildren && 'after:absolute after:inset-0 after:content-[""]',
-                  )}
-                  data-action="navigate"
-                  data-entity={mod.aiEntity ?? 'module'}
-                >
-                  <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
-                    <Icon className="size-5" aria-hidden />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">{mod.label}</span>
-                    {mod.description && (
-                      <span className="text-muted-foreground block text-xs">{mod.description}</span>
-                    )}
-                  </span>
-                </button>
-              );
-              return (
-                <li key={mod.id}>
-                  {hasChildren ? (
-                    <div className="hover:border-primary/40 hover:bg-accent/40 h-full rounded-xl border border-border/60 p-3 transition-colors">
-                      {moduleButton}
-                      <div className="mt-2 flex flex-wrap gap-1 border-t border-border pt-2">
-                        {children.map((child) => (
-                          <button
-                            key={child.id}
-                            type="button"
-                            onClick={() => go(child.to)}
-                            className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-full border border-border px-3 text-xs outline-none transition-colors focus-visible:ring-2"
-                            data-action="navigate"
-                            data-entity={child.aiEntity ?? 'module'}
-                          >
-                            <child.icon className="size-3" aria-hidden />
-                            {child.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <Card interactive className="relative h-full gap-0 border-border/60 p-3 shadow-none">
-                      {moduleButton}
-                    </Card>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        {/* Navigation — compact icon-tile grid (active module marked). */}
+        <section className="space-y-2">
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Navigasyon</p>
+          {filtered.length === 0 ? (
+            <p className="text-muted-foreground py-6 text-center text-sm">Sonuç bulunamadı.</p>
+          ) : (
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {filtered.map((mod) => {
+                const Icon = mod.icon;
+                const active = isNavItemActive(mod.to, pathname);
+                return (
+                  <li key={mod.id}>
+                    <button
+                      type="button"
+                      onClick={() => go(mod.to)}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'focus-visible:ring-ring flex h-full w-full flex-col items-center gap-1.5 rounded-lg border p-3 text-center outline-none transition-colors focus-visible:ring-2',
+                        active
+                          ? 'border-primary/40 bg-accent/50'
+                          : 'border-border/60 hover:border-primary/40 hover:bg-accent/40',
+                      )}
+                      data-action="navigate"
+                      data-entity={mod.aiEntity ?? 'module'}
+                    >
+                      <span
+                        className={cn(
+                          'flex size-10 items-center justify-center rounded-md',
+                          active ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary',
+                        )}
+                      >
+                        <Icon className="size-5" aria-hidden />
+                      </span>
+                      <span className="w-full truncate text-xs font-medium">{mod.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         {/* Quick actions — grouped so related controls read as one cluster. */}
-        <div className="space-y-3">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Hızlı aksiyonlar</p>
+        <section className="space-y-3">
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Hızlı komutlar</p>
           <QuickGroup label="Genel">
             <QuickAction icon={Sparkles} label="AI Asistanı" onClick={() => { setAssistantOpen(true); onOpenChange(false); }} action="open-assistant" />
           </QuickGroup>
@@ -277,6 +281,25 @@ export function CommandCardLauncher() {
             <QuickAction icon={Moon} label="Koyu" onClick={() => setTheme('dark')} action="set-theme" />
             <QuickAction icon={Monitor} label="Sistem" onClick={() => setTheme('system')} action="set-theme" />
           </QuickGroup>
+        </section>
+
+        {/* Footer — keyboard hints + assistant status (matches the reference chrome). */}
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="inline-flex items-center gap-1">
+              <kbd className={KBD}>Tab</kbd> gezin
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <kbd className={KBD}>↵</kbd> seç
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <kbd className={KBD}>Esc</kbd> kapat
+            </span>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="bg-success size-1.5 rounded-full" aria-hidden />
+            AI hazır
+          </span>
         </div>
       </DialogContent>
     </Dialog>

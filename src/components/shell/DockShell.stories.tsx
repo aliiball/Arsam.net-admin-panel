@@ -62,8 +62,10 @@ type Story = StoryObj<typeof meta>;
 export const Desktop: Story = {
   parameters: { viewport: { defaultViewport: 'bpXl' } },
   play: async () => {
-    await expect(within(document.body).getByText(/Şu an:/)).toBeInTheDocument();
-    await expect(within(document.body).getByText('09:07')).toBeInTheDocument();
+    // The floating command dock renders (its launcher carries the active page).
+    await expect(
+      within(document.body).getByRole('button', { name: /menü ve komut aramayı aç/i }),
+    ).toBeInTheDocument();
     // All three edge docks render (bottom / left / right).
     await expect(document.body.querySelectorAll('[data-slot="edge-dock"]')).toHaveLength(3);
   },
@@ -102,7 +104,9 @@ export const EdgeDocksOff: Story = {
   },
   play: async () => {
     // Top command dock still renders; the edge docks do not.
-    await expect(within(document.body).getByText(/Şu an:/)).toBeInTheDocument();
+    await expect(
+      within(document.body).getByRole('button', { name: /menü ve komut aramayı aç/i }),
+    ).toBeInTheDocument();
     await expect(document.body.querySelectorAll('[data-slot="edge-dock"]')).toHaveLength(0);
   },
 };

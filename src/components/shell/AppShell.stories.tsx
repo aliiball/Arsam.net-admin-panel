@@ -59,8 +59,8 @@ export const Dock: Story = {
     // No persistent sidebar/topnav chrome in dock mode.
     await expect(canvas.queryByTestId('sidebar')).toBeNull();
     await expect(canvas.queryByTestId('topnav')).toBeNull();
-    // The floating dock's context pill is present.
-    await expect(canvas.getByText(/Şu an:/)).toBeInTheDocument();
+    // The floating command dock is present.
+    await expect(document.body.querySelector('[data-entity="dock"]')).not.toBeNull();
   },
 };
 
@@ -95,7 +95,7 @@ export const DockFlagOff: Story = {
   play: async ({ canvas }) => {
     // Fell back to sidebar: the sidebar chrome is present, no dock pill.
     await expect(canvas.getByTestId('sidebar')).toBeInTheDocument();
-    await expect(canvas.queryByText(/Şu an:/)).toBeNull();
+    await expect(document.body.querySelector('[data-entity="dock"]')).toBeNull();
   },
 };
 
