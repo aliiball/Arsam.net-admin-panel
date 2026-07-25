@@ -53,7 +53,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6" data-entity="settings">
-      <header>
+      <header className="animate-fade-in">
         <h1 className="text-2xl font-semibold">Ayarlar</h1>
         <p className="text-muted-foreground text-sm">
           Sistem ayarları, özellik bayrakları ve görünüm varsayılanları. Değişiklikler denetim kaydına yazılır.

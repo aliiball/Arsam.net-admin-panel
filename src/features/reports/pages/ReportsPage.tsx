@@ -40,7 +40,7 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6" data-entity="report">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="animate-fade-in flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Raporlar & Analitik</h1>
           <p className="text-muted-foreground text-sm">

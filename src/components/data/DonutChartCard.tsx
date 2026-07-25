@@ -61,7 +61,7 @@ export function DonutChartCard({
         <CardTitle className="text-base">{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      <CardContent>
+      <CardContent className="@container">
         {loading ? (
           <DonutSkeleton height={height} />
         ) : isEmpty ? (
@@ -72,7 +72,14 @@ export function DonutChartCard({
             Görüntülenecek veri yok.
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 md:flex-row">
+          // Container-query (not viewport): donut + legend sit side-by-side only when
+          // the CARD is wide enough (~416px content), so in a narrow bento column at
+          // `lg` the donut stacks above its legend instead of overflowing. The query
+          // container is the CardContent (`@container` below).
+          <div
+            data-slot="donut-layout"
+            className="flex flex-col items-center gap-4 @[26rem]:flex-row"
+          >
             <div className="relative" style={{ height, width: height }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

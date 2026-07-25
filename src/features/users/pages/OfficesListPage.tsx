@@ -58,7 +58,7 @@ export function OfficesListPage() {
 
   return (
     <div className="space-y-4">
-      <header>
+      <header className="animate-fade-in">
         <h1 className="text-2xl font-semibold">Emlak Ofisleri</h1>
         <p className="text-muted-foreground text-sm">Kayıtlı emlak ofisleri; belge doğrulaması, askı ve güven skoru.</p>
       </header>

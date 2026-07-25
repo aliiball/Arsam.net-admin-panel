@@ -69,7 +69,7 @@ export function ListingsListPage() {
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="animate-fade-in flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">İlanlar</h1>
           <p className="text-muted-foreground text-sm">Konut, işyeri, arsa, devremülk ve turistik ilanları.</p>

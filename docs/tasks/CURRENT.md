@@ -1,35 +1,35 @@
 # Current Task
--> (none) — Aşama 6 (Modernizasyon) TAMAMLANDI. Sıradaki fazı seçmek için BACKLOG.md'ye bak.
+-> docs/tasks/024-dock-pulse.md
 
-Status: Aşama 6 (Modernizasyon) COMPLETE. Tasks 000–022 (+ Aşama 1–5) tamam — PROGRESS.md'de detay.
-Task 022 (Motion & Bento, SON faz) kullanıcı commit'ini bekliyor.
+Status: Task 023 (Motion follow-up polish) DONE — kullanıcı commit'ini bekliyor. Sıradaki: Task 024 (Dock pulse).
 
-Task 022 (Motion & Bento) done: ölü `--duration-*`/`--ease-*` tokenları canlandırıldı + dashboard bento'ya geçti.
-- **Motion** (`theme.css`): `fade-in`/`fade-in-up`/`scale-in` keyframe'leri + `--animate-*` tokenları (duration/ease
-  güdümlü), `.card-interactive` hover-lift, `.stagger-children` util (`--stagger-step` adımlı), `--lift-y`. Reduced-motion
-  base kuralı `animation-delay`/`transition-delay`'i de sıfırlar + `.card-interactive` transform'u kapanır (shadow kalır).
-- **Card `interactive`** varyantı (cva): hover-lift + `focus-within` ring, sadece tıklanabilir kartlarda (dashboard
-  hızlı-erişim, stretched-link + `min-h-11`).
-- **KpiCard**: opsiyonel `trend` → ~40px recharts sparkline (chart-1, aria-hidden); simetrik delta pill (tint + ok +
-  `+/−` işaret; renk tek sinyal değil). Yeni `--destructive-tint-foreground` on-tint token'ı AA'yı geçirir
-  (6.99:1 light / 7.17:1 dark, pozitif branch'le simetrik). `DashboardStats`'e deterministik `makeTrend()` serisi.
-- **Bento dashboard**: tek responsive grid — mobil 1-up / lg(768) 2-up / xl(1024) 4-up, span-1/span-2 boşluksuz;
-  gerçek `isError`→`ErrorState` dalı; `EmptyState` tutarlılığı; `gap-4`; giriş stagger'ı. Canlı KPI'larda delta YOK
-  (gerçek baz dönem yok — sparkline yönü taşır); delta özelliği story'lerde tam kanıtlı.
-- **Shape-matched skeleton**: `ChartSkeleton` (bar silüeti) + `DonutSkeleton` (halka+legend); `ChartCard`/`DonutChartCard`
-  `loading` prop'u. Dashboard `Loading`/`Empty`/`Error` story'leri yeni `seedQueryLoading` ile GERÇEK query durumlarını sürer.
-- **AiSuggestionBadge** (020 devralınan): hover-only Tooltip → tap/klavye `Popover` (gerçek `<button>`, `title` yok),
-  `after:-inset-3` görünmez hit-area (≥44px, play testinde `getBoundingClientRect` ile kilitli).
+Aşama 6 (Modernizasyon, 018–022) TAMAMLANDI. Kullanıcının ek istekleri için post-modernization sıra:
+**023 follow-up polish (DONE) → 024 dock pulse → 025 yönetici raporu (özet ağırlıklı, docs/report.html) →
+026 GitHub Pages deploy (app + storybook + report, EN SON).**
 
-**4 agent çalıştı, tüm blocking'ler kapandı:** token-guardian CLEAN; ux-critic 2 High (error state yok + sahte delta) +
-3 orta (hepsi düzeltildi); a11y-sentinel 1 BLOCKER (delta kontrastı, düzeltildi) + 2 WARN (dokunma hedefleri, düzeltildi);
-dod-reviewer 1 BLOCKER (badge 42px → `-inset-3` 46px, düzeltildi) → NO→YES.
-lint 0-error · typecheck · test 926/926 · build · build-storybook hepsi yeşil.
+Task 023 (Motion follow-up polish) done: ux-critic'in 022'de işaretlediği 3 non-blocking item kapatıldı.
+- 14 sayfa header'ına `animate-fade-in` (reduced-motion güvenli). `card-interactive` yalnızca dashboard
+  quick-access'te (çok-aksiyonlu moderation/mobil kartlara UYGULANMADI — belgelendi).
+- KpiCard sparkline sağ-kolondan **tam-genişlik alt şeride**; `reserveSparkline` prop'u loading'de yüksekliği
+  sabitler (dashboard 4 KPI kullanır; Reports etkilenmez).
+- Bento `lg` mozaik: DonutChartCard legend'i **container-query** (`@container`+`@[26rem]:flex-row`) ile kartın
+  genişliğine bağlı istiflenir (taşma yok); kategori+donut `lg`'de yan yana (span-1), `xl`'de span-2; grid
+  `items-start` (sabit-yükseklik bar-chart zorla gerilmez → kasıtlı mozaik).
+- **4 agent:** a11y-sentinel PASS (0 bulgu); token-guardian CLEAN; ux-critic 1 High (bento yükseklik → `items-start`)
+  + 1 Medium (KPI loading shift → `reserveSparkline`) + 1 Medium (CommandCardLauncher → **Task 024'e devredildi**);
+  dod-reviewer YES + 4 story-coverage önerisi (KpiCard LoadingReserved, DonutChartCard NarrowColumn, DashboardPage
+  Tablet play + yorum tazeleme) kapatıldı.
+- lint 0-error · typecheck · test 928/928 · build · build-storybook yeşil.
+- NOT: Tailwind v4 `docs/` tarıyor → task markdown'ındaki `@[...]` literal'i CSS build'i kırdı, kaldırıldı. Task 025
+  (rapor HTML) için: Tailwind source kapsamını `docs/`'tan ayır (`@source`).
 
-Mode: TASK. Sıradaki adım: kullanıcı commit → `/clear`.
+## Task 024 — Dock pulse (sıradaki)
+Referanstaki "kalp atışı" (breathing/pulse) etkisini **yalnızca `dock` layout modunda** entegre et: dock komut
+pill'i / launcher'a token-güdümlü hafif scale-pulse (`--animate-pulse-*`, ~1↔1.04), `prefers-reduced-motion` MUTLAK
+kapatır, Storybook + motion-bağımsız play. **Ek (023 devri):** CommandCardLauncher'daki yaprak (leaf) modül kartlarını
+`Card interactive` + stretched-link (`after:inset-0`) grameriyle hizala (parent kartlar renk-only hover'da kalır).
 
-Devralınan non-blocking (022 PROGRESS'te): motion vocabini app geneline yay (header `animate-fade-in`, tıklanabilir özet
-kartlarda `card-interactive`); KpiCard sağ-kolon yoğunluğu (sparkline varken ikon?); bento sadece xl'de tam mozaik.
+Mode: TASK. Sıradaki adım: kullanıcı commit (023) → sonra Task 024.
 
 Backlog / faz sırası: docs/tasks/BACKLOG.md
 Resume: "docs/tasks/CURRENT.md ve PROGRESS.md'yi oku, devam et".

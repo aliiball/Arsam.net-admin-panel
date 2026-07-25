@@ -60,4 +60,23 @@ export const Error: Story = {
   args: { data: [], title: 'Grafik yüklenemedi', description: 'Bir hata oluştu' },
 };
 
+/**
+ * Narrow column (below the ~26rem container-query threshold): donut + legend stack
+ * vertically instead of overflowing side-by-side. This is what makes the dashboard
+ * bento safe when the donut sits in a half-width column. Asserts the stacked
+ * (column) layout via computed flex-direction, so it holds regardless of viewport.
+ */
+export const NarrowColumn: Story = {
+  render: (args) => (
+    <div className="w-64">
+      <DonutChartCard {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const layout = canvasElement.querySelector<HTMLElement>('[data-slot="donut-layout"]');
+    await expect(layout).not.toBeNull();
+    await expect(getComputedStyle(layout!).flexDirection).toBe('column');
+  },
+};
+
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };

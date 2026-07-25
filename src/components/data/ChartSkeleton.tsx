@@ -32,7 +32,7 @@ export function DonutSkeleton({ height = 260 }: { height?: number }) {
     <div
       data-slot="donut-skeleton"
       aria-hidden="true"
-      className="flex flex-col items-center gap-4 md:flex-row"
+      className="flex flex-col items-center gap-4 @[26rem]:flex-row"
     >
       <div className="relative shrink-0" style={{ height, width: height }}>
         {/* Ring: full disc minus a centered hole (matches innerRadius 62%). */}

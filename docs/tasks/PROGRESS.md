@@ -1215,3 +1215,47 @@ Entry format:
   mosaic only at `xl` — at `lg` the three heavy tiles stack full-width (acceptable, documented).
 - Suggested commit message:
   `feat(motion): entrance/hover motion tokens + bento dashboard, KpiCard sparkline, tap-accessible AI reasons`
+
+## 2026-07-25 Task 023 — Aşama 6 sonrası: Motion follow-up polish
+- Built: closed the three non-blocking follow-ups `ux-design-critic` raised on Task 022.
+  - **Motion vocab app-wide**: `animate-fade-in` added to the `<header>` of all 14 top-level feature pages
+    (reduced-motion-safe via the existing token + base-layer rule). `card-interactive` deliberately NOT spread
+    beyond the dashboard quick-access tiles — the app is table-centric and the remaining card surfaces (moderation
+    queue cards, mobile list cards) are MULTI-action (link + approve/reject / checkbox + actions), so a whole-card
+    hover-lift implying a single click target would be misleading. (ux-critic confirmed no other genuine single-click
+    navigational card exists; the one CommandCardLauncher inconsistency it found is a prior dock commit → Task 024.)
+  - **KpiCard density**: sparkline moved from the cramped right column (icon+sparkline stack) to a full-width bottom
+    strip (~32px, chart-1 token, aria-hidden) — reads cleaner. Added `reserveSparkline` prop: reserves the strip
+    height while `loading` so a trend-bearing card doesn't jump ~32px when data lands (dashboard's 4 KPIs set it;
+    Reports' trend-less KPIs don't).
+  - **Bento `lg` mosaic**: `DonutChartCard` legend layout switched from viewport `md:flex-row` to a container-query
+    (`@container` on CardContent + `@[26rem]:flex-row`) so the donut stacks (ring over legend) in a narrow column
+    instead of overflowing. Dashboard bento: category chart + donut now span-1 at `lg` (side-by-side 2-col mosaic),
+    span-2 half-width at `xl`. Added `items-start` to the grid so the fixed-height bar chart isn't force-stretched to
+    the taller stacked-donut's height (top-aligned varied heights = intentional bento, no dead-space-in-card).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (928/928, 153 files) ·
+  build PASS · build-storybook PASS. (Note: full `npm run test` occasionally shows a transient first-run failure from
+  Vite dep pre-bundle re-optimization when new recharts/container-query graph lands; the storybook project alone and
+  the warm re-run are green — the documented cold-start optimizer race, not a real failure.)
+- **4 review agents, all blockers closed:**
+  - `a11y-sentinel`: PASS, 0 findings (header fade-in reduced-motion-safe + no flash-of-invisible-content; sparkline
+    stays decorative; container-query is layout-only).
+  - `design-token-guardian`: CLEAN (only new "magic" value is the intentional 26rem container-query threshold).
+  - `ux-design-critic`: 1 High (bento height mismatch — donut stacks taller than the fixed-height bar chart, grid
+    `stretch` left dead space) → FIXED with `items-start`; 1 Medium (KPI loading layout-shift) → FIXED with
+    `reserveSparkline`; 1 Medium (CommandCardLauncher module-card affordance inconsistency) → OUT OF SCOPE (prior dock
+    commit), deferred to Task 024.
+  - `dod-reviewer`: Ready to commit YES, no blockers; 4 story-coverage recommendations (the Step-4 stories the plan
+    promised) — ALL closed: KpiCard `LoadingReserved` (asserts the reserved placeholder via new
+    `data-slot="kpi-sparkline-skeleton"`), DonutChartCard `NarrowColumn` (asserts stacked `flex-direction: column`
+    below 26rem via new `data-slot="donut-layout"`), DashboardPage `Tablet` play + refreshed stale JSDoc.
+- Decisions/assumptions:
+  - `items-start` over shrinking the donut: keeps the ring readable; varied top-aligned heights are the point of a
+    bento. The donut's container-query stacking is what makes the narrow-column pairing safe (no overflow).
+  - `reserveSparkline` is opt-in (not automatic) because KpiCard can't know during `loading` whether a trend will
+    arrive (trend is derived from not-yet-loaded stats); the caller declares intent.
+  - Removed a stray ``@[Npx]:flex-row`` literal from the new task markdown — Tailwind v4 scans `docs/`, and the
+    invalid arbitrary value broke the lightningcss CSS minify step. (Root cause noted for Task 025's report HTML:
+    scope Tailwind sources away from `docs/` there.)
+- Suggested commit message:
+  `polish(motion): fade-in page headers, KpiCard sparkline strip, lg bento mosaic (container-query donut)`

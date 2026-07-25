@@ -43,6 +43,24 @@ export const Sparkline: Story = {
   },
 };
 export const Loading: Story = { args: { loading: true } };
+/**
+ * `reserveSparkline` keeps the sparkline strip's height while loading so a
+ * trend-bearing card (e.g. the dashboard KPIs) doesn't jump ~32px taller when
+ * data arrives. Asserts the reserved placeholder is present.
+ */
+export const LoadingReserved: Story = {
+  args: { loading: true, reserveSparkline: true },
+  render: (args) => (
+    <div className="w-72">
+      <KpiCard {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(
+      canvasElement.querySelector('[data-slot="kpi-sparkline-skeleton"]'),
+    ).not.toBeNull();
+  },
+};
 export const Empty: Story = { args: { value: 0, hint: 'veri yok' } };
 export const Error: Story = { args: { value: '—', hint: 'yüklenemedi' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };

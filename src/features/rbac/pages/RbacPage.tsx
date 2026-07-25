@@ -30,7 +30,7 @@ export function RbacPage() {
 
   return (
     <div className="space-y-6" data-entity="rbac">
-      <header>
+      <header className="animate-fade-in">
         <h1 className="text-2xl font-semibold">Roller & İzinler</h1>
         <p className="text-muted-foreground text-sm">
           Her rolün <code>resource.action</code> izinlerini düzenleyin. Değişiklikler anında uygulanır ve

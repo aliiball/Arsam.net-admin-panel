@@ -71,15 +71,18 @@ export function DashboardPage() {
           onRetry={() => void refetch()}
         />
       ) : (
-      /* Bento — one responsive grid. Mobile 1-up; `lg` (768) 2-up; `xl` (1024) 4-up
-         with varied tile widths (span-1/span-2). Spans pack cleanly into rows of 2
-         (lg) and 4 (xl) with no gaps. Children fade-in-up in a token-driven stagger.
+      /* Bento — one responsive grid. Mobile 1-up; `lg` (768) 2-up (chart+donut side by
+         side); `xl` (1024) 4-up with varied tile widths (span-1/span-2). `items-start`
+         (not the default `stretch`): the bar chart has a fixed inner height while the
+         donut grows taller when its legend stacks in a narrow column, so stretching
+         would leave dead space inside the shorter card — top-aligned varied heights read
+         as an intentional bento mosaic instead. Children fade-in-up in a token stagger.
          KPI band reflows 1→2-up at `lg` (768): unlike Reports' currency KpiCards
          (which hold width until `md`), these are plain counts, so the earlier 2-up
          reflow reads cleanly on tablet portrait. Deltas are intentionally omitted —
          a signed % needs a real prior-period baseline the mock doesn't have; the
          sparkline carries the direction-neutral trend instead. */
-      <div className="stagger-children grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="stagger-children grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-4">
         {/* KPI band — four 1×1 tiles (1-up mobile, 2-up lg, 4-up xl). */}
         <KpiCard
           label="Toplam İlan"
@@ -88,6 +91,7 @@ export function DashboardPage() {
           loading={isLoading}
           hint="tüm kategoriler"
           trend={stats?.trends.totalListings}
+          reserveSparkline
         />
         <KpiCard
           label="Bekleyen Moderasyon"
@@ -96,6 +100,7 @@ export function DashboardPage() {
           loading={isLoading}
           hint="kuyrukta"
           trend={stats?.trends.pending}
+          reserveSparkline
         />
         <KpiCard
           label="Yayında"
@@ -104,6 +109,7 @@ export function DashboardPage() {
           loading={isLoading}
           hint="aktif ilan"
           trend={stats?.trends.active}
+          reserveSparkline
         />
         <KpiCard
           label="Reddedilen"
@@ -112,11 +118,12 @@ export function DashboardPage() {
           loading={isLoading}
           hint="toplam"
           trend={stats?.trends.rejected}
+          reserveSparkline
         />
 
-        {/* Category bar chart — 2-wide (half at xl, full at lg). */}
+        {/* Category bar chart — span-2 at xl (half), span-1 at lg (side-by-side w/ donut). */}
         <ChartCard
-          className="lg:col-span-2"
+          className="xl:col-span-2"
           title="Kategoriye göre ilanlar"
           description="Aktif taksonomi dağılımı"
           loading={isLoading}
@@ -146,9 +153,9 @@ export function DashboardPage() {
           </BarChart>
         </ChartCard>
 
-        {/* Status distribution donut — 2-wide (half at xl, full at lg). */}
+        {/* Status distribution donut — span-2 at xl (half), span-1 at lg (side-by-side w/ chart). */}
         <DonutChartCard
-          className="lg:col-span-2"
+          className="xl:col-span-2"
           title="Duruma göre dağılım"
           description="İlan yaşam döngüsü"
           centerLabel="ilan"

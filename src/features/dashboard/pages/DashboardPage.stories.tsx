@@ -120,8 +120,16 @@ export const Phone: Story = {
     await expect(canvas.getByText('Reddedilen')).toBeInTheDocument();
   },
 };
-/** Tablet portrait (768px) — bento at 2-up: KPI 2-up, span-2 tiles full width. */
-export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
+/** Tablet portrait (768px) — bento at 2-up mosaic: KPI 2-up, category chart + donut
+ *  side-by-side (span-1), pending queue full-width, recent + quick-access paired. */
+export const Tablet: Story = {
+  parameters: { viewport: { defaultViewport: 'bpLg' } },
+  play: async ({ canvas }) => {
+    // Chart + donut both render (they share the second bento row side-by-side at lg).
+    await expect(await canvas.findByText('Kategoriye göre ilanlar')).toBeInTheDocument();
+    await expect(canvas.getByText('Duruma göre dağılım')).toBeInTheDocument();
+  },
+};
 /** Desktop (1024px) — full bento at 4-up: KPI 4-up, span-2 chart/pending tiles half width. */
 export const Desktop: Story = {
   parameters: { viewport: { defaultViewport: 'bpXl' } },
