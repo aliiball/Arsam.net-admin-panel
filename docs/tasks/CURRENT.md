@@ -1,18 +1,19 @@
 # Current Task
--> (none — all planned tasks complete)
+-> docs/tasks/018-quality-agents-tooling.md
 
-Status: DONE. Tasks 000–016 + Aşama 1–5 complete. Task 017 (Aşama 5 — Enterprise Cila &
-Performans, FİNAL faz) shipped: route-level code-split (main bundle 2.04MB → 543KB),
-44px touch targets, DataTable column pinning + drag-reorder + keyboard alternative,
-ChartCard a11y summary + ErrorState 44px retry, real page-error stories. See PROGRESS.md
-for the full checkpoint + deferred (non-blocking) follow-up items.
+Status: NOT STARTED (Aşama 6 — Modernizasyon; ilk faz: Kalite Agent'ları & Tooling).
+Tasks 000–017 (+ Aşama 1–5) complete — see PROGRESS.md. Task 017 kullanıcı commit'i bekliyor.
 
-Mode: TASK. All verification green (lint · typecheck · test 860/860 · build · build-storybook);
-dod-reviewer → "Ready to commit: YES".
+Mode: TASK (uygula → doğrula → DoD → PROGRESS checkpoint → sonraki görev dosyasını yaz → CURRENT ilerlet
+→ DUR → kullanıcı commit → /clear).
 
-Next: user commits Task 017 manually. Optional follow-ups (all non-blocking, tracked in
-PROGRESS.md): generic DataTableProps<TData,TMeta>, route errorElement for chunk-load
-failures, DataTable right-pin UI, OSM tile mock, FieldHelp popover aria-describedby.
+Aşama 6 kilitli kararlar (BACKLOG.md'de detay):
+- Referans (sahibinden-v2): SEÇİCİ uyarlama, birebir klon değil.
+- Görsel: zengin cam / kendi OKLCH paletimiz, WCAG-kontrast güvenli.
+- Nav: 3. layout modu `dock` (sidebar opsiyonel) + card-grid launcher + NL + context pill + notification.
+- Breakpoint: strateji A (8-token ölçek; 1024 tablo-switch `lg:`→`xl:` remap ile korunur).
+- Yeni yüzeyler feature-flag'li (canlı aç/kapa, geri alınabilir/revize edilebilir).
+- Faz sırası: 018 agent tooling → 019 breakpoint → 020 mobil → 021 dock/launcher → 022 motion/bento.
 
 Backlog / faz sırası: docs/tasks/BACKLOG.md
 Resume: "docs/tasks/CURRENT.md ve PROGRESS.md'yi oku, devam et".
