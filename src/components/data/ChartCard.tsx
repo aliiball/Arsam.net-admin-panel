@@ -17,6 +17,12 @@ export interface ChartCardProps {
   action?: ReactNode;
   height?: number;
   className?: string;
+  /**
+   * Accessible text alternative for the (visual-only) chart. When provided it is
+   * rendered `sr-only` and the SVG is hidden from assistive tech, so screen-reader
+   * users get a meaningful summary instead of the unlabeled recharts DOM.
+   */
+  summary?: ReactNode;
   /** A single recharts chart element (BarChart, LineChart, …). */
   children: ReactElement;
 }
@@ -28,6 +34,7 @@ export function ChartCard({
   action,
   height = 260,
   className,
+  summary,
   children,
 }: ChartCardProps) {
   return (
@@ -38,7 +45,17 @@ export function ChartCard({
         {action}
       </CardHeader>
       <CardContent>
-        <div style={{ height }} className="w-full">
+        {summary && (
+          <p className="sr-only" data-slot="chart-summary">
+            {summary}
+          </p>
+        )}
+        <div
+          data-slot="chart-viz"
+          style={{ height }}
+          className="w-full"
+          aria-hidden={summary ? true : undefined}
+        >
           <ResponsiveContainer width="100%" height="100%">
             {children}
           </ResponsiveContainer>

@@ -4,13 +4,17 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   useReactTable,
+  type Column,
   type ColumnDef,
+  type ColumnOrderState,
+  type ColumnPinningState,
   type RowSelectionState,
   type VisibilityState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, GripVertical } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,8 +49,37 @@ export interface DataTableProps<TData> {
   onExport?: (format: ExportFormat, scope: ExportScope, ctx: { pageRows: TData[]; selectedIds: string[] }) => void | Promise<void>;
   /** Arbitrary table meta forwarded to columns via `table.options.meta`. */
   meta?: unknown;
+  /**
+   * Enables column pinning (sticky left) + drag-reorder (DATA_TABLE_SPEC point 4).
+   * Opt-in per table so tables that don't need it keep their default behavior.
+   * A keyboard-accessible alternative (pin / move) lives in the Kolonlar menu.
+   */
+  columnControls?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+}
+
+/** Sticky positioning + token styling for a pinned (left/right) column cell. */
+function pinnedCellProps<TData>(column: Column<TData>): {
+  style: React.CSSProperties;
+  className: string;
+} {
+  const pinned = column.getIsPinned();
+  if (!pinned) return { style: {}, className: '' };
+  const isLastLeft = pinned === 'left' && column.getIsLastColumn('left');
+  const isFirstRight = pinned === 'right' && column.getIsFirstColumn('right');
+  return {
+    style: {
+      position: 'sticky',
+      left: pinned === 'left' ? column.getStart('left') : undefined,
+      right: pinned === 'right' ? column.getAfter('right') : undefined,
+    },
+    className: cn(
+      'bg-background',
+      isLastLeft && 'border-r border-border',
+      isFirstRight && 'border-l border-border',
+    ),
+  };
 }
 
 /** Advanced, server-driven, URL-synced data table (DATA_TABLE_SPEC 10-point contract). */
@@ -65,18 +98,22 @@ export function DataTable<TData>({
   bulkActions,
   onExport,
   meta,
+  columnControls = false,
   emptyTitle = 'Kayıt bulunamadı',
   emptyDescription = 'Filtreleri değiştirin ya da yeni bir kayıt oluşturun.',
 }: DataTableProps<TData>) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([]);
+  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>({ left: [], right: [] });
   const [allMatching, setAllMatching] = React.useState(false);
+  const dragCol = React.useRef<string | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting: state.sorting, rowSelection, columnVisibility },
+    state: { sorting: state.sorting, rowSelection, columnVisibility, columnOrder, columnPinning },
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
@@ -85,17 +122,36 @@ export function DataTable<TData>({
     enableRowSelection: true,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
+    enableColumnPinning: columnControls,
     onSortingChange: state.setSorting,
     onRowSelectionChange: (updater) => {
       setRowSelection(updater);
       setAllMatching(false);
     },
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnOrderChange: setColumnOrder,
+    onColumnPinningChange: setColumnPinning,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getRowCanExpand: () => Boolean(renderSubRow),
     ...(meta !== undefined ? { meta: meta as Record<string, unknown> } : {}),
   });
+
+  /** Reorder columns by dropping the dragged header onto a target header. */
+  const reorderColumn = (targetId: string) => {
+    const from = dragCol.current;
+    dragCol.current = null;
+    if (!from || from === targetId) return;
+    const order = table.getState().columnOrder.length
+      ? [...table.getState().columnOrder]
+      : table.getAllLeafColumns().map((c) => c.id);
+    const fromIdx = order.indexOf(from);
+    const toIdx = order.indexOf(targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = order.splice(fromIdx, 1);
+    order.splice(toIdx, 0, moved!);
+    setColumnOrder(order);
+  };
 
   const rows = table.getRowModel().rows;
   const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id]);
@@ -130,7 +186,7 @@ export function DataTable<TData>({
         <div className="min-w-0 flex-1">{filterBar}</div>
         <div className="flex items-center gap-2">
           <DensityToggle />
-          <ColumnVisibility table={table} />
+          <ColumnVisibility table={table} enableControls={columnControls} />
           {onExport && <ExportMenu selectedCount={selectedIds.length} onExport={handleExport} />}
         </div>
       </div>
@@ -167,14 +223,44 @@ export function DataTable<TData>({
                     {headerGroup.headers.map((header) => {
                       const canSort = header.column.getCanSort();
                       const sorted = header.column.getIsSorted();
+                      const pin = pinnedCellProps(header.column);
+                      const reorderable = columnControls && !header.isPlaceholder;
                       return (
                         <th
                           key={header.id}
                           scope="col"
                           aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
-                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                          className="text-muted-foreground relative h-11 whitespace-nowrap px-3 text-left align-middle font-medium"
+                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined, ...pin.style }}
+                          {...(reorderable
+                            ? {
+                                onDragOver: (e: React.DragEvent) => e.preventDefault(),
+                                onDrop: () => reorderColumn(header.column.id),
+                              }
+                            : {})}
+                          className={cn(
+                            'text-muted-foreground relative h-11 whitespace-nowrap px-3 text-left align-middle font-medium',
+                            pin.style.position ? 'bg-muted/60 z-20' : undefined,
+                            pin.className,
+                          )}
                         >
+                          {reorderable && (
+                            <button
+                              type="button"
+                              draggable
+                              onDragStart={() => {
+                                dragCol.current = header.column.id;
+                              }}
+                              onDragEnd={() => {
+                                dragCol.current = null;
+                              }}
+                              aria-label="Kolonu taşımak için sürükle"
+                              className="text-muted-foreground/50 hover:text-foreground mr-1 inline-flex cursor-grab align-middle outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+                              data-action="drag-column"
+                              data-entity="table"
+                            >
+                              <GripVertical className="size-3.5" />
+                            </button>
+                          )}
                           {header.column.getCanResize() && (
                             <div
                               onMouseDown={header.getResizeHandler()}
@@ -221,11 +307,18 @@ export function DataTable<TData>({
                       data-state={row.getIsSelected() ? 'selected' : undefined}
                       className="border-t border-border data-[state=selected]:bg-accent/40 hover:bg-muted/40 transition-colors"
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="px-3 py-2 align-middle" style={{ height: ROW_HEIGHT }}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
+                      {row.getVisibleCells().map((cell) => {
+                        const pin = pinnedCellProps(cell.column);
+                        return (
+                          <td
+                            key={cell.id}
+                            className={cn('px-3 py-2 align-middle', pin.style.position ? 'z-10' : undefined, pin.className)}
+                            style={{ height: ROW_HEIGHT, ...pin.style }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
                     </tr>
                     {row.getIsExpanded() && renderSubRow && (
                       <tr className="bg-muted/30">

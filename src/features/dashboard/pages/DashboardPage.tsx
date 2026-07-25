@@ -66,6 +66,13 @@ export function DashboardPage() {
         <ChartCard
           title="Kategoriye göre ilanlar"
           description="Aktif taksonomi dağılımı"
+          summary={
+            stats?.byCategory?.length
+              ? `Kategoriye göre ilan sayıları: ${stats.byCategory
+                  .map((c) => `${c.label} ${c.count}`)
+                  .join(', ')}.`
+              : undefined
+          }
         >
           <BarChart data={stats?.byCategory ?? []} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />

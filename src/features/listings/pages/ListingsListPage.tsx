@@ -92,6 +92,7 @@ export function ListingsListPage() {
         total={data?.total ?? 0}
         state={state}
         getRowId={(r) => r.id}
+        columnControls
         isLoading={isLoading}
         isError={isError}
         onRetry={() => void refetch()}

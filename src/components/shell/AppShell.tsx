@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { useLayout } from '@/lib/layout/layout-context';
 import { AssistantDock } from '@/components/ai';
+import { PageSkeleton } from '@/app/pages/PageSkeleton';
 import { CommandPaletteProvider } from './command-palette-context';
 import { CommandPalette } from './CommandPalette';
 import { MobileBottomNav } from './MobileNav';
@@ -23,7 +25,9 @@ export function AppShell({ children }: AppShellProps) {
   const { config } = useLayout();
   const content = children ?? (
     <RouteGuard>
-      <Outlet />
+      <Suspense fallback={<PageSkeleton />}>
+        <Outlet />
+      </Suspense>
     </RouteGuard>
   );
 

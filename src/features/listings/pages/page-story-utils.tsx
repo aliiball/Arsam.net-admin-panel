@@ -48,6 +48,21 @@ export function makeSeededClient(seed: (qc: QueryClient) => void): QueryClient {
   return qc;
 }
 
+/**
+ * Seed a query into a real error state (deterministic, no network) so page
+ * `Error` stories render the actual `isError` branch instead of mirroring Empty.
+ * The seeded client disables refetchOnMount, so the error state sticks.
+ */
+export function seedQueryError(qc: QueryClient, queryKey: readonly unknown[]): void {
+  const query = qc.getQueryCache().build(qc, { queryKey: [...queryKey] });
+  query.setState({
+    status: 'error',
+    error: new Error('İstek başarısız'),
+    fetchStatus: 'idle',
+    data: undefined,
+  });
+}
+
 /** Wrap a page element in a seeded QueryClient + memory data-router. */
 export function renderPage(
   element: ReactElement,

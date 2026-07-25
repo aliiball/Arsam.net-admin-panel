@@ -1,9 +1,7 @@
-import type { QueryClient } from '@tanstack/react-query';
-
 import type { Report } from '../schemas/report';
 
 // Reuse the seeded-client + memory-router harness from the listings vertical.
-export { renderPage, makeSeededClient } from '@/features/listings/pages/page-story-utils';
+export { renderPage, makeSeededClient, seedQueryError } from '@/features/listings/pages/page-story-utils';
 
 export const MOCK_REPORTS: Report[] = [
   {
@@ -43,18 +41,3 @@ export const MOCK_REPORTS: Report[] = [
     createdAt: '2026-07-18T11:05:00.000Z',
   },
 ];
-
-/**
- * Seed a query into a real error state (deterministic, no network) so page
- * `Error` stories render the actual `isError` branch instead of mirroring Empty.
- * The seeded client disables refetchOnMount, so the error state sticks.
- */
-export function seedQueryError(qc: QueryClient, queryKey: readonly unknown[]): void {
-  const query = qc.getQueryCache().build(qc, { queryKey: [...queryKey] });
-  query.setState({
-    status: 'error',
-    error: new Error('İstek başarısız'),
-    fetchStatus: 'idle',
-    data: undefined,
-  });
-}

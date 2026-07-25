@@ -1,7 +1,7 @@
 import { computeTrustScore, type User } from '../schemas/user';
 
 // Reuse the seeded-client + memory-router harness from the listings vertical.
-export { renderPage, makeSeededClient } from '@/features/listings/pages/page-story-utils';
+export { renderPage, makeSeededClient, seedQueryError } from '@/features/listings/pages/page-story-utils';
 
 function withTrust(u: Omit<User, 'trustScore'>): User {
   return { ...u, trustScore: computeTrustScore(u) };

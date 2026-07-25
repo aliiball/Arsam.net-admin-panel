@@ -70,4 +70,34 @@ export const Error: Story = {
     </div>
   ),
 };
+const summaryText = 'Kategoriye göre ilan sayıları: Konut 24, İşyeri 12, Arsa 18, Devremülk 6, Turistik 9.';
+
+/**
+ * With an accessible text alternative: the summary is rendered `sr-only` and the
+ * (visual-only) chart SVG is hidden from assistive tech.
+ */
+export const WithSummary: Story = {
+  render: () => (
+    <div className="max-w-xl">
+      <ChartCard title="Kategoriye göre ilanlar" description="Örnek dağılım" summary={summaryText}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+          <XAxis dataKey="label" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} tickLine={false} axisLine={false} />
+          <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} tickLine={false} axisLine={false} allowDecimals={false} />
+          <Bar dataKey="count" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ChartCard>
+    </div>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    // The summary is present as an sr-only alternative…
+    const summary = canvas.getByText(summaryText);
+    await expect(summary).toBeInTheDocument();
+    await expect(summary).toHaveClass('sr-only');
+    // …and the visual chart is hidden from assistive tech to avoid double-reading.
+    const viz = canvasElement.querySelector('[data-slot="chart-viz"]');
+    await expect(viz).toHaveAttribute('aria-hidden', 'true');
+  },
+};
+
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };

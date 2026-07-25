@@ -71,6 +71,29 @@ export const SelectsRowsAndShowsBulkBar: Story = {
   },
 };
 
+export const ColumnControls: Story = {
+  render: () => <DataTableDemo columnControls />,
+  play: async ({ canvas }) => {
+    // Drag handles are present on reorderable headers (mouse affordance)…
+    await expect(canvas.getAllByRole('button', { name: 'Kolonu taşımak için sürükle' }).length).toBeGreaterThan(0);
+
+    // …and the Kolonlar menu exposes a keyboard-accessible pin alternative.
+    await userEvent.click(canvas.getByRole('button', { name: 'Kolonlar' }));
+    const body = within(document.body);
+    await userEvent.click(await body.findByRole('menuitem', { name: 'Şehir' }));
+    await userEvent.click(await body.findByRole('menuitem', { name: 'Sola sabitle' }));
+    await userEvent.keyboard('{Escape}');
+
+    // The pinned column header becomes sticky (position set inline).
+    await waitFor(() => {
+      const sticky = canvas
+        .getAllByRole('columnheader')
+        .some((th) => (th as HTMLElement).style.position === 'sticky');
+      expect(sticky).toBe(true);
+    });
+  },
+};
+
 export const Loading: Story = { render: () => <StateHarness isLoading /> };
 export const Empty: Story = { render: () => <StateHarness empty /> };
 export const Error: Story = { render: () => <StateHarness isError /> };

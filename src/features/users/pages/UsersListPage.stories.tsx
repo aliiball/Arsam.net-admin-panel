@@ -3,7 +3,7 @@ import { expect } from 'storybook/test';
 
 import { UsersListPage } from './UsersListPage';
 import { userKeys } from '../api/queries';
-import { MOCK_USERS, renderPage } from './page-story-utils';
+import { MOCK_USERS, renderPage, seedQueryError } from './page-story-utils';
 
 const defaultQuery = { page: 1, pageSize: 25, sort: [], filters: {}, q: '' };
 
@@ -59,4 +59,17 @@ export const Empty: Story = {
         qc.setQueryData(userKeys.list(defaultQuery), { items: [], total: 0, page: 1, pageSize: 25 }),
     }),
 };
-export const Error: Story = { ...Empty };
+// A real isError state (not a mirror of Empty) — deterministic, no network.
+export const Error: Story = {
+  render: () =>
+    renderPage(<UsersListPage />, {
+      path: '/users',
+      initialPath: '/users',
+      extraRoutes: [{ path: '*', element: <div /> }],
+      seed: (qc) => seedQueryError(qc, userKeys.list(defaultQuery)),
+    }),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Tekrar dene' })).toBeInTheDocument();
+  },
+};

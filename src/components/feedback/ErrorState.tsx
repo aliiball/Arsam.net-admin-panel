@@ -38,7 +38,13 @@ export function ErrorState({
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
       {onRetry && (
-        <Button variant="outline" size="sm" onClick={onRetry} data-action="retry" data-entity="query">
+        <Button
+          variant="outline"
+          onClick={onRetry}
+          className="min-h-11"
+          data-action="retry"
+          data-entity="query"
+        >
           <RefreshCw className="size-4" />
           {retryLabel}
         </Button>

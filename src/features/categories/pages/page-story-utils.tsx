@@ -1,7 +1,7 @@
 import type { Category } from '../schemas/category';
 
 // Reuse the seeded-client + memory-router harness from the listings vertical.
-export { renderPage, makeSeededClient } from '@/features/listings/pages/page-story-utils';
+export { renderPage, makeSeededClient, seedQueryError } from '@/features/listings/pages/page-story-utils';
 
 export const MOCK_CATEGORIES: Category[] = [
   {

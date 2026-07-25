@@ -5,9 +5,14 @@ import { expect, userEvent, within } from 'storybook/test';
 import { ColumnVisibility } from './ColumnVisibility';
 import { demoColumns, DEMO_ROWS } from './story-fixtures';
 
-function Harness() {
-  const table = useReactTable({ data: DEMO_ROWS.slice(0, 3), columns: demoColumns, getCoreRowModel: getCoreRowModel() });
-  return <ColumnVisibility table={table} />;
+function Harness({ enableControls = false }: { enableControls?: boolean } = {}) {
+  const table = useReactTable({
+    data: DEMO_ROWS.slice(0, 3),
+    columns: demoColumns,
+    getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: enableControls,
+  });
+  return <ColumnVisibility table={table} enableControls={enableControls} />;
 }
 
 const meta = {
@@ -23,6 +28,18 @@ export const Default: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole('button', { name: /Kolonlar/ }));
     await expect(await within(document.body).findByText('Görünür kolonlar')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+  },
+};
+/** With `enableControls`: the menu exposes keyboard-accessible pin + move (per-column submenu). */
+export const WithControls: Story = {
+  render: () => <Harness enableControls />,
+  play: async ({ canvas }) => {
+    const body = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: /Kolonlar/ }));
+    await expect(await body.findByText('Kolon düzeni')).toBeInTheDocument();
+    await userEvent.click(await body.findByRole('menuitem', { name: 'Şehir' }));
+    await expect(await body.findByRole('menuitem', { name: 'Sola sabitle' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
   },
 };

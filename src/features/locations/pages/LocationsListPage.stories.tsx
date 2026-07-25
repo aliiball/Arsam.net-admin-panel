@@ -3,7 +3,7 @@ import { expect } from 'storybook/test';
 
 import { LocationsListPage } from './LocationsListPage';
 import { provinceKeys } from '../api/queries';
-import { MOCK_PROVINCES, renderPage } from './page-story-utils';
+import { MOCK_PROVINCES, renderPage, seedQueryError } from './page-story-utils';
 
 const defaultQuery = { page: 1, pageSize: 25, sort: [], filters: {}, q: '' };
 
@@ -46,4 +46,11 @@ export const Topnav: Story = { globals: { layout: 'topnav' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
 export const Loading: Story = { render: () => render(() => {}) };
 export const Empty: Story = { render: () => render(seedList([])) };
-export const Error: Story = { render: () => render(seedList([])) };
+// A real isError state (not a mirror of Empty) — deterministic, no network.
+export const Error: Story = {
+  render: () => render((qc) => seedQueryError(qc, provinceKeys.list(defaultQuery))),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('alert')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Tekrar dene' })).toBeInTheDocument();
+  },
+};

@@ -157,7 +157,7 @@ function query(rows: DemoRow[], q: ReturnType<typeof useTableUrlState>['query'])
 }
 
 /** Full DataTable demo wired to URL state — used across stories. */
-export function DataTableDemo() {
+export function DataTableDemo({ columnControls = false }: { columnControls?: boolean } = {}) {
   const state = useTableUrlState({ defaultPageSize: 10 });
   const filtered = useMemo(() => query(DEMO_ROWS, state.query), [state.query]);
   const page = state.pagination.pageIndex;
@@ -171,6 +171,7 @@ export function DataTableDemo() {
         total={filtered.length}
         state={state}
         getRowId={(r) => r.id}
+        columnControls={columnControls}
         filterBar={<FilterBar tableKey="demo" filters={filters} state={state} searchPlaceholder="İlan ara…" />}
         renderSubRow={(row) => (
           <div className="text-sm">

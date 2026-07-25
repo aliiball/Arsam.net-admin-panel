@@ -841,3 +841,58 @@ Entry format:
     seeded error → the panel's `Error` story sets `retryOnMount:false` so `seedQueryError` sticks (deterministic).
 - Suggested commit message:
   `feat(ai): deterministic assistant + copilots — NL parser/intent core, guardrailed AI bulk-approve vs audit`
+
+## 2026-07-25 Task 017 — Aşama 5: Enterprise Cila & Performans (FİNAL faz)
+- Closed the cross-cutting technical debt accumulated across the verticals; NO new vertical — measure, fix, prove.
+- **1. Route-level code-split** (`src/app/router.tsx`): every page component is now loaded on demand via a small
+  `named(loader, key)` → `React.lazy` helper (each `import('@/features/<x>')` specifier → ONE shared per-feature chunk,
+  so a feature's pages travel together). Critically, `handle`/routeMeta stays a STATIC object literal on each route
+  (NOT inside `route.lazy()`), so `RouteGuard`/breadcrumbs/RBAC resolve at the boundary BEFORE the chunk loads — a deep
+  link to a forbidden route renders the 403 without ever flashing the fallback. New `src/app/pages/PageSkeleton.tsx`
+  (token-only, `role="status"` + `aria-busy`); `AppShell` nests `RouteGuard > Suspense(fallback=PageSkeleton) > Outlet`.
+  **Measured:** main bundle **2,037.98 kB → 542.77 kB** (gzip **626.57 → 163.63 kB**, ~73% smaller); recharts
+  (`DonutChartCard` 378 kB), leaflet (323 kB), and all 11 feature chunks split out. Storybook page-story harness is
+  unaffected (pages import directly, not via the router); router smoke re-verified by build + tests.
+- **2. Touch targets** (`src/components/ui/switch.tsx`, `checkbox.tsx`): added a ≥44px WCAG 2.5.5 hit area via a
+  transparent `after:` pseudo-element (the FieldHelp HIT_AREA idiom) while PRESERVING the 20×36 / 16px visual size —
+  Switch `after:-inset-x-1 after:-inset-y-3` (44×44), Checkbox `after:-inset-3.5` (16+2·14 = 44). CSS-only, token-based,
+  no new variant/state (existing full-matrix stories still cover them).
+- **3. DataTable column pinning + drag-reorder** (`DataTable.tsx`, `ColumnVisibility.tsx`) — completes DATA_TABLE_SPEC
+  point 4. Opt-in `columnControls` prop (enabled on **listings** only, so other tables/tests are untouched): TanStack
+  `enableColumnPinning` + `columnOrder`/`columnPinning` state; sticky pinned cells via `pinnedCellProps()` (token-only —
+  `bg-background`/`bg-muted/60`/`border-border`, NO hardcoded color); a draggable header grip (native HTML5 DnD, no new
+  dep) reorders columns; and a **keyboard-accessible alternative** in the Kolonlar menu — a per-column submenu
+  (Sola sabitle / Sola taşı / Sağa taşı) that performs the identical reorder/pin via larger, fully keyboard-operable
+  controls (WCAG 2.5.8 equivalent-alternative). New `ColumnControls` story + play test (asserts grip presence, drives the
+  keyboard pin flow, and asserts the header actually becomes `position: sticky`); `WithControls` story added to
+  `ColumnVisibility.stories`.
+- **4. ChartCard accessible summary + ErrorState retry 44px:** `ChartCard` gained an optional `summary` prop — rendered
+  `sr-only` with the visual `[data-slot="chart-viz"]` SVG set `aria-hidden` (screen-reader users get a meaningful data
+  summary instead of the unlabeled recharts DOM); wired on the DashboardPage category chart. New `WithSummary` story +
+  play (asserts the sr-only text and the `aria-hidden` chart). `ErrorState` retry button bumped from `size="sm"` (32px)
+  to `min-h-11` (≥44px).
+- **5. Page-error story retrofit** (debt from 009): listings/users/categories/locations LIST `Error` stories now drive a
+  REAL `isError` branch via `seedQueryError` (moved to the shared listings `page-story-utils` as the single origin;
+  messages + the 3 feature utils now re-export it), asserting `role="alert"` + a "Tekrar dene" retry button — instead of
+  mirroring `Empty`. Every list vertical now has a genuine page-error story.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings — untouched files) · typecheck PASS · test PASS
+  (860/860, 144 files) · build PASS (543 kB main) · build-storybook PASS.
+- DoD self-check: ran the `dod-reviewer` agent → "Ready to commit: YES" with ONE blocking gap, FIXED before checkpoint:
+  the new `ChartCard.summary` prop had no story coverage → added the `WithSummary` story + play. Applied non-blocking rec:
+  isolated `ColumnVisibility` `WithControls` story. Independently re-verified green.
+- Deferred (non-blocking, tracked with rationale):
+  - **Generic `DataTableProps<TData, TMeta>`** (008 note): removing the `meta as Record` cast cleanly needs a
+    `TableMeta` module augmentation that ripples through every typed column `meta`; low value / higher risk in a polish
+    phase → deferred. The single `meta?: unknown` boundary cast remains.
+  - **FieldHelp `aria-describedby` popover→field** (014 note): NOT changed — `FormField` (and the standalone
+    CascadingSelect/LayoutDefaultsForm consumers) already wire `aria-describedby` to a PERSISTENT `sr-only` help node, so
+    the field IS described. Pointing describedby at the popover (conditionally mounted) would create a dangling idref when
+    closed — a regression. Convention already satisfies the intent.
+  - **DATA_TABLE_SPEC point 4 right-pin:** only LEFT-pin is exposed in the UI (dominant real-world case); `columnPinning.right`
+    state exists but no UI populates it. Add a "Sağa sabitle" item if any listing column needs it.
+  - **Route `errorElement`** (reviewer flag): no boundary catches a failed dynamic `import()` (stale chunk hash after a
+    redeploy) → today that surfaces as a blank render, not the app's `ErrorState`. Worth a small follow-up.
+  - **OSM tile mock / configurable provider** (006 note): tiles still fetched live in stories/tests (green) — flagged for
+    backend hardening.
+- Suggested commit message:
+  `perf(polish): route-level code-split + 44px touch targets, table column pinning/reorder, chart a11y, real page-error stories`

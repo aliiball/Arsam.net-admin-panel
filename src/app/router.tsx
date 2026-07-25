@@ -1,24 +1,44 @@
+import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 import { AppShell } from '@/components/shell/AppShell';
-import { DashboardPage } from '@/features/dashboard';
-import {
-  ListingsListPage,
-  ListingDetailPage,
-  ListingCreatePage,
-  ModerationQueuePage,
-} from '@/features/listings';
-import { UsersListPage, OfficesListPage, UserDetailPage } from '@/features/users';
-import { CategoriesListPage, CategoryDetailPage } from '@/features/categories';
-import { LocationsListPage, ProvinceDetailPage } from '@/features/locations';
-import { ReportsListPage, ReportDetailPage } from '@/features/messages';
-import { PackagesListPage, PaymentsListPage, PaymentDetailPage } from '@/features/promotions';
-import { ReportsPage } from '@/features/reports';
-import { AuditListPage } from '@/features/audit';
-import { RbacPage } from '@/features/rbac';
-import { SettingsPage } from '@/features/settings';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import type { RouteHandle } from './route-meta';
+
+/**
+ * Route-level code-split: every page component is loaded on demand via
+ * `React.lazy`, so the heavy verticals (recharts on Reports/Dashboard, Leaflet
+ * on the listing detail + dashboard maps) leave the initial bundle. Each
+ * `import('@/features/<x>')` specifier resolves to ONE shared chunk, so a
+ * feature's pages travel together. `handle` (routeMeta) stays STATIC on the
+ * routes so RouteGuard / breadcrumbs / RBAC resolve at the boundary BEFORE the
+ * component chunk arrives; the Suspense fallback lives around <Outlet /> in
+ * AppShell. `default` shims map the named page exports to lazy default exports.
+ */
+const named = <M, K extends keyof M>(loader: () => Promise<M>, key: K) =>
+  lazy(async () => ({ default: (await loader())[key] as React.ComponentType }));
+
+const DashboardPage = named(() => import('@/features/dashboard'), 'DashboardPage');
+const ListingsListPage = named(() => import('@/features/listings'), 'ListingsListPage');
+const ListingDetailPage = named(() => import('@/features/listings'), 'ListingDetailPage');
+const ListingCreatePage = named(() => import('@/features/listings'), 'ListingCreatePage');
+const ModerationQueuePage = named(() => import('@/features/listings'), 'ModerationQueuePage');
+const UsersListPage = named(() => import('@/features/users'), 'UsersListPage');
+const OfficesListPage = named(() => import('@/features/users'), 'OfficesListPage');
+const UserDetailPage = named(() => import('@/features/users'), 'UserDetailPage');
+const CategoriesListPage = named(() => import('@/features/categories'), 'CategoriesListPage');
+const CategoryDetailPage = named(() => import('@/features/categories'), 'CategoryDetailPage');
+const LocationsListPage = named(() => import('@/features/locations'), 'LocationsListPage');
+const ProvinceDetailPage = named(() => import('@/features/locations'), 'ProvinceDetailPage');
+const ReportsListPage = named(() => import('@/features/messages'), 'ReportsListPage');
+const ReportDetailPage = named(() => import('@/features/messages'), 'ReportDetailPage');
+const PackagesListPage = named(() => import('@/features/promotions'), 'PackagesListPage');
+const PaymentsListPage = named(() => import('@/features/promotions'), 'PaymentsListPage');
+const PaymentDetailPage = named(() => import('@/features/promotions'), 'PaymentDetailPage');
+const ReportsPage = named(() => import('@/features/reports'), 'ReportsPage');
+const AuditListPage = named(() => import('@/features/audit'), 'AuditListPage');
+const RbacPage = named(() => import('@/features/rbac'), 'RbacPage');
+const SettingsPage = named(() => import('@/features/settings'), 'SettingsPage');
 
 const meta = (routeMeta: RouteHandle['routeMeta']): RouteHandle => ({ routeMeta });
 
