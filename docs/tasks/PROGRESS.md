@@ -1393,3 +1393,55 @@ Entry format:
   - Report is NOT published as a Claude Artifact (per the task): it is a plain repo file for the Pages deploy in Task 027.
 - Suggested commit message:
   `docs(report): self-contained executive report (docs/report.html) — Calm Signal styling, real repo metrics`
+
+## 2026-07-25 Task 027 — GitHub Pages deploy (app + Storybook + report)
+- Built: one-site GitHub Pages deploy publishing all three surfaces under
+  `https://aliiball.github.io/Arsam.net-admin-panel/`: `/` (the admin panel, mock-only demo), `/storybook/` (static
+  Storybook), `/report.html` (Task 026 executive report). Deploy plumbing only — ZERO feature/component work.
+- Runtime changes to make a `/`-assuming SPA work from a `/<repo>/` project-pages subpath:
+  - `vite.config.ts` — `base: process.env.APP_BASE ?? '/'` (env-driven, NOT coupled to Vite `command`, so the Storybook
+    build — which also runs Vite in build mode and merges our config — stays at `base:'/'` unless `APP_BASE` is exported;
+    it is scoped to the app build step only).
+  - `src/app/router.tsx` — `basename` derived from `import.meta.env.BASE_URL` (trailing slash stripped, `'/'` fallback
+    for dev), passed to `createBrowserRouter` (DATA mode preserved — no HashRouter).
+  - `src/main.tsx` — MSW now runs in dev AND in the static Pages build (mock-only demo, no backend); skipped only under
+    `MODE==='test'` (unit tests never import this entry). The msw chunk is lazy `import()`-ed, so no initial-bundle bloat.
+  - `src/lib/msw/browser.ts` — `serviceWorker.url = \`${import.meta.env.BASE_URL}mockServiceWorker.js\`` (dev BASE_URL is
+    `/` → unchanged `/mockServiceWorker.js`; under Pages → base-prefixed so the SW resolves + scopes correctly).
+  - `package.json` — added `"preview": "vite preview"` for local base-path verification.
+- `.github/workflows/pages.yml` (NEW): checkout → setup-node 22 (npm cache) → `npm ci` → build app with
+  `APP_BASE=/${{ github.event.repository.name }}/` (dynamic repo name, no hardcode/case-mismatch risk) → build Storybook
+  into `dist/storybook` (NO APP_BASE — Storybook static output uses relative asset URLs, works under `/storybook/`) →
+  `cp docs/report.html dist/report.html` + `cp dist/index.html dist/404.html` (SPA deep-link fallback; Vite emits
+  absolute base-prefixed asset URLs so the copy boots at any path, browser URL preserved, React Router routes it — no
+  redirect hack) + `touch dist/.nojekyll` → `configure-pages` → `upload-pages-artifact` → separate `deploy` job with
+  `deploy-pages@v4`. Least-privilege `permissions` (contents:read, pages:write, id-token:write, OIDC, no PAT);
+  `concurrency: pages` with `cancel-in-progress:false` (never abort an in-flight publish).
+- Verification: lint 0-error (13 pre-existing warnings) · typecheck PASS · test 939/939 (155 files) on the WARM run —
+  the first run showed the documented 5-fail cold browser dep-prebundle/instrumenter env-flake, green on warm re-run ·
+  `npm run build` PASS for BOTH `base:'/'` (default) and `APP_BASE=/Arsam.net-admin-panel/` (verified index.html emits
+  base-prefixed asset URLs) · `build-storybook -o dist/storybook` PASS (relative asset URLs confirmed) · assembled the
+  full `dist/` (report + 404 + .nojekyll). Runtime-verified by serving the assembled `dist/` via `vite preview` at the
+  base path and driving headless Chromium (Playwright): (1) app boots + dashboard renders, (2) deep-link `/listings`
+  renders MSW-served rows — proving basename routing AND MSW-in-prod both work, (3) `/storybook/` loads, (4)
+  `/report.html` loads — all 4 PASS, 0 console errors. `curl` confirmed 200 for `/…/`, `/…/storybook/`, `/…/report.html`,
+  `/…/mockServiceWorker.js` (root `/` → 302 to base, expected under preview).
+- DoD self-check: ran the `dod-reviewer` agent over the working-tree diff → NO blocking issues, "Ready to commit: YES"
+  (token compliance PASS, no `any`/`@ts-ignore`, workflow security least-privilege, base/basename/MSW/SW-URL traced
+  end-to-end, 404 fallback + build ordering correct). Non-blocking notes: MSW permanently ships in the prod bundle by
+  design (revisit when a real FastAPI backend is wired) — tracked; PROGRESS/CURRENT bookkeeping updated here.
+- Decisions/assumptions:
+  - `base` is env-driven via `APP_BASE` rather than Vite's `command==='build'` so the Storybook build isn't accidentally
+    given the app's subpath (Storybook is served at `/storybook/`, not `/`).
+  - SPA fallback is `dist/index.html` copied to `dist/404.html` (done in the workflow, on the BUILT html with hashed
+    asset refs) — not a `public/404.html` source copy (which would lack the build hashes) and not the redirect-query hack.
+  - Storybook is NOT given a base; its relative asset URLs make it subpath-portable as-is.
+- ONE-TIME MANUAL STEP (cannot be automated): repo Settings → Pages → Source = "GitHub Actions" before the first push to
+  `main` publishes. Called out in the task file and the hand-off.
+- Suggested commit message:
+  `ci(pages): deploy app + Storybook + report to GitHub Pages (base path, SPA 404 fallback, MSW-in-prod demo)`
+
+## Modernization arc COMPLETE
+Tasks 000 → 027 done. Full product (12 modules), design system, AI-first layer, RBAC/audit, quality-agent tooling,
+modernization (breakpoints/mobile/dock/motion/bento), executive report, and the Pages deploy pipeline are all in place.
+Awaiting the user's manual commit of Task 027 and the one-time Pages "Source: GitHub Actions" switch.

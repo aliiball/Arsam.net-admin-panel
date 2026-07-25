@@ -12,7 +12,9 @@ import { Providers } from '@/app/providers';
 import { router } from '@/app/router';
 
 async function enableMocking(): Promise<void> {
-  if (!import.meta.env.DEV) return;
+  // MSW runs in dev AND in the static Pages build (a mock-only demo with no
+  // backend). Skipped only under unit tests, which never import this entry.
+  if (import.meta.env.MODE === 'test') return;
   const { startMockWorker } = await import('@/lib/msw/browser');
   await startMockWorker();
 }

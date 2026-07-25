@@ -46,6 +46,12 @@ const meta = (routeMeta: RouteHandle['routeMeta']): RouteHandle => ({ routeMeta 
  * React Router v7 — DATA mode ONLY (createBrowserRouter). No framework mode,
  * no SSR/RSC. AppShell is the root layout; every route carries `handle.routeMeta`.
  */
+/**
+ * Under GitHub Pages the app is served from `/<repo>/`; strip that segment so
+ * routes resolve. `import.meta.env.BASE_URL` is `/` in dev (→ `'/'`).
+ */
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -169,4 +175,4 @@ export const router = createBrowserRouter([
       { path: '*', Component: () => <PlaceholderPage title="Sayfa bulunamadı" description="Aradığınız sayfa mevcut değil." /> },
     ],
   },
-]);
+], { basename });
