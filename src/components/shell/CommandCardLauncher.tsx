@@ -16,8 +16,10 @@ import {
   Sun,
 } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -198,29 +200,42 @@ export function CommandCardLauncher() {
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {filtered.map((mod) => {
               const Icon = mod.icon;
+              const children = mod.children ?? [];
+              const hasChildren = children.length > 0;
+              // Leaf modules are a single click target → use the shared `Card interactive`
+              // hover-lift + stretched-link (`after:inset-0`), same grammar as the
+              // dashboard quick-access tiles. Parent modules carry child quick-action
+              // chips (multi-action) → keep the plain color-only hover, since a whole-card
+              // lift would falsely imply one click target.
+              const moduleButton = (
+                <button
+                  type="button"
+                  onClick={() => go(mod.to)}
+                  className={cn(
+                    'focus-visible:ring-ring flex w-full items-start gap-3 rounded-md text-left outline-none focus-visible:ring-2',
+                    !hasChildren && 'after:absolute after:inset-0 after:content-[""]',
+                  )}
+                  data-action="navigate"
+                  data-entity={mod.aiEntity ?? 'module'}
+                >
+                  <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
+                    <Icon className="size-5" aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">{mod.label}</span>
+                    {mod.description && (
+                      <span className="text-muted-foreground block text-xs">{mod.description}</span>
+                    )}
+                  </span>
+                </button>
+              );
               return (
                 <li key={mod.id}>
-                  <div className="hover:border-primary/40 hover:bg-accent/40 h-full rounded-lg border border-border p-3 transition-colors">
-                    <button
-                      type="button"
-                      onClick={() => go(mod.to)}
-                      className="focus-visible:ring-ring flex w-full items-start gap-3 rounded-md text-left outline-none focus-visible:ring-2"
-                      data-action="navigate"
-                      data-entity={mod.aiEntity ?? 'module'}
-                    >
-                      <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
-                        <Icon className="size-5" aria-hidden />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-medium">{mod.label}</span>
-                        {mod.description && (
-                          <span className="text-muted-foreground block text-xs">{mod.description}</span>
-                        )}
-                      </span>
-                    </button>
-                    {mod.children && mod.children.length > 0 && (
+                  {hasChildren ? (
+                    <div className="hover:border-primary/40 hover:bg-accent/40 h-full rounded-xl border border-border/60 p-3 transition-colors">
+                      {moduleButton}
                       <div className="mt-2 flex flex-wrap gap-1 border-t border-border pt-2">
-                        {mod.children.map((child) => (
+                        {children.map((child) => (
                           <button
                             key={child.id}
                             type="button"
@@ -234,8 +249,12 @@ export function CommandCardLauncher() {
                           </button>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <Card interactive className="relative h-full gap-0 border-border/60 p-3 shadow-none">
+                      {moduleButton}
+                    </Card>
+                  )}
                 </li>
               );
             })}

@@ -1,6 +1,12 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Scope class detection to app source only. Tailwind v4 auto-scans the whole repo,
+   which pulls in docs/ markdown — task notes there mention utility-like tokens (e.g.
+   an `@[…]` container-query example) that Tailwind would compile into invalid CSS and
+   break the lightningcss minify step. The report/docs HTML carries its own styling. */
+@source not "../../docs";
+
 /* Dark mode is class-driven (.dark on <html>), managed by ThemeProvider. */
 @custom-variant dark (&:is(.dark *));
 
@@ -213,6 +219,7 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.6, 1); /* symmetric — for looping/breathing motion */
 
   /* Accordion open/close */
   --animate-accordion-down: accordion-down 0.2s var(--ease-standard);
@@ -225,6 +232,13 @@
   --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
   --animate-fade-in-up: fade-in-up var(--duration-slow) var(--ease-standard) both;
   --animate-scale-in: scale-in var(--duration-base) var(--ease-emphasized) both;
+
+  /* Heartbeat pulse — used ONLY for the dock-mode command launcher logo to mark the
+     primary (command-driven) nav entry point. Continuous by product decision (the
+     reference dock's "living" launcher). prefers-reduced-motion users are fully
+     protected (base layer collapses it to a single ~0ms cycle ending at scale(1), plus
+     an explicit motion-reduce:animate-none on the element). */
+  --animate-pulse-soft: pulse-soft 1.8s var(--ease-in-out) infinite;
 }
 
 @keyframes accordion-down {
@@ -282,6 +296,21 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+/* Heartbeat (lub-dub) — a strong beat, a lighter second beat, then rest. Starts AND
+   ends at scale(1) so a reduced-motion single cycle leaves no residual transform. */
+@keyframes pulse-soft {
+  0%,
+  40%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.12);
+  }
+  26% {
+    transform: scale(1.04);
   }
 }
 

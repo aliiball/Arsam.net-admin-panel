@@ -29,6 +29,14 @@ export const Default: Story = {
     await expect(within(dialog).getByText('Komut merkezi')).toBeInTheDocument();
     // Module cards render (İlanlar is visible to the default role).
     await expect(within(dialog).getByText('İlanlar')).toBeInTheDocument();
+
+    // Affordance split: a LEAF module (Genel Bakış, no children) is a single click
+    // target → shared `Card interactive` hover-lift. A PARENT module (İlanlar, has
+    // child quick-action chips) is multi-action → plain container, NOT interactive.
+    const leaf = within(dialog).getByText('Genel Bakış').closest('[data-slot="card"]');
+    await expect(leaf).not.toBeNull();
+    await expect(leaf).toHaveAttribute('data-interactive');
+    await expect(within(dialog).getByText('İlanlar').closest('[data-slot="card"]')).toBeNull();
   },
 };
 

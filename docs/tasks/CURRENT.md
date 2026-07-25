@@ -1,35 +1,33 @@
 # Current Task
--> docs/tasks/024-dock-pulse.md
+-> docs/tasks/025-manager-report.md (henüz yazılmadı — Task 024 commit'inden sonra başlanacak)
 
-Status: Task 023 (Motion follow-up polish) DONE — kullanıcı commit'ini bekliyor. Sıradaki: Task 024 (Dock pulse).
+Status: Task 024 (Dock pulse) DONE — kullanıcı commit'ini bekliyor. Sıradaki: Task 025 (yönetici raporu).
 
-Aşama 6 (Modernizasyon, 018–022) TAMAMLANDI. Kullanıcının ek istekleri için post-modernization sıra:
-**023 follow-up polish (DONE) → 024 dock pulse → 025 yönetici raporu (özet ağırlıklı, docs/report.html) →
-026 GitHub Pages deploy (app + storybook + report, EN SON).**
+Post-modernization sıra: 023 follow-up (DONE) → 024 dock pulse (DONE) →
+**025 yönetici raporu (özet ağırlıklı, docs/report.html) → 026 GitHub Pages deploy (app + storybook + report, EN SON).**
 
-Task 023 (Motion follow-up polish) done: ux-critic'in 022'de işaretlediği 3 non-blocking item kapatıldı.
-- 14 sayfa header'ına `animate-fade-in` (reduced-motion güvenli). `card-interactive` yalnızca dashboard
-  quick-access'te (çok-aksiyonlu moderation/mobil kartlara UYGULANMADI — belgelendi).
-- KpiCard sparkline sağ-kolondan **tam-genişlik alt şeride**; `reserveSparkline` prop'u loading'de yüksekliği
-  sabitler (dashboard 4 KPI kullanır; Reports etkilenmez).
-- Bento `lg` mozaik: DonutChartCard legend'i **container-query** (`@container`+`@[26rem]:flex-row`) ile kartın
-  genişliğine bağlı istiflenir (taşma yok); kategori+donut `lg`'de yan yana (span-1), `xl`'de span-2; grid
-  `items-start` (sabit-yükseklik bar-chart zorla gerilmez → kasıtlı mozaik).
-- **4 agent:** a11y-sentinel PASS (0 bulgu); token-guardian CLEAN; ux-critic 1 High (bento yükseklik → `items-start`)
-  + 1 Medium (KPI loading shift → `reserveSparkline`) + 1 Medium (CommandCardLauncher → **Task 024'e devredildi**);
-  dod-reviewer YES + 4 story-coverage önerisi (KpiCard LoadingReserved, DonutChartCard NarrowColumn, DashboardPage
-  Tablet play + yorum tazeleme) kapatıldı.
-- lint 0-error · typecheck · test 928/928 · build · build-storybook yeşil.
-- NOT: Tailwind v4 `docs/` tarıyor → task markdown'ındaki `@[...]` literal'i CSS build'i kırdı, kaldırıldı. Task 025
-  (rapor HTML) için: Tailwind source kapsamını `docs/`'tan ayır (`@source`).
+Task 024 (Dock pulse) done: referans dock'un "yaşayan launcher" hissi kendi tokenlarımızla, sadece dock modunda.
+- `theme.css`: `pulse-soft` keyframe = gerçek kalp atışı (lub-dub: 12% scale 1.12, 26% scale 1.04, sonra dinlenme)
+  + `--animate-pulse-soft` (`--ease-in-out`, 1.8s, **SÜREKLI/infinite** — KULLANICI KARARI: görünür, sürekli kalp
+  atışı istedi; agent'lar "calm" için sonlu önermişti ama ürün kararı kullanıcının). reduced-motion tam korunur.
+- `DockLogo` (yeni bileşen+story): pulse'lı yuvarlak launcher logosu (`motion-reduce:animate-none`, `aria-hidden`);
+  CommandDock (size-7) + DockShell (size-8) inline hexagon'u değiştirdi. Yapısal olarak dock-only.
+- CommandCardLauncher (023 devri): leaf modül kartları `Card interactive` + stretched-link; parent kartlar renk-only.
+  Radius/border hizalandı (rounded-xl + border-border/60).
+- `@source not "../../docs"`: Tailwind v4 `docs/` taraması geçersiz CSS üretip build'i kırıyordu (Task 025'i açar).
+- **4 agent:** a11y PASS (WARN sonsuz→sonlu ile kapandı); token-guardian CLEAN; ux-critic 1 Medium (sonsuz→sonlu) +
+  2 Low (radius/border) düzeltildi; dod-reviewer YES + 1 minor (`children!` non-null → `?? []` narrow) düzeltildi.
+- lint 0-error · typecheck · test 931/931 · build · build-storybook yeşil.
+- NOT: kullanıcı "kalp atışı"nı SÜREKLI isterse tek satır (`3`→`infinite`); sonlu tercih edildi (calm + a11y).
 
-## Task 024 — Dock pulse (sıradaki)
-Referanstaki "kalp atışı" (breathing/pulse) etkisini **yalnızca `dock` layout modunda** entegre et: dock komut
-pill'i / launcher'a token-güdümlü hafif scale-pulse (`--animate-pulse-*`, ~1↔1.04), `prefers-reduced-motion` MUTLAK
-kapatır, Storybook + motion-bağımsız play. **Ek (023 devri):** CommandCardLauncher'daki yaprak (leaf) modül kartlarını
-`Card interactive` + stretched-link (`after:inset-0`) grameriyle hizala (parent kartlar renk-only hover'da kalır).
+## Task 025 — Yönetici raporu (sıradaki, henüz task dosyası yok)
+`docs/report.html` — tek-dosya, kendi kendine açılan, **kendi stilini taşıyan** (app Tailwind'ine bağlı değil, Golden
+Rule 1'e uygun kendi paletimiz) YÖNETİCİ ÖZETİ ağırlıklı rapor: ne yaptık, yetenekler, 12 modül, 131+ story kapsamı,
+5 review-agent rosteri + rolleri, Calm Signal tasarım sistemi, 3 layout modu, AI-first, RBAC+audit, motion/bento,
+DoD/kalite süreci. Kullanıcı isteği: Artifact DEĞİL, repo HTML dosyası (Pages'a /report olarak da girecek).
+Gerçek verilerle doldur (uydurma yok). İmpersonation yok — kendi work-product'ımız.
 
-Mode: TASK. Sıradaki adım: kullanıcı commit (023) → sonra Task 024.
+Mode: TASK. Sıradaki adım: kullanıcı commit (024) → sonra Task 025.
 
 Backlog / faz sırası: docs/tasks/BACKLOG.md
 Resume: "docs/tasks/CURRENT.md ve PROGRESS.md'yi oku, devam et".

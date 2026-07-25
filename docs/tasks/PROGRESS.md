@@ -1254,8 +1254,73 @@ Entry format:
     bento. The donut's container-query stacking is what makes the narrow-column pairing safe (no overflow).
   - `reserveSparkline` is opt-in (not automatic) because KpiCard can't know during `loading` whether a trend will
     arrive (trend is derived from not-yet-loaded stats); the caller declares intent.
-  - Removed a stray ``@[Npx]:flex-row`` literal from the new task markdown — Tailwind v4 scans `docs/`, and the
+  - Removed a stray arbitrary container-query class literal (an at-bracket variant with a placeholder length) from the
+    new task markdown — Tailwind v4 scans `docs/`, and the
     invalid arbitrary value broke the lightningcss CSS minify step. (Root cause noted for Task 025's report HTML:
     scope Tailwind sources away from `docs/` there.)
 - Suggested commit message:
   `polish(motion): fade-in page headers, KpiCard sparkline strip, lg bento mosaic (container-query donut)`
+
+## 2026-07-25 Task 024 — Dock pulse (reference "heartbeat" launcher) + deferred 023 fix
+- Built: integrated the reference dock's "living launcher" feel — a subtle breathing pulse on the Arsam command-launcher
+  logo — with OUR tokens, scoped to `dock` mode, plus the CommandCardLauncher affordance-consistency fix deferred from 023.
+  - **Motion** (`theme.css`): `pulse-soft` keyframe (0%/100% scale(1), 50% scale(1.06) — symmetric, no residual transform)
+    + `--animate-pulse-soft` token (2.6s, new symmetric `--ease-in-out`). FINITE: `3` cycles then rests, NOT `infinite` —
+    every other motion in the system is finite/state-triggered, and a forever-looping chrome element is both an
+    enterprise-calm distraction and an SC 2.2.2 (pause/stop/hide) risk for users who haven't set OS reduced-motion.
+  - **`DockLogo`** (new component + story): decorative round launcher logo (`animate-pulse-soft` +
+    `motion-reduce:animate-none` + `aria-hidden`). Replaces the inline hexagon badge in `CommandDock` (desktop, size-7)
+    and `DockShell` (mobile pill, size-8). The pulse is STRUCTURALLY dock-only (these components render only in dock mode)
+    — no runtime flag needed. Golden Rule 1: our own subtle scale, NOT a clone of the reference glass/glow/palette.
+  - **CommandCardLauncher affordance split** (023 deferral): leaf (childless) module cards now use the shared
+    `Card interactive` hover-lift + stretched-link (`after:inset-0`) — same grammar as the dashboard quick-access tiles;
+    parent cards (with child quick-action chips) stay plain color-hover, since a whole-card lift would falsely imply a
+    single click target. Radius/border aligned (rounded-xl + border-border/60) so only the hover treatment differs.
+  - **Build stability** (`theme.css`): `@source not "../../docs"` — Tailwind v4 auto-scans the repo including docs/, and a
+    utility-like `@[…]` container-query example in a task note was compiling into invalid CSS and breaking the lightningcss
+    minify step. Report/docs HTML carries its own styling, so scoping detection to app source is correct (unblocks Task 025).
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (931/931, 154 files) ·
+  build PASS · build-storybook PASS.
+- **4 review agents, all findings closed:**
+  - `a11y-sentinel`: PASS, 0 blockers; 1 advisory WARN (infinite animation vs SC 2.2.2) → CLOSED by switching to finite
+    3-cycle. Verified DockLogo aria-hidden + button accessible name intact + leaf stretched-link keyboard-safe.
+  - `design-token-guardian`: CLEAN (Golden Rules 1 & 2; motion via tokens; no reference clone).
+  - `ux-design-critic`: 1 Medium (infinite loop — only continuous animation in the system, calm/fatigue concern) → FIXED
+    (finite settle); 3 Low → 2 FIXED (parent card rounded-xl + border-border/60 to match leaf/dashboard), 1 non-fix note
+    (redundant-but-harmless motion-reduce class).
+  - `dod-reviewer`: Ready to commit YES, no blockers; 1 minor strictness finding (`mod.children!` non-null assertion,
+    banned by CLAUDE.md) → FIXED (destructure `children = mod.children ?? []`, TS narrows without `!`).
+- Decisions/assumptions:
+  - Finite 3-cycle over infinite: still delivers the "living launcher" on mount / mode-switch (the shell persists across
+    route changes, so it pulses once when entering dock mode) without a session-long ambient loop. If the user wants a
+    truly continuous heartbeat, it's a one-line token change (`3` → `infinite`) — surfaced to them.
+  - DockLogo skips Loading/Empty/Error stub stories — it's a purely decorative atom with no data states, consistent with
+    the ContextPill precedent; dod-reviewer confirmed coverage PASS.
+- Suggested commit message:
+  `feat(dock): breathing launcher pulse (dock-only, finite) + leaf-card interactive affordance; scope Tailwind off docs`
+
+## 2026-07-25 Task 024 — Hotfix (CI build red + tsconfig deprecation)
+- **CI build was failing on the committed Task 023 (acebf2c):** the Task-023 PROGRESS checkpoint text literally contained
+  an `@`-bracket container-query class example, and Tailwind v4 auto-scans `docs/`, so it compiled that placeholder into
+  an invalid `@container (width >= …)` rule that the lightningcss minify step rejected — but the `@source not "../../docs"`
+  fix that resolves it only lived in the (then-uncommitted) Task-024 working tree. Two-layer fix, both now in the tree:
+  (1) `@source not "../../docs"` in `theme.css` (scopes Tailwind class detection to app source), and (2) reworded the
+  PROGRESS.md line so no `@`-bracket literal remains anywhere under `docs/` (belt-and-suspenders). `npm run build` green.
+- **tsconfig deprecation (editor red on tsconfig.app.json):** `"baseUrl": "."` is deprecated and removed in TS 7. Dropped
+  it from BOTH `tsconfig.app.json` and `tsconfig.node.json`; `paths` (`@/*` → `./src/*`) now resolves relative to each
+  config's location (bundler moduleResolution). typecheck + build + 931/931 tests still green.
+- Full CI parity re-run locally (mirrors quality.yml): lint 0-error · typecheck · test 931/931 · build · build-storybook
+  — all green. Committing the current working tree makes the GitHub `Quality` workflow pass again.
+
+## 2026-07-25 Task 024 — Pulse: finite → continuous heartbeat (user decision)
+- The finite 3-cycle settle pulse was invisible in practice: it only played on mount and had already ended by the time
+  the user looked at the live dock. The user explicitly wants a visible, continuous heartbeat (the reference's "living"
+  launcher). Product-owner decision overrides the agents' "enterprise-calm / SC 2.2.2" preference for finite.
+- Reworked `pulse-soft` into a real heartbeat (lub-dub): keyframe 12% scale(1.12) [strong beat], 26% scale(1.04) [lighter
+  second beat], 0/40/100% scale(1) [rest] — over 1.8s, `infinite`. Clearly visible (1.12 peak) with a lifelike beat-then-
+  pause rhythm. `--animate-pulse-soft: pulse-soft 1.8s var(--ease-in-out) infinite`.
+- Accessibility is still fully preserved: `motion-reduce:animate-none` on DockLogo + the base-layer reduced-motion rule
+  disable it entirely for users who set OS reduced-motion; the keyframe starts/ends at scale(1) so no residual transform.
+  The SC 2.2.2 (pause/stop/hide) advisory is a conscious, documented risk-acceptance at the user's request.
+- Verified: typecheck clean · DockLogo story green (asserts the animate-pulse-soft class, motion-independent) · build green.
+- If a calmer feel is ever wanted again: lower the 1.12 peak and/or switch `infinite` → a finite count in the token.

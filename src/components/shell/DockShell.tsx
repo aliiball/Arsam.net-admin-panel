@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Hexagon, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 import { useFeatureFlag } from '@/lib/settings/feature-flags-store';
 import { CommandDock } from './CommandDock';
+import { DockLogo } from './DockLogo';
 import { NotificationBell } from './NotificationBell';
 import { UserMenu } from './UserMenu';
 import { useCommandPalette } from './command-palette-context';
@@ -42,9 +43,7 @@ export function DockShell({ children, now }: DockShellProps) {
           data-action="open-command-palette"
           data-entity="command"
         >
-          <span className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full">
-            <Hexagon className="size-4" aria-hidden />
-          </span>
+          <DockLogo className="size-8" />
           <span className="truncate">arsam</span>
           <Search className="text-muted-foreground ml-auto size-4 shrink-0" aria-hidden />
         </button>

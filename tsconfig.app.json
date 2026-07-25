@@ -26,8 +26,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    /* Path alias */
-    "baseUrl": ".",
+    /* Path alias — `paths` resolves relative to this config's location (no
+       `baseUrl`; that option is deprecated and removed in TS 7). */
     "paths": {
       "@/*": ["./src/*"]
     }

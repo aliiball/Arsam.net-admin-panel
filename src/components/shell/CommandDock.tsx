@@ -1,9 +1,10 @@
-import { Hexagon, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useFeatureFlag } from '@/lib/settings/feature-flags-store';
 import { ContextPill } from './ContextPill';
+import { DockLogo } from './DockLogo';
 import { NotificationBell } from './NotificationBell';
 import { UserMenu } from './UserMenu';
 import { useCommandPalette } from './command-palette-context';
@@ -42,9 +43,7 @@ export function CommandDock({ now, className }: CommandDockProps) {
         data-action="open-command-palette"
         data-entity="command"
       >
-        <span className="bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-full">
-          <Hexagon className="size-4" aria-hidden />
-        </span>
+        <DockLogo className="size-7" />
         <span>arsam</span>
         <Search className="text-muted-foreground size-4" aria-hidden />
         <kbd className="bg-background/40 text-muted-foreground pointer-events-none select-none rounded border border-glass-border px-1.5 font-mono text-[0.625rem]">
