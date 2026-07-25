@@ -85,7 +85,7 @@ export function PaymentsListPage() {
         }
         renderSubRow={(row) => (
           <div className="space-y-2 text-sm">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 md:grid-cols-4">
               <Detail label="Fatura No" value={row.invoiceNo} />
               <Detail label="Kullanıcı" value={row.userName} />
               <Detail label="Paket" value={row.packageName} />

@@ -34,7 +34,7 @@ export function DataTablePagination({
   const to = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-col items-center justify-between gap-3 px-1 py-2 sm:flex-row">
+    <div className="flex flex-col items-center justify-between gap-3 px-1 py-2 md:flex-row">
       <div className="text-muted-foreground text-sm tabular-nums">
         {selectedCount > 0 && <span className="mr-2">{selectedCount} seçili ·</span>}
         {from}–{to} / {total} kayıt

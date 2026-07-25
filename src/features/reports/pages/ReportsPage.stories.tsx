@@ -68,9 +68,15 @@ export const Error: Story = {
       seed: (qc) => seedQueryError(qc, KEY),
     }),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('alert')).toBeInTheDocument();
+    // Longer timeout: the browser test project runs many viewport-resizing stories in
+    // parallel, so the error-state render can settle past the 1000ms findBy default.
+    await expect(await canvas.findByRole('alert', {}, { timeout: 3000 })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'Tekrar dene' })).toBeInTheDocument();
   },
 };
 
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Tablet portrait (768px) — KPI 3-up, trends 2-up, breakdowns stacked (task 019 regression guard). */
+export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
+/** Desktop (1024px) — KPI 3-up (6-up returns at 2xl/1280), breakdowns 3-up. */
+export const Desktop: Story = { parameters: { viewport: { defaultViewport: 'bpXl' } } };

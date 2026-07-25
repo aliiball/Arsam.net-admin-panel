@@ -30,7 +30,7 @@ export function ExportMenu({ selectedCount = 0, onExport }: ExportMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2" data-action="open-export" data-entity="table">
           <Download className="size-4" />
-          <span className="hidden sm:inline">Dışa aktar</span>
+          <span className="hidden md:inline">Dışa aktar</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">

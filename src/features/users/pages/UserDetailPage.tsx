@@ -52,7 +52,7 @@ export function UserDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <TrustScoreMeter score={user.trustScore} />
             <div className="space-y-1">
               <span className="text-muted-foreground text-xs">Doğrulama</span>
@@ -61,7 +61,7 @@ export function UserDetailPage() {
           </div>
 
           <Separator />
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
             <Field label="Şehir" value={LOCATIONS[user.il]?.label} />
             <Field label="İlan Sayısı" value={String(user.listingsCount)} />
             <Field label="Kayıt Tarihi" value={new Date(user.joinedAt).toLocaleDateString('tr-TR')} />
@@ -78,7 +78,7 @@ export function UserDetailPage() {
             <CardDescription>Bağlı emlak ofisi ve üye danışmanlar.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
               <Field label="Unvan" value={user.office.title} />
               <Field label="Vergi No" value={user.office.taxId} />
               <Field

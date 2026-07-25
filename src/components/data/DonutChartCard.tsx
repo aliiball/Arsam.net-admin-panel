@@ -66,7 +66,7 @@ export function DonutChartCard({
             Görüntülenecek veri yok.
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
+          <div className="flex flex-col items-center gap-4 md:flex-row">
             <div className="relative" style={{ height, width: height }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

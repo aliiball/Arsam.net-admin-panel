@@ -28,7 +28,7 @@ export function AssistantDock() {
         onClick={() => setOpen(true)}
         aria-label="AI asistanını aç"
         aria-haspopup="dialog"
-        className="fixed bottom-20 right-4 z-40 size-12 rounded-full shadow-lg lg:bottom-6"
+        className="fixed bottom-20 right-4 z-40 size-12 rounded-full shadow-lg xl:bottom-6"
         data-action="open-assistant"
         data-entity="assistant"
       >
@@ -36,7 +36,7 @@ export function AssistantDock() {
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex w-full flex-col gap-4 sm:max-w-md">
+        <SheetContent side="right" className="flex w-full flex-col gap-4 md:max-w-md">
           <SheetHeader className="space-y-1">
             <SheetTitle className="flex items-center gap-2">
               <Sparkles className="text-primary size-4" aria-hidden /> AI Asistanı

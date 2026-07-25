@@ -67,7 +67,7 @@ export function CascadingSelect({
           {help}
         </span>
       )}
-      <div className={cn('grid gap-3 sm:grid-cols-3', className)}>
+      <div className={cn('grid gap-3 md:grid-cols-3', className)}>
         {levels.map((level, index) => {
           const parent = index > 0 ? levels[index - 1] : undefined;
           const parentChosen = !parent || Boolean(value[parent.key]);

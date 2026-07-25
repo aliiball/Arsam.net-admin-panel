@@ -41,7 +41,7 @@ export interface DataTableProps<TData> {
   filterBar?: React.ReactNode;
   /** Expandable detail row content. */
   renderSubRow?: (row: TData) => React.ReactNode;
-  /** Mobile card renderer (below lg). Falls back to a simple key/value list. */
+  /** Mobile card renderer (below xl, i.e. 1024). Falls back to a simple key/value list. */
   renderMobileCard?: (row: TData, selected: boolean, toggle: () => void) => React.ReactNode;
   /** Bulk actions rendered in the selection bar. */
   bulkActions?: (selectedIds: string[], allMatching: boolean, clear: () => void) => React.ReactNode;
@@ -182,7 +182,7 @@ export function DataTable<TData>({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">{filterBar}</div>
         <div className="flex items-center gap-2">
           <DensityToggle />
@@ -214,7 +214,7 @@ export function DataTable<TData>({
           {/* Desktop table */}
           <div
             ref={scrollRef}
-            className="relative hidden max-h-[32rem] overflow-auto rounded-lg border border-border lg:block"
+            className="relative hidden max-h-[32rem] overflow-auto rounded-lg border border-border xl:block"
           >
             <table className="w-full caption-bottom text-sm" role="grid">
               <thead className="bg-muted/60 sticky top-0 z-10 backdrop-blur">
@@ -339,7 +339,7 @@ export function DataTable<TData>({
           </div>
 
           {/* Mobile cards */}
-          <div className="space-y-2 lg:hidden">
+          <div className="space-y-2 xl:hidden">
             {rows.map((row) => {
               const selected = row.getIsSelected();
               const toggle = () => row.toggleSelected();

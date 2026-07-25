@@ -135,6 +135,23 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
+  /* Breakpoints — 8-token named scale (Aşama 6, task 019).
+     NOTE: adding --breakpoint-* to @theme REPLACES Tailwind's default scale
+     (adds xs/3xl/4xl, overrides sm/md/lg/xl/2xl). The former 1024px shell/table
+     convergence lived at the default `lg` (1024); under this scale that threshold
+     is `xl` (1024) — Strategy A. Shell + DataTable class-1 `lg:` were remapped to
+     `xl:` so the sidebar/topnav ↔ drawer+bottom-nav and table ↔ card switch stay
+     at 1024px. Content-grid `lg:` (dashboard/reports) reflow earlier at 768 on
+     purpose (tablet portrait). */
+  --breakpoint-xs: 320px; /* small phone */
+  --breakpoint-sm: 480px; /* phone */
+  --breakpoint-md: 640px; /* large phone / small tablet */
+  --breakpoint-lg: 768px; /* tablet portrait */
+  --breakpoint-xl: 1024px; /* tablet landscape / small laptop — former `lg` threshold */
+  --breakpoint-2xl: 1280px; /* laptop */
+  --breakpoint-3xl: 1536px; /* desktop */
+  --breakpoint-4xl: 1920px; /* wide desktop */
+
   /* Typography */
   --font-sans: 'Geist Variable', 'Inter Variable', system-ui, -apple-system,
     'Segoe UI', Roboto, Arial, sans-serif;

@@ -87,7 +87,7 @@ export function FilterBar({
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2" data-action="open-nl-filter" data-entity="table">
               <Sparkles className="size-4" />
-              <span className="hidden sm:inline">Akıllı filtre</span>
+              <span className="hidden md:inline">Akıllı filtre</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80">
@@ -149,7 +149,7 @@ export function FilterBar({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2" data-action="open-saved-views" data-entity="table">
               <Bookmark className="size-4" />
-              <span className="hidden sm:inline">Görünümler</span>
+              <span className="hidden md:inline">Görünümler</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

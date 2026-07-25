@@ -73,7 +73,7 @@ export function ListingDetailPage() {
           <p className="text-muted-foreground text-sm">{listing.description}</p>
 
           <Separator />
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
             <Field label="Brüt m²" value={a.grossArea?.toString()} />
             <Field label="Net m²" value={a.netArea?.toString()} />
             <Field label="Oda Sayısı" value={a.rooms} />

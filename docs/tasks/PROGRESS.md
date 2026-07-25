@@ -955,3 +955,73 @@ Entry format:
   - **ux (→ 022 / feature touch-ups):** PackageKindBadge state-color misuse; promotions NL parser → shared `lib/ai`.
 - Suggested commit message:
   `chore(agents): add Tier-1 review agents (token/a11y/ux/dead-code) + AGENTS roster; governance: selective-adaptation`
+
+## 2026-07-25 Task 019 — Aşama 6: Breakpoint Adopsiyonu + Responsive Re-audit
+- Built: 8-token named breakpoint scale in `src/styles/theme.css` `@theme` (`--breakpoint-*`:
+  xs320/sm480/md640/lg768/xl1024/2xl1280/3xl1536/4xl1920). In Tailwind v4 adding `--breakpoint-*` to `@theme`
+  REPLACES the whole default scale (not just `lg`), so every default threshold shifts down one step
+  (sm640→480, md768→640, lg1024→768, xl1280→1024, 2xl1536→1280). **Strategy A** — preserve every existing
+  threshold by shifting each pre-existing responsive prefix UP one token so 640/768/1024/1280 stay put; the new
+  `xs`(320)/`sm`(480) tokens are additive for future mobile work (020/021).
+  - **Class-1 (shell/table 1024 convergence) `lg:`→`xl:`** (meaning-preserving): SidebarShell (aside reveal,
+    main pb), TopnavShell (nav reveal, main pb), MobileNav (drawer trigger + bottom nav `xl:hidden`),
+    TopbarActions (search label/kbd), AssistantDock (FAB bottom offset), DataTable (toolbar flex-row,
+    desktop table `xl:block`, mobile cards `xl:hidden`). The sidebar/topnav ↔ drawer+bottom-nav and table ↔
+    card switch stay at 1024 exactly.
+  - **`md:`→`lg:`** (former 768 → new lg 768): Topbar breadcrumb reveal, TopnavShell secondary row reveal.
+  - **`sm:`→`md:`** (former 640 → new md 640): mechanical prefix shift across ~28 non-story source files
+    (detail/list metadata `grid-cols-3/4` definition lists, label reveals `inline`/`block`, `flex-row`,
+    dialog/sheet `max-w-*`, pagination/breadcrumb/calendar/wizard reveals, FilterBar/ColumnVisibility/
+    ExportMenu button labels). Done with a letter-following regex (`\bsm:(?=[a-z0-9\[])`) that skips the cva
+    size-variant KEY `sm: '...'` in `button.tsx` (the `sm`/`lg` there are variant names, NOT breakpoints).
+  - **Class-2 content-grid decisions** (reviewed one-by-one, each with a rationale comment in-file):
+    - Dashboard KPI row `lg:grid-cols-4`→`xl:grid-cols-4` (4-up only at 1024): KpiCard value is
+      `text-2xl tabular-nums`, unformatted/currency; 4-up at 768 left ~79px usable width and clipped 5-digit
+      values (ux-critic High). 2-up on tablet portrait is roomy.
+    - Dashboard charts row → `lg:grid-cols-2 xl:grid-cols-3` (bar+donut side-by-side ~360px at 768, 3-up at
+      1024) — avoids a single 320→1024 column stranding the fixed-260px donut (ux-critic Medium/Low).
+    - Dashboard panels row → `xl:grid-cols-3` (+ `xl:col-span-2`).
+    - Reports KPI `lg:grid-cols-3 xl:grid-cols-6`→`lg:grid-cols-3 2xl:grid-cols-6`: 6-up returns to 1280
+      (was silently pulled to 1024 by the token override → currency clip, ux-critic High); keeps the earlier
+      3-up reflow at 768.
+    - Reports breakdowns `lg:grid-cols-3`→`xl:grid-cols-3` (3 charts cramped at 240px on tablet).
+    - Reports trends `lg:grid-cols-2` LEFT as-is (2 charts ~384px at 768 read cleanly — the reference pattern).
+    - PageSkeleton inner padding `lg:p-6`→`xl:p-6` (Suspense fallback renders inside the `xl:pb-6` main; keeps
+      loading/loaded padding aligned in the 768–1023 band; dod Blocking).
+  - Storybook: `.storybook/preview.tsx` viewports aligned to the named scale — bpXs(320)/bpSm(480)/bpMd(640)/
+    bpLg(768)/bpXl(1024), 360/414 phone widths kept. Added Tablet(bpLg)+Desktop(bpXl) convergence stories to
+    AppShell, DataTable, ListingsListPage (+ Dashboard/Reports page stories) — the viewport IS applied in the
+    vitest browser runner, so `getByRole`/`queryByRole` visibility (bottom nav / columnheader dropping out of the
+    a11y tree at 1024 but present at 768) proves the 1024 switch point rather than just class-string matching.
+  - Docs: `docs/DESIGN_SYSTEM.md` Breakpoints section rewritten to the 8-token scale + the "converge below xl
+    (1024)" rule + the up-one-token shift note (GR1 source-of-truth). Stale JSDoc "below lg" comments fixed in
+    AppShell/DataTable/MobileNav/SidebarShell/TopnavShell.
+- Verification: lint PASS (0 errors; 13 pre-existing warnings) · typecheck PASS · test PASS (870/870, 144 files —
+  run TWICE green for flake determinism) · build PASS (543 kB) · build-storybook PASS.
+- DoD self-check: ran all four review agents (dod-reviewer + a11y-sentinel + ux-design-critic + design-token-guardian).
+  design-token-guardian CLEAN; a11y-sentinel PASS (compiled CSS verified: `xl:*` classes emit under
+  `@media (width>=1024px)`); ux-critic surfaced 2 High KPI-clip regressions (both FIXED, see Reports/Dashboard KPI
+  above); dod-reviewer returned NO with 4 blocking gaps — ALL FIXED before checkpoint:
+  (1) PageSkeleton `lg:p-6`→`xl:p-6`; (2) DESIGN_SYSTEM.md breakpoints section rewritten; (3) AppShell/DataTable
+  stale "below lg" JSDoc → "below xl (1024)"; (4) **the uncaught collateral `sm:`/`md:` shift** — the token
+  override moved sm 640→480 and md 768→640 for ~28 files that the task's `lg:`-only scan missed → resolved by the
+  up-one-token shift (sm→md, md→lg) that preserves all original thresholds. Also applied the non-blocking dod
+  recommendation (DataTable Tablet story now asserts real viewport visibility, not class strings).
+- One flaky test surfaced under the added viewport-resize load: ReportsPage `Error` story's `findByRole('alert')`
+  timed out past the 1000ms default on a loaded parallel run (green on retry). Hardened with `{ timeout: 3000 }` —
+  deterministic across two full re-runs.
+- Decisions/assumptions:
+  - Chose to preserve every existing threshold via a mechanical +1-token prefix shift rather than let the scale
+    override silently move sm/md/2xl thresholds — this fully honors Strategy A (no silent regressions) and reserves
+    the new low-end tokens for the mobile phases. Net behavioral change from the collateral override: zero.
+  - `button.tsx` `sm:`/`lg:` cva size KEYS were deliberately excluded from the sm→md remap (they name variants,
+    not breakpoints); verified the button size API (`default/sm/lg/icon`) is intact post-remap.
+  - The two `lg:flex` reveals in Topbar/TopnavShell are the former-`md` (768) breadcrumb + secondary-row reveals,
+    NOT the shell nav switch (that is `xl:flex`) — 768 preserved on purpose.
+  - Left Reports trends `lg:grid-cols-2` and the intentional progressive Reports KPI chain unchanged where they
+    compute cleanly at 768; every content-grid choice carries an inline rationale comment.
+- Tracked (feed into 020, non-blocking): 018 a11y smoke-run findings remain 020 scope (FilterBar NL-box
+  `aria-describedby`, sub-44px radio-group/DataTable-handle/pagination/bulk targets, unnamed DatePickers);
+  no list page passes `renderMobileCard` yet (all use the generic dl/dt/dd fallback) — 020's core work.
+- Suggested commit message:
+  `feat(responsive): 8-token breakpoint scale + Strategy-A remap (preserve 1024 convergence); tablet re-audit`

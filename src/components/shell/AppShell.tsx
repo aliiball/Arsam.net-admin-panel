@@ -19,7 +19,7 @@ export interface AppShellProps {
 /**
  * Configurable shell — renders SidebarShell or TopnavShell from a single nav
  * schema, driven by `config.mode`, switchable at runtime without reload.
- * Both modes converge to drawer + bottom nav + command palette below `lg`.
+ * Both modes converge to drawer + bottom nav + command palette below `xl` (1024).
  */
 export function AppShell({ children }: AppShellProps) {
   const { config } = useLayout();

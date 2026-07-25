@@ -53,15 +53,21 @@ export function DashboardPage() {
         </Button>
       </header>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* KPI row — 4-up only at xl (1024). KpiCard values are unformatted/currency
+          integers at text-2xl tabular-nums; a 4-up step at lg (768) leaves ~79px of
+          usable text width per tile and clips 5-digit values, so the reflow stays at
+          1024 (2-up on tablet portrait is roomy and reads cleanly). */}
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <KpiCard label="Toplam İlan" value={stats?.totalListings ?? 0} icon={Building2} loading={isLoading} hint="tüm kategoriler" />
         <KpiCard label="Bekleyen Moderasyon" value={stats?.pending ?? 0} icon={Clock} loading={isLoading} delta={-8} hint="son 7 gün" />
         <KpiCard label="Yayında" value={stats?.active ?? 0} icon={CheckCircle2} loading={isLoading} delta={12} hint="son 7 gün" />
         <KpiCard label="Reddedilen" value={stats?.rejected ?? 0} icon={XCircle} loading={isLoading} hint="toplam" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Charts row — 2-up at lg (768) so bar + donut sit side-by-side (~360px each,
+          the readable width the Reports trends row uses), 3-up at xl (1024). Avoids
+          a single 320→1024 column that leaves the fixed-260px donut stranded. */}
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {/* Category chart */}
         <ChartCard
           title="Kategoriye göre ilanlar"
@@ -131,9 +137,9 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-3">
         {/* Pending queue preview */}
-        <Card className="gap-3 lg:col-span-2">
+        <Card className="gap-3 xl:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <div>
               <CardTitle className="text-base">Bekleyen ilanlar</CardTitle>
@@ -155,7 +161,7 @@ export function DashboardPage() {
                     <Link to={`/listings/${listing.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline" data-action="open-detail" data-entity="listing">
                       {listing.title}
                     </Link>
-                    <span className="text-muted-foreground hidden text-sm sm:inline">
+                    <span className="text-muted-foreground hidden text-sm md:inline">
                       {CATEGORY_LABELS[listing.category]} · {LOCATIONS[listing.il]?.label}
                     </span>
                     <AiSuggestionBadge suggestion={listing.aiSuggestion} reasons={listing.aiReasons} />

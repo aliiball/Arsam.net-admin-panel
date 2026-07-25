@@ -47,6 +47,43 @@ export const Mobile: Story = {
   },
 };
 
+/**
+ * Tablet portrait (768px). Under the 8-token scale (task 019) the shell converges
+ * to drawer + bottom nav BELOW `xl` (1024) — so at 768 the bottom nav is the
+ * active navigation and the persistent sidebar is still CSS-hidden (`display:none`,
+ * out of the a11y tree). The viewport IS applied in the test runner, so `getByRole`
+ * (which excludes `display:none`) proves convergence at the real 768px width.
+ */
+export const Tablet: Story = {
+  globals: { layout: 'sidebar' },
+  parameters: { viewport: { defaultViewport: 'bpLg' } },
+  play: async ({ canvas }) => {
+    // Bottom nav is visible at 768 (convergence still active below xl).
+    const bottomNav = canvas.getByRole('navigation', { name: 'Alt gezinme' });
+    await expect(bottomNav.className).toContain('xl:hidden');
+    // The sidebar exists in the DOM but its reveal is gated at `xl:flex` (1024), NOT `lg` (768).
+    await expect(canvas.getByTestId('sidebar').className).toContain('xl:flex');
+  },
+};
+
+/**
+ * Desktop (1024px) — the `xl` threshold where the persistent sidebar takes over.
+ * Verifies Strategy A: convergence was remapped from `lg` (now 768) to `xl` (1024),
+ * so at 1024 the bottom nav is `display:none` (absent from the a11y tree) while the
+ * sidebar is revealed. That the bottom nav drops out here — but is present at 768
+ * above — proves the switch point stayed at 1024, not 768.
+ */
+export const Desktop: Story = {
+  globals: { layout: 'sidebar' },
+  parameters: { viewport: { defaultViewport: 'bpXl' } },
+  play: async ({ canvas }) => {
+    // At 1024 the bottom nav is hidden → not in the accessibility tree.
+    await expect(canvas.queryByRole('navigation', { name: 'Alt gezinme' })).toBeNull();
+    // The sidebar reveal class is `xl:flex` (visible at 1024).
+    await expect(canvas.getByTestId('sidebar').className).toContain('xl:flex');
+  },
+};
+
 export const Loading: Story = {
   args: {
     children: (

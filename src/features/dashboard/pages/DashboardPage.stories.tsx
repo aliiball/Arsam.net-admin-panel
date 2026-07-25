@@ -75,6 +75,10 @@ export const Default: Story = {
   },
 };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Tablet portrait (768px) — KPI row 2-up, charts 2-up (task 019 content-grid regression guard). */
+export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
+/** Desktop (1024px) — KPI 4-up, charts/panels 3-up. */
+export const Desktop: Story = { parameters: { viewport: { defaultViewport: 'bpXl' } } };
 export const Loading: Story = { render: () => render(false) };
 export const Empty: Story = { render: () => render(false) };
 export const Error: Story = { render: () => render(false) };

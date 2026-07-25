@@ -21,12 +21,12 @@ export function TopbarActions() {
         data-entity="command"
       >
         <Search className="size-4" />
-        <span className="hidden lg:inline">Ara…</span>
-        <kbd className="bg-muted text-muted-foreground pointer-events-none hidden select-none rounded border border-border px-1.5 font-mono text-[0.625rem] lg:inline">
+        <span className="hidden xl:inline">Ara…</span>
+        <kbd className="bg-muted text-muted-foreground pointer-events-none hidden select-none rounded border border-border px-1.5 font-mono text-[0.625rem] xl:inline">
           ⌘K
         </kbd>
       </button>
-      <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
+      <Separator orientation="vertical" className="mx-1 hidden h-6 md:block" />
       <DensityToggle />
       <LayoutSwitcher />
       <ThemeToggle />

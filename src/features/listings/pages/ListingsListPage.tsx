@@ -106,7 +106,7 @@ export function ListingsListPage() {
           />
         }
         renderSubRow={(row) => (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
             <Detail label="İlan No" value={row.id} />
             <Detail label="Ofis" value={row.agentName} />
             <Detail label="Brüt m²" value={row.attributes.grossArea?.toString() ?? '—'} />

@@ -60,7 +60,7 @@ export function CategoryDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
             <Field label="Anahtar" value={category.key} mono />
             <Field label="Simge" value={category.icon ?? '—'} />
             <Field label="Sıra" value={String(category.order + 1)} />

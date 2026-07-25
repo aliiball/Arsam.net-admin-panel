@@ -12,10 +12,10 @@ export interface TopbarProps {
 /** Top bar for the sidebar shell: leading slot + breadcrumbs + actions. */
 export function Topbar({ left, showBreadcrumbs = true }: TopbarProps) {
   return (
-    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-3 backdrop-blur sm:px-4">
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-3 backdrop-blur md:px-4">
       {left}
       {showBreadcrumbs && (
-        <div className="hidden min-w-0 items-center gap-2 md:flex">
+        <div className="hidden min-w-0 items-center gap-2 lg:flex">
           <Breadcrumbs />
         </div>
       )}

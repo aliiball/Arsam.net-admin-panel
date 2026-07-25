@@ -62,7 +62,7 @@ export function ReportDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
             <Field label="Şikayet No" value={report.id} />
             <div>
               <dt className="text-muted-foreground text-xs">Sebep</dt>

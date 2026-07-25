@@ -110,7 +110,7 @@ export function ReportsListPage() {
         }
         renderSubRow={(row) => (
           <div className="space-y-2 text-sm">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 md:grid-cols-4">
               <Detail label="Şikayet No" value={row.id} />
               <Detail label="Konu No" value={row.subjectId} />
               <Detail label="Tür" value={REPORT_SUBJECT_TYPE_LABELS[row.subjectType]} />

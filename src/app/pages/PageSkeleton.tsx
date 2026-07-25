@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function PageSkeleton() {
   return (
     <div
-      className="space-y-6 p-4 lg:p-6"
+      className="space-y-6 p-4 xl:p-6"
       role="status"
       aria-busy="true"
       aria-label="Sayfa yükleniyor"

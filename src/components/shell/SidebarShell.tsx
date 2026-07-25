@@ -12,7 +12,7 @@ import { Topbar } from './Topbar';
 import { MobileDrawer } from './MobileNav';
 import { usePermittedNav } from './nav-utils';
 
-/** Sidebar layout: collapsible aside (lg+) + top bar + content. */
+/** Sidebar layout: collapsible aside (xl+, i.e. 1024) + top bar + content. */
 export function SidebarShell({ children }: { children: ReactNode }) {
   const { config, toggleSidebar } = useLayout();
   const nav = usePermittedNav();
@@ -24,7 +24,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
         data-testid="sidebar"
         data-collapsed={collapsed}
         className={cn(
-          'bg-sidebar hidden shrink-0 flex-col border-r border-sidebar-border transition-[width] duration-200 lg:flex',
+          'bg-sidebar hidden shrink-0 flex-col border-r border-sidebar-border transition-[width] duration-200 xl:flex',
           collapsed ? 'w-16' : 'w-64',
         )}
       >
@@ -57,7 +57,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar left={<MobileDrawer />} />
-        <main className="flex-1 overflow-x-hidden p-4 pb-20 lg:pb-6" data-density-scope>
+        <main className="flex-1 overflow-x-hidden p-4 pb-20 xl:pb-6" data-density-scope>
           {children}
         </main>
       </div>

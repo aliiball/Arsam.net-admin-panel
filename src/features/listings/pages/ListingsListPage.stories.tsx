@@ -40,6 +40,10 @@ export const Sidebar: Story = {
 };
 export const Topnav: Story = { globals: { layout: 'topnav' } };
 export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/** Tablet portrait (768px) — card list still active; table view takes over at `xl` (1024). */
+export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'bpLg' } } };
+/** Desktop (1024px) — the `xl` switch point; table view active. */
+export const Desktop: Story = { parameters: { viewport: { defaultViewport: 'bpXl' } } };
 export const Loading: Story = {
   render: () =>
     renderPage(<ListingsListPage />, {

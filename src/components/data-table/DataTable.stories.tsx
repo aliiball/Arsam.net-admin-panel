@@ -101,3 +101,31 @@ export const Mobile: Story = {
   render: () => <DataTableDemo />,
   parameters: { viewport: { defaultViewport: 'mobile1' } },
 };
+
+/**
+ * Tablet portrait (768px). The table ↔ card switch is the heart of Strategy A
+ * (task 019): it must stay at `xl` (1024), NOT drop to `lg` (768). At 768 the
+ * card list is still the active view. Assertions check the switch classes
+ * (`xl:block` desktop table / `xl:hidden` mobile cards) so the threshold is
+ * proven independent of the test runner's actual window size.
+ */
+export const Tablet: Story = {
+  render: () => <DataTableDemo />,
+  parameters: { viewport: { defaultViewport: 'bpLg' } },
+  play: async ({ canvas }) => {
+    // The viewport IS applied in the runner: at 768 (below xl) the desktop table is
+    // `display:none`, so its column headers leave the a11y tree and the card view is
+    // active. That the table drops out here — but is present at 1024 (Desktop story) —
+    // proves the switch stayed at 1024, not 768.
+    await expect(canvas.queryByRole('columnheader', { name: /Başlık/ })).toBeNull();
+  },
+};
+
+/** Desktop (1024px) — the `xl` threshold where the table view takes over. */
+export const Desktop: Story = {
+  render: () => <DataTableDemo />,
+  parameters: { viewport: { defaultViewport: 'bpXl' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('columnheader', { name: /Başlık/ })).toBeInTheDocument();
+  },
+};

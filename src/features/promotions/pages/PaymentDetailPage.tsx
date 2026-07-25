@@ -55,7 +55,7 @@ export function PaymentDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-4">
             <Field label="Fatura No" value={payment.invoiceNo} />
             <Field label="Yöntem" value={PAYMENT_METHOD_LABELS[payment.method]} />
             <Field label="Tarih" value={new Date(payment.createdAt).toLocaleString('tr-TR')} />

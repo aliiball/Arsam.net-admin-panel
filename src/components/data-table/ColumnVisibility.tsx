@@ -46,7 +46,7 @@ export function ColumnVisibility<TData>({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2" data-action="open-column-visibility" data-entity="table">
           <Columns3 className="size-4" />
-          <span className="hidden sm:inline">Kolonlar</span>
+          <span className="hidden md:inline">Kolonlar</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

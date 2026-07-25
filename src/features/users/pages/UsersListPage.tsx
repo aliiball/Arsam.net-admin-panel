@@ -103,7 +103,7 @@ export function UsersListPage() {
           />
         }
         renderSubRow={(row) => (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
             <Detail label="Kullanıcı No" value={row.id} />
             <Detail label="E-posta" value={row.email} />
             <Detail label="Telefon" value={row.phone} />

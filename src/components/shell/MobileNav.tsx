@@ -12,7 +12,7 @@ import { usePermittedNav, usePrimaryNav, isNavItemActive } from './nav-utils';
 import { useCommandPalette } from './command-palette-context';
 import { useLocation } from 'react-router-dom';
 
-/** Hamburger + full-nav drawer. Placed in the shell's mobile leading slot (lg:hidden). */
+/** Hamburger + full-nav drawer. Placed in the shell's mobile leading slot (xl:hidden). */
 export function MobileDrawer() {
   const [open, setOpen] = useState(false);
   const nav = usePermittedNav();
@@ -22,7 +22,7 @@ export function MobileDrawer() {
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden"
+          className="xl:hidden"
           aria-label="Menüyü aç"
           data-action="open-mobile-drawer"
           data-entity="navigation"
@@ -45,7 +45,7 @@ export function MobileDrawer() {
   );
 }
 
-/** Fixed bottom navigation (<=5 primary items) + palette shortcut. Visible below lg. */
+/** Fixed bottom navigation (<=5 primary items) + palette shortcut. Visible below xl (1024). */
 export function MobileBottomNav() {
   const primary = usePrimaryNav(4);
   const { pathname } = useLocation();
@@ -53,7 +53,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="bg-background fixed inset-x-0 bottom-0 z-30 flex h-16 items-stretch border-t border-border lg:hidden"
+      className="bg-background fixed inset-x-0 bottom-0 z-30 flex h-16 items-stretch border-t border-border xl:hidden"
       aria-label="Alt gezinme"
     >
       {primary.map((item) => {

@@ -111,7 +111,9 @@ Dark mode uses borders + slightly stronger shadow alpha for separation.
 - Respect `prefers-reduced-motion`: disable non-essential motion.
 
 ## Breakpoints
-`sm 640 · md 768 · lg 1024 · xl 1280 · 2xl 1536`. Mobile-first; both shells converge to mobile nav below `lg`.
+8-token named scale (defined in `src/styles/theme.css` `@theme` as `--breakpoint-*`; overrides Tailwind's defaults):
+`xs 320 · sm 480 · md 640 · lg 768 · xl 1024 · 2xl 1280 · 3xl 1536 · 4xl 1920`.
+Mobile-first. **Both shells + the data table converge to drawer + bottom nav / card view below `xl` (1024)** — the convergence lives at `xl`, not `lg`. When the scale was introduced (task 019) every pre-existing responsive prefix was shifted up one token (`sm`→`md`, `md`→`lg`, `lg`→`xl`, `xl`→`2xl`) so the original 640/768/1024/1280 thresholds are preserved exactly; the new `xs` (320) and `sm` (480) tokens are additive for future mobile refinement.
 
 ## Density modes
 `comfortable` (default) and `compact`. Density changes row height, control padding, and font-size step on tables/forms via a `data-density` attribute on the shell root; tokens read it.

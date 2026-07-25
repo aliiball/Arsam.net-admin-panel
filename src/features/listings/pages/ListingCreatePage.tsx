@@ -73,7 +73,7 @@ function AttributesStep() {
   const category = useWatch<ListingFormValues>({ name: 'category' }) as Category;
   const attrs = CATEGORY_ATTRIBUTES[category] ?? [];
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2">
       {attrs.map((name) => (
         <AttributeField key={name} name={name} />
       ))}

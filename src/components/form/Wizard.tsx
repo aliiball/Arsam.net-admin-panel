@@ -175,7 +175,7 @@ function Stepper<T extends FieldValues>({
               >
                 {state === 'complete' ? <Check className="size-3.5" /> : i + 1}
               </span>
-              <span className="hidden sm:inline">{step.title}</span>
+              <span className="hidden md:inline">{step.title}</span>
             </button>
             {i < steps.length - 1 && <span className="text-muted-foreground" aria-hidden="true">›</span>}
           </li>
